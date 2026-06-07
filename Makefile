@@ -1,5 +1,6 @@
 # 变量定义
 BINARY_NAME=cert-hacker
+MCP_BINARY_NAME=cert-hacker-mcp
 VERSION?=dev
 COMMIT=$(shell git rev-parse --short HEAD)
 DATE=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -26,6 +27,14 @@ build:
 	echo "  >  Building binary..."
 	go build $(LDFLAGS) -o $(GOBIN)/$(BINARY_NAME) cmd/main.go
 
+## build-mcp: 构建 MCP 服务器
+build-mcp:
+	echo "  >  Building MCP server..."
+	go build $(LDFLAGS) -o $(GOBIN)/$(MCP_BINARY_NAME) cmd/mcp/main.go
+
+## build-all-binaries: 构建 CLI 和 MCP 服务器
+build-all-binaries: build build-mcp
+
 ## install: 安装依赖
 install:
 	echo "  >  Installing dependencies..."
@@ -36,7 +45,7 @@ install:
 clean:
 	echo "  >  Cleaning build cache..."
 	go clean
-	rm -f $(GOBIN)/$(BINARY_NAME)
+	rm -f $(GOBIN)/$(BINARY_NAME) $(GOBIN)/$(MCP_BINARY_NAME)
 
 ## test: 运行测试
 test:
@@ -82,4 +91,4 @@ docker-build:
 	echo "  >  Building Docker image..."
 	docker build -t $(BINARY_NAME):$(VERSION) .
 
-.PHONY: help build install clean test test-coverage fmt lint run dev build-all docker-build
+.PHONY: help build build-mcp build-all-binaries install clean test test-coverage fmt lint run dev build-all docker-build
