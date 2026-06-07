@@ -5,6 +5,9 @@
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+> **🤖 Claude Code Plugin**: 本项目同时可作为 Claude Code 插件使用，为 AI 提供证书安全分析能力。
+> 详见 [PLUGIN_README.md](PLUGIN_README.md) 了解如何安装为 Claude Code 技能插件。
+
 # 一、简介
 
 `cert-hacker` 是一个专为安全研究人员、系统管理员和渗透测试人员设计的证书安全工具包。它提供了全面的SSL/TLS证书操作功能，包括证书获取、解析、分析、生成和安全测试等。
