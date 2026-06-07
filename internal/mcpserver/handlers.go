@@ -2,10 +2,10 @@ package mcpserver
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/cyberspacesec/certificate-hacker/pkg"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -54,6 +54,59 @@ func HandleCertAnalyze(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallT
 	}
 
 	return marshalResult(analysis)
+}
+
+// HandleCertFingerprintDomain generates fingerprints by connecting to a domain.
+func HandleCertFingerprintDomain(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	sslInfo, err := pkg.GetCertFromDomain(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to connect to %s: %v", target, err)), nil
+	}
+
+	// Extract fingerprints from the leaf certificate (first in chain)
+	if len(sslInfo.PeerCerts.Certificates) == 0 {
+		return mcp.NewToolResultError(fmt.Sprintf("no certificates found for %s", target)), nil
+	}
+
+	leafCert := sslInfo.PeerCerts.Certificates[0]
+	result := map[string]interface{}{
+		"target":       target,
+		"tls_version":  sslInfo.TLSVersion,
+		"fingerprints": leafCert.Fingerprints,
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCertFingerprintFile generates fingerprints from a local certificate file.
+func HandleCertFingerprintFile(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	filePath, err := req.RequireString("file_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// Verify file exists before attempting to parse
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return mcp.NewToolResultError(fmt.Sprintf("file not found: %s", filePath)), nil
+	}
+
+	certInfo, err := pkg.GetCertFromFile(filePath)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to parse certificate: %v", err)), nil
+	}
+
+	result := map[string]interface{}{
+		"file_path":    filePath,
+		"subject":      certInfo.Subject,
+		"fingerprints": certInfo.Fingerprints,
+	}
+
+	return marshalResult(result)
 }
 
 // HandleCertGenerate generates a self-signed certificate.
@@ -145,22 +198,6 @@ func HandleCertValidateFiles(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Certificate and key files are valid and match.\nCertificate: %s\nPrivate Key: %s", certPath, keyPath)), nil
-}
-
-// HandleCertFingerprint generates fingerprints from base64-encoded DER data.
-func HandleCertFingerprint(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	certDataB64, err := req.RequireString("certificate_data_base64")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	certData, err := base64.StdEncoding.DecodeString(certDataB64)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid base64 encoding: %v", err)), nil
-	}
-
-	fingerprints := pkg.GenerateFingerprintFromBytes(certData)
-	return marshalResult(fingerprints)
 }
 
 // HandleCertValidateFingerprint validates a fingerprint format.
