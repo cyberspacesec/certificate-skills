@@ -1,6 +1,11 @@
 package pkg
 
 import (
+	"bytes"
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -15,33 +20,41 @@ import (
 
 // CertificateRequest 证书生成请求
 type CertificateRequest struct {
-	CommonName       string   `json:"common_name"`       // 通用名称
-	Organization     string   `json:"organization"`      // 组织
-	Country          string   `json:"country"`           // 国家
-	Province         string   `json:"province"`          // 省份
-	Locality         string   `json:"locality"`          // 地区
-	DNSNames         []string `json:"dns_names"`         // DNS名称
-	IPAddresses      []net.IP `json:"ip_addresses"`      // IP地址
-	ValidityDays     int      `json:"validity_days"`     // 有效期天数
-	KeySize          int      `json:"key_size"`          // 密钥长度
-	IsCA             bool     `json:"is_ca"`             // 是否为CA证书
-	OutputCertPath   string   `json:"output_cert_path"`  // 证书输出路径
-	OutputKeyPath    string   `json:"output_key_path"`   // 私钥输出路径
+	CommonName     string   `json:"common_name"`       // 通用名称
+	Organization   string   `json:"organization"`      // 组织
+	Country        string   `json:"country"`           // 国家
+	Province       string   `json:"province"`          // 省份
+	Locality       string   `json:"locality"`          // 地区
+	DNSNames       []string `json:"dns_names"`         // DNS名称
+	IPAddresses    []net.IP `json:"ip_addresses"`      // IP地址
+	ValidityDays   int      `json:"validity_days"`     // 有效期天数
+	KeySize        int      `json:"key_size"`          // RSA密钥长度
+	KeyType        string   `json:"key_type"`          // 密钥类型: rsa, ecdsa, ed25519
+	IsCA           bool     `json:"is_ca"`             // 是否为CA证书
+	OutputCertPath string   `json:"output_cert_path"`  // 证书输出路径
+	OutputKeyPath  string   `json:"output_key_path"`   // 私钥输出路径
 }
 
 // GenerationResult 证书生成结果
 type GenerationResult struct {
-	CertificatePath string `json:"certificate_path"`
-	PrivateKeyPath  string `json:"private_key_path"`
+	CertificatePath string            `json:"certificate_path"`
+	PrivateKeyPath  string            `json:"private_key_path"`
 	Fingerprints    map[string]string `json:"fingerprints"`
-	Message         string `json:"message"`
+	Message         string            `json:"message"`
 }
 
 // GenerateSelfSignedCert 生成自签名证书
 func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 	// 设置默认值
+	if req.KeyType == "" {
+		req.KeyType = "rsa"
+	}
 	if req.KeySize == 0 {
-		req.KeySize = 2048
+		if req.KeyType == "rsa" {
+			req.KeySize = 2048
+		} else if req.KeyType == "ecdsa" {
+			req.KeySize = 256
+		}
 	}
 	if req.ValidityDays == 0 {
 		req.ValidityDays = 365
@@ -56,10 +69,60 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		req.OutputKeyPath = fmt.Sprintf("%s-key.pem", req.CommonName)
 	}
 
-	// 生成私钥
-	privateKey, err := rsa.GenerateKey(rand.Reader, req.KeySize)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key: %v", err)
+	// 生成私钥和公钥
+	var publicKey crypto.PublicKey
+	var privateKeyBytes []byte
+
+	switch req.KeyType {
+	case "rsa":
+		privateKey, err := rsa.GenerateKey(rand.Reader, req.KeySize)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate RSA private key: %v", err)
+		}
+		publicKey = &privateKey.PublicKey
+		pkcs8Key, err := x509.MarshalPKCS8PrivateKey(privateKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal RSA private key: %v", err)
+		}
+		privateKeyBytes = pkcs8Key
+
+	case "ecdsa":
+		var curve elliptic.Curve
+		switch req.KeySize {
+		case 256:
+			curve = elliptic.P256()
+		case 384:
+			curve = elliptic.P384()
+		case 521:
+			curve = elliptic.P521()
+		default:
+			curve = elliptic.P256()
+		}
+		privateKey, err := ecdsa.GenerateKey(curve, rand.Reader)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate ECDSA private key: %v", err)
+		}
+		publicKey = &privateKey.PublicKey
+		pkcs8Key, err := x509.MarshalPKCS8PrivateKey(privateKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal ECDSA private key: %v", err)
+		}
+		privateKeyBytes = pkcs8Key
+
+	case "ed25519":
+		pub, priv, err := ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate Ed25519 private key: %v", err)
+		}
+		publicKey = pub
+		pkcs8Key, err := x509.MarshalPKCS8PrivateKey(priv)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal Ed25519 private key: %v", err)
+		}
+		privateKeyBytes = pkcs8Key
+
+	default:
+		return nil, fmt.Errorf("unsupported key type: %s (use rsa, ecdsa, or ed25519)", req.KeyType)
 	}
 
 	// 创建证书模板
@@ -81,6 +144,11 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		IPAddresses:           req.IPAddresses,
 	}
 
+	// Ed25519 不支持 KeyEncipherment，只设置 DigitalSignature
+	if req.KeyType == "ed25519" {
+		template.KeyUsage = x509.KeyUsageDigitalSignature
+	}
+
 	// 如果是CA证书，设置相应的属性
 	if req.IsCA {
 		template.IsCA = true
@@ -93,8 +161,23 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		template.DNSNames = append(template.DNSNames, req.CommonName)
 	}
 
-	// 生成证书
-	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+	// 生成自签名证书 (self-signed: 使用自己的模板作为 parent)
+	// 对于 Ed25519，签名算法会由 Go 标准库自动选择
+	// 需要传入实际的私钥用于签名
+	var signer crypto.Signer
+	switch req.KeyType {
+	case "rsa":
+		k, _ := x509.ParsePKCS8PrivateKey(privateKeyBytes)
+		signer = k.(crypto.Signer)
+	case "ecdsa":
+		k, _ := x509.ParsePKCS8PrivateKey(privateKeyBytes)
+		signer = k.(crypto.Signer)
+	case "ed25519":
+		k, _ := x509.ParsePKCS8PrivateKey(privateKeyBytes)
+		signer = k.(crypto.Signer)
+	}
+
+	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey, signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create certificate: %v", err)
 	}
@@ -121,14 +204,9 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 	}
 	defer keyFile.Close()
 
-	privateKeyDER, err := x509.MarshalPKCS8PrivateKey(privateKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal private key: %v", err)
-	}
-
 	err = pem.Encode(keyFile, &pem.Block{
 		Type:  "PRIVATE KEY",
-		Bytes: privateKeyDER,
+		Bytes: privateKeyBytes,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to write private key: %v", err)
@@ -147,7 +225,7 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		CertificatePath: req.OutputCertPath,
 		PrivateKeyPath:  req.OutputKeyPath,
 		Fingerprints:    fingerprints,
-		Message:         fmt.Sprintf("Successfully generated certificate and private key"),
+		Message:         fmt.Sprintf("Successfully generated %s certificate and private key", req.KeyType),
 	}
 
 	return result, nil
@@ -155,10 +233,55 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 
 // GenerateCSR 生成证书签名请求 (Certificate Signing Request)
 func GenerateCSR(req CertificateRequest) (string, error) {
-	// 生成私钥
-	privateKey, err := rsa.GenerateKey(rand.Reader, req.KeySize)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate private key: %v", err)
+	// 设置默认值
+	if req.KeyType == "" {
+		req.KeyType = "rsa"
+	}
+	if req.KeySize == 0 {
+		if req.KeyType == "rsa" {
+			req.KeySize = 2048
+		} else if req.KeyType == "ecdsa" {
+			req.KeySize = 256
+		}
+	}
+
+	var signer crypto.Signer
+
+	switch req.KeyType {
+	case "rsa":
+		privateKey, err := rsa.GenerateKey(rand.Reader, req.KeySize)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate RSA private key: %v", err)
+		}
+		signer = privateKey
+
+	case "ecdsa":
+		var curve elliptic.Curve
+		switch req.KeySize {
+		case 256:
+			curve = elliptic.P256()
+		case 384:
+			curve = elliptic.P384()
+		case 521:
+			curve = elliptic.P521()
+		default:
+			curve = elliptic.P256()
+		}
+		privateKey, err := ecdsa.GenerateKey(curve, rand.Reader)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate ECDSA private key: %v", err)
+		}
+		signer = privateKey
+
+	case "ed25519":
+		_, priv, err := ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate Ed25519 private key: %v", err)
+		}
+		signer = priv
+
+	default:
+		return "", fmt.Errorf("unsupported key type: %s (use rsa, ecdsa, or ed25519)", req.KeyType)
 	}
 
 	// 创建CSR模板
@@ -175,7 +298,7 @@ func GenerateCSR(req CertificateRequest) (string, error) {
 	}
 
 	// 生成CSR
-	csrDER, err := x509.CreateCertificateRequest(rand.Reader, &template, privateKey)
+	csrDER, err := x509.CreateCertificateRequest(rand.Reader, &template, signer)
 	if err != nil {
 		return "", fmt.Errorf("failed to create CSR: %v", err)
 	}
@@ -224,18 +347,37 @@ func ValidateCertificateFiles(certPath, keyPath string) error {
 	}
 
 	// 验证私钥和证书是否匹配
-	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
-	if !ok {
-		return fmt.Errorf("private key is not RSA")
-	}
+	switch priv := privateKey.(type) {
+	case *rsa.PrivateKey:
+		rsaPublicKey, ok := cert.PublicKey.(*rsa.PublicKey)
+		if !ok {
+			return fmt.Errorf("certificate public key type does not match private key type (expected RSA)")
+		}
+		if priv.PublicKey.N.Cmp(rsaPublicKey.N) != 0 {
+			return fmt.Errorf("RSA private key and certificate do not match")
+		}
 
-	rsaPublicKey, ok := cert.PublicKey.(*rsa.PublicKey)
-	if !ok {
-		return fmt.Errorf("certificate public key is not RSA")
-	}
+	case *ecdsa.PrivateKey:
+		ecdsaPublicKey, ok := cert.PublicKey.(*ecdsa.PublicKey)
+		if !ok {
+			return fmt.Errorf("certificate public key type does not match private key type (expected ECDSA)")
+		}
+		if priv.PublicKey.X.Cmp(ecdsaPublicKey.X) != 0 || priv.PublicKey.Y.Cmp(ecdsaPublicKey.Y) != 0 {
+			return fmt.Errorf("ECDSA private key and certificate do not match")
+		}
 
-	if rsaPrivateKey.PublicKey.N.Cmp(rsaPublicKey.N) != 0 {
-		return fmt.Errorf("private key and certificate do not match")
+	case ed25519.PrivateKey:
+		ed25519PublicKey, ok := cert.PublicKey.(ed25519.PublicKey)
+		if !ok {
+			return fmt.Errorf("certificate public key type does not match private key type (expected Ed25519)")
+		}
+		derivedPub := priv.Public().(ed25519.PublicKey)
+		if !bytes.Equal(derivedPub, ed25519PublicKey) {
+			return fmt.Errorf("Ed25519 private key and certificate do not match")
+		}
+
+	default:
+		return fmt.Errorf("unsupported private key type: %T", privateKey)
 	}
 
 	return nil

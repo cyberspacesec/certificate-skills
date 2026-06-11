@@ -17,32 +17,13 @@ func Tools() []server.ServerTool {
 		{Tool: CertGenerateCSRTool, Handler: HandleCertGenerateCSR},
 		{Tool: CertValidateFilesTool, Handler: HandleCertValidateFiles},
 		{Tool: CertValidateFingerprintTool, Handler: HandleCertValidateFingerprint},
+		{Tool: CertCompareTool, Handler: HandleCertCompare},
+		{Tool: CertBatchAnalyzeTool, Handler: HandleCertBatchAnalyze},
 	}
 }
 
 // --- Tool Definitions ---
-
-var CertInfoTool = mcp.NewTool("cert_info",
-	mcp.WithDescription(
-		"Retrieve SSL/TLS certificate and connection information from a domain. "+
-			"Connects to the target server and returns the full certificate chain details, "+
-			"TLS version, cipher suite, handshake time, and fingerprints (SHA-256, SHA-1, MD5, public key SHA-256)."),
-	mcp.WithString("target",
-		mcp.Required(),
-		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com', 'example.com:8443'). Default port is 443."),
-	),
-)
-
-var CertParseTool = mcp.NewTool("cert_parse",
-	mcp.WithDescription(
-		"Parse a certificate from a local file (PEM or DER format) and return detailed information "+
-			"including subject, issuer, validity dates, Subject Alternative Names (SANs), key usage, "+
-			"public key algorithm, signature algorithm, and fingerprints."),
-	mcp.WithString("file_path",
-		mcp.Required(),
-		mcp.Description("Absolute or relative path to the certificate file (supports .pem, .crt, .cer, .der formats)"),
-	),
-)
+// (Ordered alphabetically by tool name for readability.)
 
 var CertAnalyzeTool = mcp.NewTool("cert_analyze_security",
 	mcp.WithDescription(
@@ -53,6 +34,32 @@ var CertAnalyzeTool = mcp.NewTool("cert_analyze_security",
 	mcp.WithString("target",
 		mcp.Required(),
 		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CertBatchAnalyzeTool = mcp.NewTool("cert_batch_analyze",
+	mcp.WithDescription(
+		"Perform security analysis on multiple domains simultaneously. Returns individual security "+
+			"scores and a summary with counts per security level and average score. Useful for "+
+			"monitoring certificate security across multiple services."),
+	mcp.WithArray("targets",
+		mcp.Required(),
+		mcp.Description("List of domain names or IP addresses to analyze (e.g., ['google.com', 'github.com', 'cloudflare.com:443'])"),
+	),
+)
+
+var CertCompareTool = mcp.NewTool("cert_compare",
+	mcp.WithDescription(
+		"Compare two SSL/TLS certificates to determine if they are identical or different. "+
+			"Compares fingerprints, subjects, issuers, validity dates, key algorithms, and more. "+
+			"Can compare two domains, two files, or a domain vs a file."),
+	mcp.WithString("target1",
+		mcp.Required(),
+		mcp.Description("First certificate target - a domain name (e.g., 'example.com') or file path (e.g., '/path/to/cert.pem')"),
+	),
+	mcp.WithString("target2",
+		mcp.Required(),
+		mcp.Description("Second certificate target - a domain name or file path"),
 	),
 )
 
@@ -79,7 +86,8 @@ var CertFingerprintFileTool = mcp.NewTool("cert_fingerprint_file",
 var CertGenerateTool = mcp.NewTool("cert_generate",
 	mcp.WithDescription(
 		"Generate a self-signed SSL/TLS certificate and private key, saving them as PEM files on disk. "+
-			"Supports RSA 2048/4096-bit keys, CA certificate generation, and custom Subject Alternative Names. "+
+			"Supports RSA 2048/4096-bit keys, ECDSA P-256/P-384/P-521 keys, Ed25519 keys, CA certificate generation, "+
+			"and custom Subject Alternative Names. "+
 			"WARNING: Self-signed certificates are for testing only, not for production use."),
 	mcp.WithString("common_name",
 		mcp.Description("Common Name (CN) for the certificate. Default: 'localhost'"),
@@ -106,7 +114,10 @@ var CertGenerateTool = mcp.NewTool("cert_generate",
 		mcp.Description("Certificate validity period in days. Default: 365. Use 3650 for CA certs."),
 	),
 	mcp.WithNumber("key_size",
-		mcp.Description("RSA key size in bits. Options: 2048 (default, standard security) or 4096 (high security, slower)"),
+		mcp.Description("Key size in bits. RSA: 2048 (default) or 4096. ECDSA: 256 (P-256), 384 (P-384), 521 (P-521). Ed25519: fixed 256."),
+	),
+	mcp.WithString("key_type",
+		mcp.Description("Key algorithm type. Options: 'rsa' (default), 'ecdsa', 'ed25519'. For ECDSA, key_size selects curve: 256=P-256, 384=P-384, 521=P-521"),
 	),
 	mcp.WithBoolean("is_ca",
 		mcp.Description("Set to true to generate a CA (Certificate Authority) certificate. Default: false"),
@@ -147,7 +158,32 @@ var CertGenerateCSRTool = mcp.NewTool("cert_generate_csr",
 		mcp.Description("Subject Alternative Names - IP addresses as strings"),
 	),
 	mcp.WithNumber("key_size",
-		mcp.Description("RSA key size in bits. Default: 2048"),
+		mcp.Description("Key size in bits. Default: 2048 (RSA), 256 (ECDSA)"),
+	),
+	mcp.WithString("key_type",
+		mcp.Description("Key algorithm type. Options: 'rsa' (default), 'ecdsa', 'ed25519'"),
+	),
+)
+
+var CertInfoTool = mcp.NewTool("cert_info",
+	mcp.WithDescription(
+		"Retrieve SSL/TLS certificate and connection information from a domain. "+
+			"Connects to the target server and returns the full certificate chain details, "+
+			"TLS version, cipher suite, handshake time, and fingerprints (SHA-256, SHA-1, MD5, public key SHA-256)."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com', 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CertParseTool = mcp.NewTool("cert_parse",
+	mcp.WithDescription(
+		"Parse a certificate from a local file (PEM or DER format) and return detailed information "+
+			"including subject, issuer, validity dates, Subject Alternative Names (SANs), key usage, "+
+			"public key algorithm, signature algorithm, key size, and fingerprints."),
+	mcp.WithString("file_path",
+		mcp.Required(),
+		mcp.Description("Absolute or relative path to the certificate file (supports .pem, .crt, .cer, .der formats)"),
 	),
 )
 
@@ -155,6 +191,7 @@ var CertValidateFilesTool = mcp.NewTool("cert_validate_files",
 	mcp.WithDescription(
 		"Validate that a certificate file and private key file are correctly formatted PEM files "+
 			"and that the public key in the certificate matches the private key. "+
+			"Supports RSA, ECDSA, and Ed25519 key types. "+
 			"Returns success if both files are valid and the key pair matches."),
 	mcp.WithString("cert_path",
 		mcp.Required(),

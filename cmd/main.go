@@ -50,7 +50,8 @@ func init() {
 	generateCmd.Flags().StringP("locality", "", "", "Locality or city")
 	generateCmd.Flags().StringP("dns-names", "", "", "Comma-separated list of DNS names")
 	generateCmd.Flags().IntP("validity-days", "", 365, "Certificate validity period in days")
-	generateCmd.Flags().IntP("key-size", "", 2048, "RSA key size (2048, 4096)")
+		generateCmd.Flags().IntP("key-size", "", 2048, "Key size (RSA: 2048/4096, ECDSA: 256/384/521)")
+		generateCmd.Flags().StringP("key-type", "", "rsa", "Key type (rsa, ecdsa, ed25519)")
 	generateCmd.Flags().BoolP("is-ca", "", false, "Generate a CA certificate")
 	generateCmd.Flags().StringP("output-cert", "", "", "Output certificate file path")
 	generateCmd.Flags().StringP("output-key", "", "", "Output private key file path")
@@ -139,30 +140,36 @@ Examples:
 var downloadCmd = &cobra.Command{
 	Use:   "download [domain:port]",
 	Short: "Download certificate from a domain",
-	Long:  `Download SSL/TLS certificate from a remote domain and save to file.`,
+	Long:  `Download SSL/TLS certificate chain from a remote domain and save to PEM files.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		domain := args[0]
-		outputFile, _ := cmd.Flags().GetString("output")
-		
-		if outputFile == "" {
-			// 使用域名作为默认文件名
-			parts := strings.Split(domain, ":")
-			outputFile = fmt.Sprintf("%s.pem", parts[0])
-		}
-		
-		fmt.Printf("Downloading certificate from: %s\n", domain)
-		
-		// 获取证书信息
-		sslInfo, err := pkg.GetCertFromDomain(domain)
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.DownloadCertsFromDomain(domain, "")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting certificate: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error downloading certificate: %v\n", err)
 			os.Exit(1)
 		}
-		
-		// TODO: 保存证书到文件
-		fmt.Printf("Certificate downloaded and saved to: %s\n", outputFile)
-		fmt.Printf("Certificate subject: %s\n", sslInfo.PeerCerts.Certificates[0].Subject)
+
+		if outputFormat == "json" {
+			data, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Printf("Certificate Download Complete!\n")
+		fmt.Printf("=============================\n")
+		fmt.Printf("Target: %s\n", result.Target)
+		fmt.Printf("Chain Length: %d certificates\n", result.ChainLength)
+		fmt.Printf("\nSaved Files:\n")
+		for _, f := range result.SavedFiles {
+			fmt.Printf("  - %s\n", f)
+		}
 	},
 }
 
@@ -208,6 +215,7 @@ Examples:
 		validityDays, _ := cmd.Flags().GetInt("validity-days")
 		keySize, _ := cmd.Flags().GetInt("key-size")
 		isCA, _ := cmd.Flags().GetBool("is-ca")
+			keyType, _ := cmd.Flags().GetString("key-type")
 		outputCert, _ := cmd.Flags().GetString("output-cert")
 		outputKey, _ := cmd.Flags().GetString("output-key")
 		outputFormat, _ := cmd.Flags().GetString("output")
@@ -237,6 +245,7 @@ Examples:
 			DNSNames:       dnsNames,
 			ValidityDays:   validityDays,
 			KeySize:        keySize,
+				KeyType:        keyType,
 			IsCA:           isCA,
 			OutputCertPath: outputCert,
 			OutputKeyPath:  outputKey,

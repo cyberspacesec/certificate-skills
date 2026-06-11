@@ -8,14 +8,14 @@ import (
 
 // SecurityAnalysis 安全分析结果
 type SecurityAnalysis struct {
-	Target           string              `json:"target"`
-	OverallScore     int                 `json:"overall_score"`     // 总体安全评分 (0-100)
-	SecurityLevel    string              `json:"security_level"`    // 安全等级: Critical, High, Medium, Low, Good
-	Issues           []SecurityIssue     `json:"issues"`            // 发现的安全问题
-	Recommendations  []string            `json:"recommendations"`   // 安全建议
-	CertificateCheck CertificateCheck    `json:"certificate_check"` // 证书检查结果
-	TLSCheck         TLSCheck            `json:"tls_check"`         // TLS检查结果
-	ExpirationCheck  ExpirationCheck     `json:"expiration_check"`  // 过期检查
+	Target           string           `json:"target"`
+	OverallScore     int              `json:"overall_score"`     // 总体安全评分 (0-100)
+	SecurityLevel    string           `json:"security_level"`    // 安全等级: Critical, High, Medium, Low, Good
+	Issues           []SecurityIssue  `json:"issues"`            // 发现的安全问题
+	Recommendations  []string         `json:"recommendations"`   // 安全建议
+	CertificateCheck CertificateCheck `json:"certificate_check"` // 证书检查结果
+	TLSCheck         TLSCheck         `json:"tls_check"`         // TLS检查结果
+	ExpirationCheck  ExpirationCheck  `json:"expiration_check"`  // 过期检查
 }
 
 // SecurityIssue 安全问题
@@ -60,6 +60,22 @@ type ExpirationCheck struct {
 	Message         string `json:"message"`
 }
 
+// BatchSecurityAnalysis 批量安全分析
+type BatchSecurityAnalysis struct {
+	Results    []SecurityAnalysis `json:"results"`
+	TotalCount int                `json:"total_count"`
+	Summary    BatchSummary       `json:"summary"`
+}
+
+// BatchSummary 批量分析摘要
+type BatchSummary struct {
+	GoodCount     int `json:"good_count"`
+	MediumCount   int `json:"medium_count"`
+	HighCount     int `json:"high_count"`
+	CriticalCount int `json:"critical_count"`
+	AverageScore  int `json:"average_score"`
+}
+
 // AnalyzeSecurity 执行安全分析
 func AnalyzeSecurity(target string) (*SecurityAnalysis, error) {
 	analysis := &SecurityAnalysis{
@@ -102,6 +118,7 @@ func analyzeCertificate(cert *CertInfo) CertificateCheck {
 	check := CertificateCheck{
 		IsValid:      true,
 		SignatureAlg: cert.SignatureAlgorithm,
+		KeySize:      cert.KeySize,
 		HasSAN:       len(cert.DNSNames) > 0,
 		SANCount:     len(cert.DNSNames),
 		Warnings:     []string{},
@@ -143,9 +160,10 @@ func analyzeCertificate(cert *CertInfo) CertificateCheck {
 // analyzeTLS 分析TLS连接安全性
 func analyzeTLS(sslInfo *SSLInfo) TLSCheck {
 	check := TLSCheck{
-		Version:     sslInfo.TLSVersion,
-		CipherSuite: sslInfo.CipherSuite,
-		Warnings:    []string{},
+		Version:        sslInfo.TLSVersion,
+		CipherSuite:   sslInfo.CipherSuite,
+		SupportsHTTP2:  sslInfo.SupportsHTTP2,
+		Warnings:      []string{},
 	}
 
 	// 检查TLS版本安全性
@@ -333,4 +351,57 @@ func (analysis *SecurityAnalysis) generateRecommendations() {
 	}
 
 	analysis.Recommendations = recommendations
+}
+
+// BatchAnalyzeSecurity 批量分析多个目标的安全性
+func BatchAnalyzeSecurity(targets []string) *BatchSecurityAnalysis {
+	result := &BatchSecurityAnalysis{
+		Results:    make([]SecurityAnalysis, 0, len(targets)),
+		TotalCount: len(targets),
+	}
+
+	totalScore := 0
+
+	for _, target := range targets {
+		analysis, err := AnalyzeSecurity(target)
+		if err != nil {
+			// 跳过失败的目标，记录错误信息
+			failedAnalysis := SecurityAnalysis{
+				Target:        target,
+				OverallScore:  0,
+				SecurityLevel: "Error",
+				Issues: []SecurityIssue{
+					{
+						Severity:    "Critical",
+						Type:        "Connection Failed",
+						Description: fmt.Sprintf("Failed to analyze: %v", err),
+						Impact:      "Unable to assess security posture",
+					},
+				},
+			}
+			result.Results = append(result.Results, failedAnalysis)
+			result.Summary.CriticalCount++
+			continue
+		}
+
+		result.Results = append(result.Results, *analysis)
+		totalScore += analysis.OverallScore
+
+		switch analysis.SecurityLevel {
+		case "Good":
+			result.Summary.GoodCount++
+		case "Medium":
+			result.Summary.MediumCount++
+		case "High":
+			result.Summary.HighCount++
+		case "Critical":
+			result.Summary.CriticalCount++
+		}
+	}
+
+	if len(targets) > 0 {
+		result.Summary.AverageScore = totalScore / len(targets)
+	}
+
+	return result
 }
