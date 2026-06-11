@@ -329,3 +329,62 @@ func marshalResult(v interface{}) (*mcp.CallToolResult, error) {
 	}
 	return mcp.NewToolResultText(string(jsonBytes)), nil
 }
+// HandleCertDownload downloads certificate chain from a domain and saves to files.
+func HandleCertDownload(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	outputDir := req.GetString("output_dir", "")
+
+	result, err := pkg.DownloadCertsFromDomain(target, outputDir)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to download certificate from %s: %v", target, err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCertScanProtocols scans for supported TLS protocol versions.
+func HandleCertScanProtocols(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.TLSProtocolScan(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to scan TLS protocols for %s: %v", target, err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCertScanCiphers scans for supported cipher suites.
+func HandleCertScanCiphers(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	tlsVersion := uint16(req.GetFloat("tls_version", 0))
+
+	result, err := pkg.CipherSuiteScan(target, tlsVersion)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to scan cipher suites for %s: %v", target, err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCertCheckHSTS checks if a domain has HSTS enabled.
+func HandleCertCheckHSTS(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result := pkg.CheckHSTS(target)
+	return marshalResult(result)
+}

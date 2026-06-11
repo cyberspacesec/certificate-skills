@@ -11,6 +11,7 @@ func Tools() []server.ServerTool {
 		{Tool: CertInfoTool, Handler: HandleCertInfo},
 		{Tool: CertParseTool, Handler: HandleCertParse},
 		{Tool: CertAnalyzeTool, Handler: HandleCertAnalyze},
+		{Tool: CertDownloadTool, Handler: HandleCertDownload},
 		{Tool: CertFingerprintDomainTool, Handler: HandleCertFingerprintDomain},
 		{Tool: CertFingerprintFileTool, Handler: HandleCertFingerprintFile},
 		{Tool: CertGenerateTool, Handler: HandleCertGenerate},
@@ -19,6 +20,9 @@ func Tools() []server.ServerTool {
 		{Tool: CertValidateFingerprintTool, Handler: HandleCertValidateFingerprint},
 		{Tool: CertCompareTool, Handler: HandleCertCompare},
 		{Tool: CertBatchAnalyzeTool, Handler: HandleCertBatchAnalyze},
+		{Tool: CertScanProtocolsTool, Handler: HandleCertScanProtocols},
+		{Tool: CertScanCiphersTool, Handler: HandleCertScanCiphers},
+		{Tool: CertCheckHSTSTool, Handler: HandleCertCheckHSTS},
 	}
 }
 
@@ -215,5 +219,55 @@ var CertValidateFingerprintTool = mcp.NewTool("cert_validate_fingerprint",
 		mcp.Required(),
 		mcp.Description("Hash algorithm to validate against"),
 		mcp.Enum("md5", "sha1", "sha256"),
+	),
+)
+var CertDownloadTool = mcp.NewTool("cert_download",
+	mcp.WithDescription(
+		"Download SSL/TLS certificate chain from a remote domain and save as PEM files on disk. "+
+			"Saves both the full certificate chain and the leaf certificate separately. "+
+			"Returns the target domain, chain length, and list of saved file paths."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+	mcp.WithString("output_dir",
+		mcp.Description("Directory to save the certificate files. Default: current working directory."),
+	),
+)
+
+var CertScanProtocolsTool = mcp.NewTool("cert_scan_protocols",
+	mcp.WithDescription(
+		"Scan a server for supported TLS protocol versions by attempting to connect "+
+			"with each version (TLS 1.0, 1.1, 1.2, 1.3) individually. "+
+			"Returns which versions are supported/unsupported and whether the server is secure "+
+			"(i.e., doesn't support insecure TLS 1.0/1.1)."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CertScanCiphersTool = mcp.NewTool("cert_scan_ciphers",
+	mcp.WithDescription(
+		"Scan a server for supported cipher suites by probing individual cipher suites. "+
+			"Tests both secure (AES-GCM, ChaCha20) and weak (RC4, 3DES, NULL) cipher suites. "+
+			"Returns which cipher suites are supported, categorized as secure or weak."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+	mcp.WithNumber("tls_version",
+		mcp.Description("TLS version to scan cipher suites for. Default: 1.2 (0x0303). Use 1.3 (0x0304) for TLS 1.3 cipher suites."),
+	),
+)
+
+var CertCheckHSTSTool = mcp.NewTool("cert_check_hsts",
+	mcp.WithDescription(
+		"Check if a domain has HSTS (HTTP Strict Transport Security) enabled by making "+
+			"an HTTPS request and inspecting the response headers. Returns HSTS status, "+
+			"max-age, includeSubDomains, and preload directives."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name (e.g., 'example.com'). Default port is 443."),
 	),
 )

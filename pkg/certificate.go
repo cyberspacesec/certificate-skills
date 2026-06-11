@@ -57,6 +57,8 @@ type SSLInfo struct {
 	ConnectedAt   time.Time        `json:"connected_at"`
 	HandshakeTime time.Duration    `json:"handshake_time"`
 	SupportsHTTP2 bool             `json:"supports_http2"`
+	HasOCSPStaple bool             `json:"has_ocsp_staple"`
+	OCSPResponse  []byte           `json:"ocsp_response,omitempty"`
 }
 
 // GetCertFromDomain 从域名获取证书
@@ -91,6 +93,7 @@ func GetCertFromDomain(domain string) (*SSLInfo, error) {
 
 	// 检测 HTTP/2 支持：ALPN 协议协商结果包含 h2
 	supportsHTTP2 := state.NegotiatedProtocol == "h2"
+	hasOCSPStaple := len(state.OCSPResponse) > 0
 
 	// 构建SSL信息
 	sslInfo := &SSLInfo{
@@ -100,6 +103,8 @@ func GetCertFromDomain(domain string) (*SSLInfo, error) {
 		ConnectedAt:   time.Now(),
 		HandshakeTime: handshakeTime,
 		SupportsHTTP2: supportsHTTP2,
+		HasOCSPStaple: hasOCSPStaple,
+		OCSPResponse:  state.OCSPResponse,
 	}
 
 	return sslInfo, nil

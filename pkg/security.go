@@ -49,6 +49,8 @@ type TLSCheck struct {
 	IsSecureVersion     bool     `json:"is_secure_version"`
 	IsSecureCipherSuite bool     `json:"is_secure_cipher_suite"`
 	SupportsHTTP2       bool     `json:"supports_http2"`
+	HasOCSPStaple       bool     `json:"has_ocsp_staple"`
+	HSTS                *HSTSResult `json:"hsts,omitempty"`
 	Warnings            []string `json:"warnings"`
 }
 
@@ -100,6 +102,10 @@ func AnalyzeSecurity(target string) (*SecurityAnalysis, error) {
 	analysis.CertificateCheck = analyzeCertificate(&cert)
 	analysis.TLSCheck = analyzeTLS(sslInfo)
 	analysis.ExpirationCheck = analyzeExpiration(&cert)
+
+	// Check HSTS (non-blocking, optional enhancement)
+	hstsResult := CheckHSTS(target)
+	analysis.TLSCheck.HSTS = hstsResult
 
 	// 收集安全问题
 	analysis.collectSecurityIssues()
@@ -163,6 +169,8 @@ func analyzeTLS(sslInfo *SSLInfo) TLSCheck {
 		Version:        sslInfo.TLSVersion,
 		CipherSuite:   sslInfo.CipherSuite,
 		SupportsHTTP2:  sslInfo.SupportsHTTP2,
+		HasOCSPStaple:  sslInfo.HasOCSPStaple,
+		HSTS:           nil, // Will be populated separately
 		Warnings:      []string{},
 	}
 
@@ -280,8 +288,26 @@ func (analysis *SecurityAnalysis) collectSecurityIssues() {
 			Description: fmt.Sprintf("Using weak cipher suite: %s", analysis.TLSCheck.CipherSuite),
 			Impact:      "Encrypted data may be vulnerable to cryptographic attacks",
 		})
+		}
+
+		if !analysis.TLSCheck.HasOCSPStaple {
+			analysis.Issues = append(analysis.Issues, SecurityIssue{
+				Severity:    "Low",
+				Type:        "Missing OCSP Stapling",
+				Description: "Server does not provide OCSP stapling",
+				Impact:      "Clients must query OCSP responders separately, adding latency to connection setup",
+			})
+		}
+
+		if analysis.TLSCheck.HSTS != nil && !analysis.TLSCheck.HSTS.Enabled {
+			analysis.Issues = append(analysis.Issues, SecurityIssue{
+				Severity:    "Medium",
+				Type:        "Missing HSTS Header",
+				Description: "Strict-Transport-Security header is not set",
+				Impact:      "Browser may attempt HTTP connections before upgrading to HTTPS, vulnerable to SSL stripping",
+			})
+		}
 	}
-}
 
 // calculateOverallScore 计算总体安全评分
 func (analysis *SecurityAnalysis) calculateOverallScore() {
