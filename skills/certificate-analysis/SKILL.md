@@ -1,6 +1,6 @@
 ---
 name: certificate-analysis
-description: This skill should be used when the user asks to "analyze SSL security", "check TLS security", "assess certificate security", "security score", "find SSL vulnerabilities", "check certificate expiry", "audit TLS configuration", "is this certificate secure", "rate my SSL", or mentions certificate security analysis, TLS hardening, cipher suite security, TLS best practices. Provides comprehensive SSL/TLS security analysis with 0-100 scoring via the cert-hacker CLI.
+description: This skill should be used when the user asks to "analyze SSL security", "check TLS security", "assess certificate security", "security score", "find SSL vulnerabilities", "check certificate expiry", "audit TLS configuration", "is this certificate secure", "rate my SSL", "batch security analysis", "analyze multiple domains", "certificate security comparison", or mentions certificate security analysis, TLS hardening, cipher suite security, TLS best practices. Provides comprehensive SSL/TLS security analysis with 0-100 scoring via the cert-hacker CLI and MCP tools.
 version: 1.0.0
 ---
 
@@ -113,3 +113,32 @@ Recommendations:
 ## Additional Resources
 
 - **`references/scoring-system.md`** — Complete scoring methodology, all check criteria, and detailed TLS assessment tables
+
+## Batch Analysis
+
+Use `cert_batch_analyze` MCP tool to analyze multiple domains at once. Provide a `targets` array with up to 50 domain names. Returns individual scores plus a summary with counts per security level and average score.
+
+Example MCP usage:
+```json
+{
+  "tool": "cert_batch_analyze",
+  "arguments": {
+    "targets": ["google.com", "github.com", "cloudflare.com"]
+  }
+}
+```
+
+## Certificate Comparison
+
+Use `cert_compare` MCP tool to compare two certificates. Supports domain-to-domain, file-to-file, or domain-to-file comparisons. Returns match status, detailed fingerprint comparison, and a list of differences.
+
+Example MCP usage:
+```json
+{
+  "tool": "cert_compare",
+  "arguments": {
+    "target1": "google.com",
+    "target2": "/path/to/local-cert.pem"
+  }
+}
+```

@@ -11,7 +11,8 @@
 | `--locality` | | string | "" | City/Locality (L) |
 | `--dns-names` | | string | "" | Comma-separated SAN DNS names |
 | `--validity-days` | | int | 365 | Certificate validity in days |
-| `--key-size` | | int | 2048 | RSA key size: 2048 or 4096 |
+| `--key-size` | | int | 2048 | Key size: RSA 2048/4096, ECDSA 256/384/521 |
+| `--key-type` | | string | rsa | Key algorithm: rsa, ecdsa, ed25519 |
 | `--is-ca` | | bool | false | Generate as Certificate Authority |
 | `--output-cert` | | string | `<cn>.pem` | Certificate output path |
 | `--output-key` | | string | `<cn>-key.pem` | Private key output path |
@@ -45,10 +46,14 @@ Generated certificates include:
 
 ## Key Size Details
 
-| Size | Security Level | Performance | Recommended |
-|------|---------------|-------------|-------------|
-| 2048 | Standard | Fast | General purpose, most web servers |
-| 4096 | High | Slower handshake | CA certificates, high-security needs |
+| Type | Size | Security Level | Performance | Recommended |
+|------|------|---------------|-------------|-------------|
+| rsa | 2048 | Standard | Fast | General purpose, most web servers |
+| rsa | 4096 | High | Slower handshake | CA certificates, high-security needs |
+| ecdsa | 256 (P-256) | High | Very fast | Modern web servers, mobile |
+| ecdsa | 384 (P-384) | Very High | Fast | High-security applications |
+| ecdsa | 521 (P-521) | Maximum | Moderate | Maximum security requirements |
+| ed25519 | 256 | Very High | Very fast | Modern deployments, SSH-style |
 
 ## Validity Period Recommendations
 

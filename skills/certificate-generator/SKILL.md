@@ -1,6 +1,6 @@
 ---
 name: certificate-generator
-description: This skill should be used when the user asks to "generate a certificate", "create self-signed certificate", "make SSL certificate", "generate CA certificate", "create root CA", "generate test certificate", "create localhost certificate", "make HTTPS certificate for development", or mentions creating certificates for development, testing, local HTTPS, or internal use. Provides self-signed and CA certificate generation via the cert-hacker CLI.
+description: This skill should be used when the user asks to "generate a certificate", "create self-signed certificate", "make SSL certificate", "generate CA certificate", "create root CA", "generate test certificate", "create localhost certificate", "make HTTPS certificate for development", "ecdsa certificate", "ed25519 certificate", "elliptic curve certificate", or mentions creating certificates for development, testing, local HTTPS, or internal use. Provides self-signed and CA certificate generation with RSA, ECDSA, and Ed25519 key types via the cert-hacker CLI.
 version: 1.0.0
 ---
 
@@ -40,7 +40,8 @@ fi
 | `--locality` | (empty) | City or locality (L) |
 | `--dns-names` | (empty) | Comma-separated SAN DNS names |
 | `--validity-days` | 365 | Certificate validity in days |
-| `--key-size` | 2048 | RSA key size: 2048 or 4096 |
+| `--key-size` | 2048 | Key size: RSA 2048/4096, ECDSA 256/384/521 |
+| `--key-type` | rsa | Key type: rsa, ecdsa, ed25519 |
 | `--is-ca` | false | Generate as CA certificate |
 | `--output-cert` | `<cn>.pem` | Certificate output file path |
 | `--output-key` | `<cn>-key.pem` | Private key output file path |
@@ -91,6 +92,27 @@ Always perform these steps after generating a certificate:
 Always include when presenting generation results:
 
 > ⚠️ **Self-signed certificates are for testing and development only.** Browsers and OS will show warnings. For production, use certificates from a trusted CA (Let's Encrypt, DigiCert, Cloudflare).
+
+## Key Type Selection
+
+- `rsa` (default): RSA 2048/4096-bit keys. Widely compatible, most common.
+- `ecdsa`: Elliptic Curve keys (P-256, P-384, P-521). Smaller key size, faster operations.
+- `ed25519`: Ed25519 keys. Modern, fast, small. Best for new deployments.
+
+Use `--key-type` flag with CLI, or `key_type` parameter with MCP `cert_generate` tool.
+
+### ECDSA Examples
+
+```bash
+./bin/cert-hacker generate --common-name example.com --key-type ecdsa
+./bin/cert-hacker generate --common-name example.com --key-type ecdsa --key-size 384
+```
+
+### Ed25519 Example
+
+```bash
+./bin/cert-hacker generate --common-name example.com --key-type ed25519
+```
 
 ## Key Size Selection
 

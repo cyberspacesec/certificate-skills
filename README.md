@@ -40,18 +40,23 @@
 - ✅ **综合安全评分** (0-100分安全评分系统)
 - ✅ **证书安全检查** (过期、弱签名算法、自签名检测)
 - ✅ **TLS安全分析** (协议版本、加密套件安全性)
+- ✅ **HTTP/2支持检测** (基于ALPN协议协商)
+- ✅ **密钥大小检测** (自动提取RSA/ECDSA/Ed25519密钥大小)
+- ✅ **证书链验证** (基于x509.Verify的真实证书链验证)
 - ✅ **详细安全报告** (问题识别、影响评估、修复建议)
 - ✅ **过期监控** (证书过期时间检查和预警)
+- ✅ **批量安全分析** (同时分析多个域名，MCP工具cert_batch_analyze)
+- ✅ **证书比较** (指纹/主题/颁发者比较，MCP工具cert_compare)
 
 ### ⚙️ 证书生成功能
 - ✅ **自签名证书生成** (支持RSA 2048/4096位密钥)
+- ✅ **ECDSA密钥支持** (P-256, P-384, P-521椭圆曲线)
+- ✅ **Ed25519密钥支持** (现代高性能签名算法)
 - ✅ **CA证书生成** (根证书生成支持)
 - ✅ **灵活配置** (自定义有效期、DNS名称、组织信息)
-- ✅ **证书验证** (生成后自动验证私钥和证书匹配)
+- ✅ **证书验证** (生成后自动验证私钥和证书匹配，支持RSA/ECDSA/Ed25519)
 
 ## 🚧 开发中功能
-- 🔄 证书签名请求(CSR)生成
-- 🔄 证书链构建和验证
 - 🔄 更多证书格式支持 (P12, JKS)
 
 ## 📋 计划功能
@@ -118,8 +123,14 @@ make build      # 构建程序
 
 #### ⚙️ 生成自签名证书
 ```bash
-# 生成基本的localhost证书
+# 生成基本的localhost证书 (RSA)
 ./bin/cert-hacker generate --common-name localhost
+
+# 生成ECDSA证书 (P-256椭圆曲线)
+./bin/cert-hacker generate --common-name example.com --key-type ecdsa
+
+# 生成Ed25519证书 (现代高性能)
+./bin/cert-hacker generate --common-name example.com --key-type ed25519
 
 # 生成带多个域名的证书
 ./bin/cert-hacker generate --common-name example.com \
@@ -134,10 +145,10 @@ make build      # 构建程序
   --key-size 4096
 ```
 
-#### 📥 下载证书到文件 (开发中)
+#### 📥 下载证书到文件
 ```bash
 ./bin/cert-hacker download google.com
-./bin/cert-hacker download google.com --output google.pem
+# 保存 google.com-chain.pem (证书链) 和 google.com.pem (叶子证书)
 ```
 
 ### 输出示例
@@ -188,13 +199,14 @@ PUBLIC_KEY_SHA256   : f3:89:91:45:af:58:8f:aa:e1:99:98:ef:47:6c:76:43...
 
 ## 当前状态
 - ✅ **基础框架**: 100% 完成
-- ✅ **核心功能**: 100% 完成  
-- ✅ **分析功能**: 90% 完成
-- ✅ **生成功能**: 80% 完成
-- ✅ **安全功能**: 85% 完成
+- ✅ **核心功能**: 100% 完成
+- ✅ **分析功能**: 95% 完成
+- ✅ **生成功能**: 95% 完成 (RSA + ECDSA + Ed25519)
+- ✅ **安全功能**: 90% 完成
 - ✅ **批量处理**: 100% 完成
+- ✅ **单元测试**: 核心模块已覆盖
 
-**总体完成度: 约 85%**
+**总体完成度: 约 90%**
 
 # 五、许可证和安全声明
 
