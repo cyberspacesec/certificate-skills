@@ -8,13 +8,13 @@ import (
 
 // KeyUsageComplianceResult represents the result of key usage compliance validation.
 type KeyUsageComplianceResult struct {
-	Target       string              `json:"target"`
-	IsCompliant  bool                `json:"is_compliant"`
-	Issues       []KeyUsageIssue     `json:"issues,omitempty"`
-	KeyUsage     []string            `json:"key_usage"`
-	ExtKeyUsage  []string            `json:"ext_key_usage"`
-	IsCA         bool                `json:"is_ca"`
-	Detail       string              `json:"detail,omitempty"`
+	Target      string          `json:"target"`
+	IsCompliant bool            `json:"is_compliant"`
+	Issues      []KeyUsageIssue `json:"issues,omitempty"`
+	KeyUsage    []string        `json:"key_usage"`
+	ExtKeyUsage []string        `json:"ext_key_usage"`
+	IsCA        bool            `json:"is_ca"`
+	Detail      string          `json:"detail,omitempty"`
 }
 
 // KeyUsageIssue represents a key usage compliance violation.

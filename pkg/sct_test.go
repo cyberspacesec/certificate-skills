@@ -10,8 +10,8 @@ func TestParseASN1Length(t *testing.T) {
 		wantLen  int
 		wantCons int
 	}{
-		{[]byte{0x05}, 5, 1},           // Short form
-		{[]byte{0x81, 0x80}, 128, 2},   // Long form, 1 byte
+		{[]byte{0x05}, 5, 1},               // Short form
+		{[]byte{0x81, 0x80}, 128, 2},       // Long form, 1 byte
 		{[]byte{0x82, 0x01, 0x00}, 256, 3}, // Long form, 2 bytes
 	}
 

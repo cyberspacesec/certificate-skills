@@ -13,12 +13,12 @@ import (
 
 // JARMResult represents the result of a JARM fingerprint scan.
 type JARMResult struct {
-	Target     string `json:"target"`
-	JARMHash   string `json:"jarm_hash"`
-	RawHash    string `json:"raw_hash"`
-	TLSVersion string `json:"tls_version,omitempty"`
+	Target      string `json:"target"`
+	JARMHash    string `json:"jarm_hash"`
+	RawHash     string `json:"raw_hash"`
+	TLSVersion  string `json:"tls_version,omitempty"`
 	CipherSuite string `json:"cipher_suite,omitempty"`
-	Error      string `json:"error,omitempty"`
+	Error       string `json:"error,omitempty"`
 }
 
 // JARM probe configurations.
@@ -69,8 +69,8 @@ var jarmProbes = []jarmProbe{
 			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
 			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
 		},
-		ALPN:           []string{},
-		SendSNI:        true,
+		ALPN:            []string{},
+		SendSNI:         true,
 		SupportedGroups: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 	},
 	// Probe 1: TLS 1.2, standard ciphers, with ALPN
@@ -84,8 +84,8 @@ var jarmProbes = []jarmProbe{
 			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
 			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
 		},
-		ALPN:           []string{"http/1.1"},
-		SendSNI:        true,
+		ALPN:            []string{"http/1.1"},
+		SendSNI:         true,
 		SupportedGroups: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 	},
 	// Probe 2: TLS 1.2, all ciphers, with ALPN
@@ -101,8 +101,8 @@ var jarmProbes = []jarmProbe{
 			tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
 		},
-		ALPN:           []string{"h2", "http/1.1"},
-		SendSNI:        true,
+		ALPN:            []string{"h2", "http/1.1"},
+		SendSNI:         true,
 		SupportedGroups: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 	},
 	// Probe 3: TLS 1.3, standard ciphers, no ALPN
@@ -191,8 +191,8 @@ var jarmProbes = []jarmProbe{
 			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
-		ALPN:           []string{},
-		SendSNI:        true,
+		ALPN:            []string{},
+		SendSNI:         true,
 		SupportedGroups: []tls.CurveID{tls.X25519, tls.CurveP256},
 	},
 	// Probe 8: TLS 1.2, short cipher list, with ALPN
@@ -202,8 +202,8 @@ var jarmProbes = []jarmProbe{
 			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
-		ALPN:           []string{"http/1.1"},
-		SendSNI:        true,
+		ALPN:            []string{"http/1.1"},
+		SendSNI:         true,
 		SupportedGroups: []tls.CurveID{tls.X25519, tls.CurveP256},
 	},
 	// Probe 9: TLS 1.2, short cipher list, with h2 ALPN
@@ -213,8 +213,8 @@ var jarmProbes = []jarmProbe{
 			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
-		ALPN:           []string{"h2", "http/1.1"},
-		SendSNI:        true,
+		ALPN:            []string{"h2", "http/1.1"},
+		SendSNI:         true,
 		SupportedGroups: []tls.CurveID{tls.X25519, tls.CurveP256},
 	},
 }

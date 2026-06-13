@@ -28,33 +28,33 @@ type SecurityIssue struct {
 
 // CertificateCheck 证书检查结果
 type CertificateCheck struct {
-	IsValid            bool     `json:"is_valid"`
-	IsSelfSigned       bool     `json:"is_self_signed"`
-	IsExpired          bool     `json:"is_expired"`
-	IsExpiringSoon     bool     `json:"is_expiring_soon"`
-	DaysUntilExpiry    int      `json:"days_until_expiry"`
-	KeySize            int      `json:"key_size"`
-	SignatureAlg       string   `json:"signature_algorithm"`
-	WeakSignature      bool     `json:"weak_signature"`
-	HasSAN             bool     `json:"has_san"`
-	SANCount           int      `json:"san_count"`
-	WildcardCert       bool     `json:"wildcard_cert"`
-	WeakKeySize        bool     `json:"weak_key_size"`
-	ShortValidity      bool     `json:"short_validity"`
-	ChainValid         bool     `json:"chain_valid"`
-	Warnings           []string `json:"warnings"`
+	IsValid         bool     `json:"is_valid"`
+	IsSelfSigned    bool     `json:"is_self_signed"`
+	IsExpired       bool     `json:"is_expired"`
+	IsExpiringSoon  bool     `json:"is_expiring_soon"`
+	DaysUntilExpiry int      `json:"days_until_expiry"`
+	KeySize         int      `json:"key_size"`
+	SignatureAlg    string   `json:"signature_algorithm"`
+	WeakSignature   bool     `json:"weak_signature"`
+	HasSAN          bool     `json:"has_san"`
+	SANCount        int      `json:"san_count"`
+	WildcardCert    bool     `json:"wildcard_cert"`
+	WeakKeySize     bool     `json:"weak_key_size"`
+	ShortValidity   bool     `json:"short_validity"`
+	ChainValid      bool     `json:"chain_valid"`
+	Warnings        []string `json:"warnings"`
 }
 
 // TLSCheck TLS连接检查结果
 type TLSCheck struct {
-	Version             string   `json:"version"`
-	CipherSuite         string   `json:"cipher_suite"`
-	IsSecureVersion     bool     `json:"is_secure_version"`
-	IsSecureCipherSuite bool     `json:"is_secure_cipher_suite"`
-	SupportsHTTP2       bool     `json:"supports_http2"`
-	HasOCSPStaple       bool     `json:"has_ocsp_staple"`
+	Version             string      `json:"version"`
+	CipherSuite         string      `json:"cipher_suite"`
+	IsSecureVersion     bool        `json:"is_secure_version"`
+	IsSecureCipherSuite bool        `json:"is_secure_cipher_suite"`
+	SupportsHTTP2       bool        `json:"supports_http2"`
+	HasOCSPStaple       bool        `json:"has_ocsp_staple"`
 	HSTS                *HSTSResult `json:"hsts,omitempty"`
-	Warnings            []string `json:"warnings"`
+	Warnings            []string    `json:"warnings"`
 }
 
 // ExpirationCheck 过期检查
@@ -76,7 +76,7 @@ type BatchSecurityAnalysis struct {
 type BatchSummary struct {
 	GoodCount     int `json:"good_count"`
 	MediumCount   int `json:"medium_count"`
-	LowCount     int `json:"low_count"`
+	LowCount      int `json:"low_count"`
 	CriticalCount int `json:"critical_count"`
 	AverageScore  int `json:"average_score"`
 }
@@ -189,11 +189,11 @@ func analyzeCertificate(cert *CertInfo, sslInfo *SSLInfo) CertificateCheck {
 // analyzeTLS 分析TLS连接安全性
 func analyzeTLS(sslInfo *SSLInfo) TLSCheck {
 	check := TLSCheck{
-		Version:        sslInfo.TLSVersion,
+		Version:       sslInfo.TLSVersion,
 		CipherSuite:   sslInfo.CipherSuite,
-		SupportsHTTP2:  sslInfo.SupportsHTTP2,
-		HasOCSPStaple:  sslInfo.HasOCSPStaple,
-		HSTS:           nil, // Will be populated separately
+		SupportsHTTP2: sslInfo.SupportsHTTP2,
+		HasOCSPStaple: sslInfo.HasOCSPStaple,
+		HSTS:          nil, // Will be populated separately
 		Warnings:      []string{},
 	}
 
@@ -329,26 +329,26 @@ func (analysis *SecurityAnalysis) collectSecurityIssues() {
 			Description: fmt.Sprintf("Using weak cipher suite: %s", analysis.TLSCheck.CipherSuite),
 			Impact:      "Encrypted data may be vulnerable to cryptographic attacks",
 		})
-		}
-
-		if !analysis.TLSCheck.HasOCSPStaple {
-			analysis.Issues = append(analysis.Issues, SecurityIssue{
-				Severity:    "Low",
-				Type:        "Missing OCSP Stapling",
-				Description: "Server does not provide OCSP stapling",
-				Impact:      "Clients must query OCSP responders separately, adding latency to connection setup",
-			})
-		}
-
-		if analysis.TLSCheck.HSTS != nil && !analysis.TLSCheck.HSTS.Enabled {
-			analysis.Issues = append(analysis.Issues, SecurityIssue{
-				Severity:    "Medium",
-				Type:        "Missing HSTS Header",
-				Description: "Strict-Transport-Security header is not set",
-				Impact:      "Browser may attempt HTTP connections before upgrading to HTTPS, vulnerable to SSL stripping",
-			})
-		}
 	}
+
+	if !analysis.TLSCheck.HasOCSPStaple {
+		analysis.Issues = append(analysis.Issues, SecurityIssue{
+			Severity:    "Low",
+			Type:        "Missing OCSP Stapling",
+			Description: "Server does not provide OCSP stapling",
+			Impact:      "Clients must query OCSP responders separately, adding latency to connection setup",
+		})
+	}
+
+	if analysis.TLSCheck.HSTS != nil && !analysis.TLSCheck.HSTS.Enabled {
+		analysis.Issues = append(analysis.Issues, SecurityIssue{
+			Severity:    "Medium",
+			Type:        "Missing HSTS Header",
+			Description: "Strict-Transport-Security header is not set",
+			Impact:      "Browser may attempt HTTP connections before upgrading to HTTPS, vulnerable to SSL stripping",
+		})
+	}
+}
 
 // calculateOverallScore 计算总体安全评分
 func (analysis *SecurityAnalysis) calculateOverallScore() {

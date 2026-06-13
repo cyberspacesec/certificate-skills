@@ -8,10 +8,10 @@ import (
 // OfflineAnalysisResult contains the results of offline certificate analysis
 // when working with an already-parsed *x509.Certificate rather than a live connection.
 type OfflineAnalysisResult struct {
-	Target               string
-	Cert                 *x509.Certificate
-	ConnectionState      *tls.ConnectionState
-	IntermediatePool     *x509.CertPool
+	Target           string
+	Cert             *x509.Certificate
+	ConnectionState  *tls.ConnectionState
+	IntermediatePool *x509.CertPool
 }
 
 // NewOfflineAnalysis creates an OfflineAnalysisResult from a parsed certificate.

@@ -57,7 +57,7 @@ func JA3Scan(target string) (*JA3Result, error) {
 	// Build a comprehensive Client Hello with common cipher suites and extensions
 	// to get a full server response for JA3S fingerprinting
 	config := &tls.Config{
-		ServerName: host,
+		ServerName:         host,
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"h2", "http/1.1"},
 		CurvePreferences: []tls.CurveID{

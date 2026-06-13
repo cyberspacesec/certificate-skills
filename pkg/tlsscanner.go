@@ -8,10 +8,10 @@ import (
 
 // TLSProtocolResult represents the result of scanning a single TLS protocol version.
 type TLSProtocolResult struct {
-	Version    string `json:"version"`
+	Version     string `json:"version"`
 	VersionCode uint16 `json:"version_code"`
-	Supported  bool   `json:"supported"`
-	Error      string `json:"error,omitempty"`
+	Supported   bool   `json:"supported"`
+	Error       string `json:"error,omitempty"`
 }
 
 // TLSProtocolScanResult represents the complete TLS protocol scan result.
@@ -23,11 +23,11 @@ type TLSProtocolScanResult struct {
 
 // TLSProtocolSummary provides a summary of supported protocols.
 type TLSProtocolSummary struct {
-	SupportedVersions  []string `json:"supported_versions"`
+	SupportedVersions   []string `json:"supported_versions"`
 	UnsupportedVersions []string `json:"unsupported_versions"`
-	MinimumVersion     string   `json:"minimum_version"`
-	MaximumVersion     string   `json:"maximum_version"`
-	IsSecure           bool     `json:"is_secure"`
+	MinimumVersion      string   `json:"minimum_version"`
+	MaximumVersion      string   `json:"maximum_version"`
+	IsSecure            bool     `json:"is_secure"`
 }
 
 // tlsProtocolVersions defines all TLS protocol versions to scan.
@@ -151,4 +151,3 @@ func firstNonEmpty(ss ...string) string {
 	}
 	return ""
 }
-

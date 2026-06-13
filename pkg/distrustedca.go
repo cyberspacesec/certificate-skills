@@ -11,11 +11,11 @@ import (
 // DistrustedCAResult represents the result of checking a certificate chain
 // against known distrusted/compromised Certificate Authorities.
 type DistrustedCAResult struct {
-	Target         string            `json:"target"`
-	IsDistrusted   bool              `json:"is_distrusted"`
-	DistrustedCAs  []DistrustedCA    `json:"distrusted_cas,omitempty"`
-	ChainPosition  map[string]string `json:"chain_position,omitempty"` // fingerprint -> subject
-	Warning        string            `json:"warning,omitempty"`
+	Target        string            `json:"target"`
+	IsDistrusted  bool              `json:"is_distrusted"`
+	DistrustedCAs []DistrustedCA    `json:"distrusted_cas,omitempty"`
+	ChainPosition map[string]string `json:"chain_position,omitempty"` // fingerprint -> subject
+	Warning       string            `json:"warning,omitempty"`
 }
 
 // DistrustedCA represents a distrusted certificate authority found in the chain.
@@ -32,9 +32,9 @@ type DistrustedCA struct {
 // distrustedCAEntry defines a known distrusted CA.
 type distrustedCAEntry struct {
 	Name         string
-	SubjectCN    string   // Common Name patterns to match
-	SubjectOrg   string   // Organization patterns to match
-	SPKISHA256   string   // SHA-256 of Subject Public Key Info (more reliable than subject)
+	SubjectCN    string // Common Name patterns to match
+	SubjectOrg   string // Organization patterns to match
+	SPKISHA256   string // SHA-256 of Subject Public Key Info (more reliable than subject)
 	Reason       string
 	DistrustDate string
 	Severity     string

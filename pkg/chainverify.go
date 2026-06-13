@@ -10,13 +10,13 @@ import (
 
 // ChainVerifyResult represents the result of a certificate chain verification.
 type ChainVerifyResult struct {
-	Target          string             `json:"target"`
-	IsValid         bool               `json:"is_valid"`
-	ChainLength     int                `json:"chain_length"`
-	TrustAnchor     string             `json:"trust_anchor,omitempty"`
-	VerifiedChains  [][]CertChainEntry `json:"verified_chains"`
-	Errors          []string           `json:"errors,omitempty"`
-	Warnings        []string           `json:"warnings,omitempty"`
+	Target         string             `json:"target"`
+	IsValid        bool               `json:"is_valid"`
+	ChainLength    int                `json:"chain_length"`
+	TrustAnchor    string             `json:"trust_anchor,omitempty"`
+	VerifiedChains [][]CertChainEntry `json:"verified_chains"`
+	Errors         []string           `json:"errors,omitempty"`
+	Warnings       []string           `json:"warnings,omitempty"`
 }
 
 // CertChainEntry represents a single certificate in a verified chain.

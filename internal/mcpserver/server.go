@@ -21,15 +21,15 @@ func NewServer() *server.MCPServer {
 		server.WithToolCapabilities(false),
 		server.WithRecovery(),
 		server.WithInstructions(
-			"Certificate security toolkit MCP server. Provides tools for retrieving SSL/TLS " +
-				"certificate information from domains, parsing local certificate files, performing " +
-				"comprehensive security analysis with scoring (0-100), generating self-signed certificates " +
-				"and CSRs, generating fingerprints (MD5/SHA1/SHA256/public-key), and validating " +
-				"certificate/key pairs.\n\n" +
-				"Common workflows:\n" +
-				"- Check a website cert: use cert_info with domain name\n" +
-				"- Security audit: use cert_analyze_security for a scored report\n" +
-				"- SSL pinning: use cert_info, then extract public_key_sha256 from fingerprints\n" +
+			"Certificate security toolkit MCP server. Provides tools for retrieving SSL/TLS "+
+				"certificate information from domains, parsing local certificate files, performing "+
+				"comprehensive security analysis with scoring (0-100), generating self-signed certificates "+
+				"and CSRs, generating fingerprints (MD5/SHA1/SHA256/public-key), and validating "+
+				"certificate/key pairs.\n\n"+
+				"Common workflows:\n"+
+				"- Check a website cert: use cert_info with domain name\n"+
+				"- Security audit: use cert_analyze_security for a scored report\n"+
+				"- SSL pinning: use cert_info, then extract public_key_sha256 from fingerprints\n"+
 				"- Generate test cert: use cert_generate with common_name",
 		),
 	)

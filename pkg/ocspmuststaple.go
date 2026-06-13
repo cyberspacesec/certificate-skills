@@ -8,12 +8,12 @@ import (
 
 // OCSPMustStapleResult represents the result of checking OCSP Must-Staple compliance.
 type OCSPMustStapleResult struct {
-	Target       string `json:"target"`
-	HasMustStaple bool  `json:"has_must_staple"`
-	HasStaple    bool   `json:"has_staple"`
-	IsCompliant  bool   `json:"is_compliant"`
-	Violation    string `json:"violation,omitempty"`
-	Detail       string `json:"detail,omitempty"`
+	Target        string `json:"target"`
+	HasMustStaple bool   `json:"has_must_staple"`
+	HasStaple     bool   `json:"has_staple"`
+	IsCompliant   bool   `json:"is_compliant"`
+	Violation     string `json:"violation,omitempty"`
+	Detail        string `json:"detail,omitempty"`
 }
 
 // OCSP Must-Staple extension OID: 1.3.6.1.5.5.7.1.24

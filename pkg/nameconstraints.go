@@ -9,33 +9,33 @@ import (
 
 // NameConstraintsResult represents the result of name constraints checking.
 type NameConstraintsResult struct {
-	Target              string              `json:"target"`
-	HasConstraints      bool                `json:"has_constraints"`
-	ConstraintedCAs     []CAConstraint      `json:"constrained_cas,omitempty"`
-	Violations          []ConstraintViolation `json:"violations,omitempty"`
-	IsCompliant         bool                `json:"is_compliant"`
-	Detail              string              `json:"detail,omitempty"`
+	Target          string                `json:"target"`
+	HasConstraints  bool                  `json:"has_constraints"`
+	ConstraintedCAs []CAConstraint        `json:"constrained_cas,omitempty"`
+	Violations      []ConstraintViolation `json:"violations,omitempty"`
+	IsCompliant     bool                  `json:"is_compliant"`
+	Detail          string                `json:"detail,omitempty"`
 }
 
 // CAConstraint represents name constraints found on a CA certificate.
 type CAConstraint struct {
-	Subject           string   `json:"subject"`
-	ChainPosition     int      `json:"chain_position"`
-	PermittedDNS      []string `json:"permitted_dns,omitempty"`
-	ExcludedDNS       []string `json:"excluded_dns,omitempty"`
-	PermittedIPs      []string `json:"permitted_ips,omitempty"`
-	ExcludedIPs       []string `json:"excluded_ips,omitempty"`
-	PermittedEmails   []string `json:"permitted_emails,omitempty"`
-	ExcludedEmails    []string `json:"excluded_emails,omitempty"`
-	IsConstraining    bool     `json:"is_constraining"`
+	Subject         string   `json:"subject"`
+	ChainPosition   int      `json:"chain_position"`
+	PermittedDNS    []string `json:"permitted_dns,omitempty"`
+	ExcludedDNS     []string `json:"excluded_dns,omitempty"`
+	PermittedIPs    []string `json:"permitted_ips,omitempty"`
+	ExcludedIPs     []string `json:"excluded_ips,omitempty"`
+	PermittedEmails []string `json:"permitted_emails,omitempty"`
+	ExcludedEmails  []string `json:"excluded_emails,omitempty"`
+	IsConstraining  bool     `json:"is_constraining"`
 }
 
 // ConstraintViolation represents a name constraint violation.
 type ConstraintViolation struct {
-	CASubject   string `json:"ca_subject"`
-	ViolatedName string `json:"violated_name"`
+	CASubject     string `json:"ca_subject"`
+	ViolatedName  string `json:"violated_name"`
 	ViolationType string `json:"violation_type"` // "excluded" or "not_permitted"
-	Constraint  string `json:"constraint"`
+	Constraint    string `json:"constraint"`
 }
 
 // CheckNameConstraints examines the certificate chain for Name Constraints
@@ -90,19 +90,19 @@ func CheckNameConstraints(target string) (*NameConstraintsResult, error) {
 				if violatesExcluded(name, constraint) {
 					result.IsCompliant = false
 					result.Violations = append(result.Violations, ConstraintViolation{
-						CASubject:    ca.Subject.String(),
-						ViolatedName: name,
+						CASubject:     ca.Subject.String(),
+						ViolatedName:  name,
 						ViolationType: "excluded",
-						Constraint:   formatConstraint(constraint),
+						Constraint:    formatConstraint(constraint),
 					})
 				}
 				if violatesNotPermitted(name, constraint) {
 					result.IsCompliant = false
 					result.Violations = append(result.Violations, ConstraintViolation{
-						CASubject:    ca.Subject.String(),
-						ViolatedName: name,
+						CASubject:     ca.Subject.String(),
+						ViolatedName:  name,
 						ViolationType: "not_permitted",
-						Constraint:   formatConstraint(constraint),
+						Constraint:    formatConstraint(constraint),
 					})
 				}
 			}

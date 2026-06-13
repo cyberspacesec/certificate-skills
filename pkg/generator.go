@@ -20,19 +20,19 @@ import (
 
 // CertificateRequest 证书生成请求
 type CertificateRequest struct {
-	CommonName     string   `json:"common_name"`       // 通用名称
-	Organization   string   `json:"organization"`      // 组织
-	Country        string   `json:"country"`           // 国家
-	Province       string   `json:"province"`          // 省份
-	Locality       string   `json:"locality"`          // 地区
-	DNSNames       []string `json:"dns_names"`         // DNS名称
-	IPAddresses    []net.IP `json:"ip_addresses"`      // IP地址
-	ValidityDays   int      `json:"validity_days"`     // 有效期天数
-	KeySize        int      `json:"key_size"`          // RSA密钥长度
-	KeyType        string   `json:"key_type"`          // 密钥类型: rsa, ecdsa, ed25519
-	IsCA           bool     `json:"is_ca"`             // 是否为CA证书
-	OutputCertPath string   `json:"output_cert_path"`  // 证书输出路径
-	OutputKeyPath  string   `json:"output_key_path"`   // 私钥输出路径
+	CommonName     string   `json:"common_name"`      // 通用名称
+	Organization   string   `json:"organization"`     // 组织
+	Country        string   `json:"country"`          // 国家
+	Province       string   `json:"province"`         // 省份
+	Locality       string   `json:"locality"`         // 地区
+	DNSNames       []string `json:"dns_names"`        // DNS名称
+	IPAddresses    []net.IP `json:"ip_addresses"`     // IP地址
+	ValidityDays   int      `json:"validity_days"`    // 有效期天数
+	KeySize        int      `json:"key_size"`         // RSA密钥长度
+	KeyType        string   `json:"key_type"`         // 密钥类型: rsa, ecdsa, ed25519
+	IsCA           bool     `json:"is_ca"`            // 是否为CA证书
+	OutputCertPath string   `json:"output_cert_path"` // 证书输出路径
+	OutputKeyPath  string   `json:"output_key_path"`  // 私钥输出路径
 }
 
 // GenerationResult 证书生成结果

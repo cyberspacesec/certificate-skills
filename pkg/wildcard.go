@@ -10,27 +10,27 @@ import (
 
 // WildcardResult represents the result of a wildcard certificate analysis.
 type WildcardResult struct {
-	Target         string         `json:"target"`
-	IsWildcard     bool           `json:"is_wildcard"`
-	WildcardNames  []string       `json:"wildcard_names"`
-	ExactNames     []string       `json:"exact_names"`
-	WildcardLevel  int            `json:"wildcard_level"`  // 0=none, 1=*.domain, 2=*.*.domain etc.
-	RiskLevel      string         `json:"risk_level"`      // None, Low, Medium, High
-	RiskReason     string         `json:"risk_reason,omitempty"`
-	CoveredDomains []string       `json:"covered_domains"` // Domains that the wildcard covers
-	AllSANs        []SANEntry     `json:"all_sans"`
-	CommonName     string         `json:"common_name"`
-	Issuer         string         `json:"issuer"`
-	Error          string         `json:"error,omitempty"`
+	Target         string     `json:"target"`
+	IsWildcard     bool       `json:"is_wildcard"`
+	WildcardNames  []string   `json:"wildcard_names"`
+	ExactNames     []string   `json:"exact_names"`
+	WildcardLevel  int        `json:"wildcard_level"` // 0=none, 1=*.domain, 2=*.*.domain etc.
+	RiskLevel      string     `json:"risk_level"`     // None, Low, Medium, High
+	RiskReason     string     `json:"risk_reason,omitempty"`
+	CoveredDomains []string   `json:"covered_domains"` // Domains that the wildcard covers
+	AllSANs        []SANEntry `json:"all_sans"`
+	CommonName     string     `json:"common_name"`
+	Issuer         string     `json:"issuer"`
+	Error          string     `json:"error,omitempty"`
 }
 
 // SANEntry represents a single Subject Alternative Name entry with its classification.
 type SANEntry struct {
-	Type     string `json:"type"`     // DNS, IP, Email, URI
-	Value    string `json:"value"`
-	IsWildcard bool  `json:"is_wildcard"`
-	WildcardLevel int `json:"wildcard_level,omitempty"` // 1=*.domain, 2=*.*.domain
-	BaseDomain string `json:"base_domain,omitempty"` // The base domain for wildcard entries
+	Type          string `json:"type"` // DNS, IP, Email, URI
+	Value         string `json:"value"`
+	IsWildcard    bool   `json:"is_wildcard"`
+	WildcardLevel int    `json:"wildcard_level,omitempty"` // 1=*.domain, 2=*.*.domain
+	BaseDomain    string `json:"base_domain,omitempty"`    // The base domain for wildcard entries
 }
 
 // CheckWildcard performs a comprehensive wildcard certificate analysis.
@@ -296,7 +296,7 @@ type TrustedDomainsResult struct {
 	AllDomains         []string `json:"all_domains"`
 	ExactDomains       []string `json:"exact_domains"`
 	WildcardDomains    []string `json:"wildcard_domains"`
-	BaseDomains        []string `json:"base_domains"`      // Unique base domains
+	BaseDomains        []string `json:"base_domains"` // Unique base domains
 	IPAddresses        []string `json:"ip_addresses"`
 	Organization       string   `json:"organization,omitempty"`
 	OrganizationalUnit string   `json:"organizational_unit,omitempty"`

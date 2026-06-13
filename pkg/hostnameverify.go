@@ -11,16 +11,16 @@ import (
 
 // HostnameVerifyResult represents the result of a hostname verification check.
 type HostnameVerifyResult struct {
-	Target       string         `json:"target"`
-	Hostname     string         `json:"hostname"`
-	IsValid      bool           `json:"is_valid"`
-	MatchType    string         `json:"match_type"`     // exact, wildcard, none
-	MatchedSAN   string         `json:"matched_san,omitempty"`
-	AllSANs      []string       `json:"all_sans"`
-	CommonName   string         `json:"common_name"`
-	MismatchInfo string         `json:"mismatch_info,omitempty"`
-	Warnings     []string       `json:"warnings,omitempty"`
-	Error        string         `json:"error,omitempty"`
+	Target       string   `json:"target"`
+	Hostname     string   `json:"hostname"`
+	IsValid      bool     `json:"is_valid"`
+	MatchType    string   `json:"match_type"` // exact, wildcard, none
+	MatchedSAN   string   `json:"matched_san,omitempty"`
+	AllSANs      []string `json:"all_sans"`
+	CommonName   string   `json:"common_name"`
+	MismatchInfo string   `json:"mismatch_info,omitempty"`
+	Warnings     []string `json:"warnings,omitempty"`
+	Error        string   `json:"error,omitempty"`
 }
 
 // VerifyHostname checks whether the certificate presented by a server

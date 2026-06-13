@@ -12,22 +12,22 @@ import (
 
 // BundleCheckResult represents the result of certificate bundle completeness checking.
 type BundleCheckResult struct {
-	Target            string   `json:"target"`
-	ChainComplete     bool     `json:"chain_complete"`
-	ChainLength       int      `json:"chain_length"`
+	Target               string                `json:"target"`
+	ChainComplete        bool                  `json:"chain_complete"`
+	ChainLength          int                   `json:"chain_length"`
 	MissingIntermediates []MissingIntermediate `json:"missing_intermediates,omitempty"`
-	CanAIAFill        bool     `json:"can_aia_fill"`        // Can AIA fetch fill the gap?
-	AIAFillResolved   bool     `json:"aia_fill_resolved"`   // Did AIA fetch resolve the chain?
-	IssuerURLs        []string `json:"issuer_urls,omitempty"`
-	Detail            string   `json:"detail,omitempty"`
+	CanAIAFill           bool                  `json:"can_aia_fill"`      // Can AIA fetch fill the gap?
+	AIAFillResolved      bool                  `json:"aia_fill_resolved"` // Did AIA fetch resolve the chain?
+	IssuerURLs           []string              `json:"issuer_urls,omitempty"`
+	Detail               string                `json:"detail,omitempty"`
 }
 
 // MissingIntermediate represents a missing intermediate certificate.
 type MissingIntermediate struct {
-	Subject       string `json:"subject"`
-	Issuer        string `json:"issuer"`
-	AIAIssuerURL  string `json:"aia_issuer_url,omitempty"`
-	FetchStatus   string `json:"fetch_status,omitempty"` // "fetched", "failed", "no_url"
+	Subject      string `json:"subject"`
+	Issuer       string `json:"issuer"`
+	AIAIssuerURL string `json:"aia_issuer_url,omitempty"`
+	FetchStatus  string `json:"fetch_status,omitempty"` // "fetched", "failed", "no_url"
 }
 
 // CheckBundleCompleteness checks if the server provides a complete certificate chain.

@@ -13,23 +13,23 @@ import (
 
 // CTSearchResult represents the result of a Certificate Transparency log search.
 type CTSearchResult struct {
-	Target      string       `json:"target"`
-	TotalCount  int          `json:"total_count"`
-	Certificates []CTCert    `json:"certificates"`
-	Error       string       `json:"error,omitempty"`
+	Target       string   `json:"target"`
+	TotalCount   int      `json:"total_count"`
+	Certificates []CTCert `json:"certificates"`
+	Error        string   `json:"error,omitempty"`
 }
 
 // CTCert represents a certificate found in CT logs.
 type CTCert struct {
-	Issuer             string   `json:"issuer"`
-	CommonName         string   `json:"common_name"`
-	NameValue          string   `json:"name_value"`           // All SANs (newline-separated from crt.sh)
-	NotBefore          string   `json:"not_before"`
-	NotAfter           string   `json:"not_after"`
-	SerialNumber       string   `json:"serial_number,omitempty"`
-	FingerprintSHA256  string   `json:"fingerprint_sha256,omitempty"`
-	IssuerCAID         int      `json:"issuer_ca_id,omitempty"`
-	IssuerName         string   `json:"issuer_name,omitempty"`
+	Issuer            string `json:"issuer"`
+	CommonName        string `json:"common_name"`
+	NameValue         string `json:"name_value"` // All SANs (newline-separated from crt.sh)
+	NotBefore         string `json:"not_before"`
+	NotAfter          string `json:"not_after"`
+	SerialNumber      string `json:"serial_number,omitempty"`
+	FingerprintSHA256 string `json:"fingerprint_sha256,omitempty"`
+	IssuerCAID        int    `json:"issuer_ca_id,omitempty"`
+	IssuerName        string `json:"issuer_name,omitempty"`
 }
 
 // crtshEntry represents a single entry from the crt.sh API response.

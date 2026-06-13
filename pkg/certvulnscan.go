@@ -16,7 +16,7 @@ import (
 type CertSecurityResult struct {
 	Target  string              `json:"target"`
 	Checks  []CertSecurityCheck `json:"checks"`
-	Summary CertSecuritySummary  `json:"summary"`
+	Summary CertSecuritySummary `json:"summary"`
 }
 
 // CertSecurityCheck represents a single certificate security check result.

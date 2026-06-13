@@ -25,15 +25,15 @@ func tlsCurveName(curveID tls.CurveID) string {
 
 // PFSResult represents the result of a Perfect Forward Secrecy check.
 type PFSResult struct {
-	Target       string   `json:"target"`
-	SupportsPFS  bool     `json:"supports_pfs"`
-	PFSCipher    string   `json:"pfs_cipher,omitempty"`
-	KeyExchange  string   `json:"key_exchange,omitempty"`
-	DHGroup      string   `json:"dh_group,omitempty"`
-	ECDHECurve   string   `json:"ecdhe_curve,omitempty"`
-	PFSCiphers   []string `json:"pfs_ciphers"`
+	Target        string   `json:"target"`
+	SupportsPFS   bool     `json:"supports_pfs"`
+	PFSCipher     string   `json:"pfs_cipher,omitempty"`
+	KeyExchange   string   `json:"key_exchange,omitempty"`
+	DHGroup       string   `json:"dh_group,omitempty"`
+	ECDHECurve    string   `json:"ecdhe_curve,omitempty"`
+	PFSCiphers    []string `json:"pfs_ciphers"`
 	NonPFSCiphers []string `json:"non_pfs_ciphers"`
-	Error        string   `json:"error,omitempty"`
+	Error         string   `json:"error,omitempty"`
 }
 
 // CheckPFS checks whether a server supports Perfect Forward Secrecy
@@ -113,7 +113,6 @@ func extractKeyExchange(cipherName string) string {
 	}
 	return "None (static key exchange)"
 }
-
 
 // contains checks if a string contains a substring (case-sensitive).
 func contains(s, substr string) bool {

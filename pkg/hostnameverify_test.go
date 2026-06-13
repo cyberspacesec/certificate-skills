@@ -30,9 +30,9 @@ func TestMatchWildcard(t *testing.T) {
 
 func TestDomainSimilarity(t *testing.T) {
 	tests := []struct {
-		a     string
-		b     string
-		min   int // minimum expected score
+		a   string
+		b   string
+		min int // minimum expected score
 	}{
 		{"www.example.com", "api.example.com", 2},
 		{"example.com", "other.com", 1},

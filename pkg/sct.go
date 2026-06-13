@@ -15,15 +15,15 @@ var oidSCTList = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 11129, 2, 4, 2}
 
 // SCTResult represents the result of an SCT (Signed Certificate Timestamp) verification.
 type SCTResult struct {
-	Target          string     `json:"target"`
-	HasSCTs         bool       `json:"has_scts"`
-	SCTCount        int        `json:"sct_count"`
-	MeetsRequirement bool      `json:"meets_requirement"`
-	RequiredSCTs    int        `json:"required_scts"`
-	SCTs            []SCTEntry `json:"scts"`
-	Warnings        []string   `json:"warnings,omitempty"`
-	CertValidity    int        `json:"cert_validity_days"`
-	Error           string     `json:"error,omitempty"`
+	Target           string     `json:"target"`
+	HasSCTs          bool       `json:"has_scts"`
+	SCTCount         int        `json:"sct_count"`
+	MeetsRequirement bool       `json:"meets_requirement"`
+	RequiredSCTs     int        `json:"required_scts"`
+	SCTs             []SCTEntry `json:"scts"`
+	Warnings         []string   `json:"warnings,omitempty"`
+	CertValidity     int        `json:"cert_validity_days"`
+	Error            string     `json:"error,omitempty"`
 }
 
 // SCTEntry represents a single Signed Certificate Timestamp entry.

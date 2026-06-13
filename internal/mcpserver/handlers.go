@@ -329,6 +329,7 @@ func marshalResult(v interface{}) (*mcp.CallToolResult, error) {
 	}
 	return mcp.NewToolResultText(string(jsonBytes)), nil
 }
+
 // HandleCertDownload downloads certificate chain from a domain and saves to files.
 func HandleCertDownload(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	target, err := req.RequireString("target")

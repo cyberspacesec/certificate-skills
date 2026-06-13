@@ -9,11 +9,11 @@ import (
 
 // SessionResumptionResult represents the result of a TLS session resumption check.
 type SessionResumptionResult struct {
-	Target               string `json:"target"`
-	SupportsSessionID    bool   `json:"supports_session_id"`
-	SupportsSessionTicket bool  `json:"supports_session_ticket"`
-	TLSVersion           string `json:"tls_version"`
-	Error                string `json:"error,omitempty"`
+	Target                string `json:"target"`
+	SupportsSessionID     bool   `json:"supports_session_id"`
+	SupportsSessionTicket bool   `json:"supports_session_ticket"`
+	TLSVersion            string `json:"tls_version"`
+	Error                 string `json:"error,omitempty"`
 }
 
 // CheckSessionResumption tests whether a server supports TLS session resumption

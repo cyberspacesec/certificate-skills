@@ -11,9 +11,9 @@ import (
 
 // VulnScanResult represents the result of a TLS vulnerability scan.
 type VulnScanResult struct {
-	Target         string        `json:"target"`
-	Vulnerabilities []VulnCheck  `json:"vulnerabilities"`
-	Summary        VulnSummary   `json:"summary"`
+	Target          string      `json:"target"`
+	Vulnerabilities []VulnCheck `json:"vulnerabilities"`
+	Summary         VulnSummary `json:"summary"`
 }
 
 // VulnCheck represents the result of checking a single vulnerability.
@@ -265,16 +265,16 @@ func buildHeartbeatClientHello(addr string) []byte {
 	var hello []byte
 
 	// TLS Record header
-	hello = append(hello, 0x16)                   // Handshake
-	hello = append(hello, 0x03, 0x01)             // TLS 1.0 record version
-	hello = append(hello, 0x00, 0x00)             // Length placeholder (will fix)
+	hello = append(hello, 0x16)       // Handshake
+	hello = append(hello, 0x03, 0x01) // TLS 1.0 record version
+	hello = append(hello, 0x00, 0x00) // Length placeholder (will fix)
 
 	// Handshake header
-	hello = append(hello, 0x01)                    // ClientHello
-	hello = append(hello, 0x00, 0x00, 0x00)       // Length placeholder
+	hello = append(hello, 0x01)             // ClientHello
+	hello = append(hello, 0x00, 0x00, 0x00) // Length placeholder
 
 	// ClientHello body
-	hello = append(hello, 0x03, 0x03)              // TLS 1.2
+	hello = append(hello, 0x03, 0x03) // TLS 1.2
 
 	// Random (32 bytes)
 	for i := 0; i < 32; i++ {
@@ -285,31 +285,31 @@ func buildHeartbeatClientHello(addr string) []byte {
 	hello = append(hello, 0x00)
 
 	// Cipher suites (2 AES-GCM + ECDHE suites)
-	hello = append(hello, 0x00, 0x08)             // 4 cipher suites
-	hello = append(hello, 0xC0, 0x2F)             // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	hello = append(hello, 0xC0, 0x30)             // TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	hello = append(hello, 0x00, 0x9C)             // TLS_RSA_WITH_AES_128_GCM_SHA256
-	hello = append(hello, 0x00, 0x9D)             // TLS_RSA_WITH_AES_256_GCM_SHA384
+	hello = append(hello, 0x00, 0x08) // 4 cipher suites
+	hello = append(hello, 0xC0, 0x2F) // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	hello = append(hello, 0xC0, 0x30) // TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	hello = append(hello, 0x00, 0x9C) // TLS_RSA_WITH_AES_128_GCM_SHA256
+	hello = append(hello, 0x00, 0x9D) // TLS_RSA_WITH_AES_256_GCM_SHA384
 
 	// Compression methods
-	hello = append(hello, 0x01, 0x00)             // No compression
+	hello = append(hello, 0x01, 0x00) // No compression
 
 	// Extensions length
 	extDataLen := extLen
 	hello = append(hello, byte(extDataLen>>8), byte(extDataLen))
 
 	// Heartbeat extension (type 0x000f, length 1, mode 1=peer_allowed_to_send)
-	hello = append(hello, 0x00, 0x0F)             // Extension: heartbeat
-	hello = append(hello, 0x00, 0x01)             // Extension data length
-	hello = append(hello, 0x01)                    // peer_allowed_to_send
+	hello = append(hello, 0x00, 0x0F) // Extension: heartbeat
+	hello = append(hello, 0x00, 0x01) // Extension data length
+	hello = append(hello, 0x01)       // peer_allowed_to_send
 
 	// SNI extension
-	hello = append(hello, 0x00, 0x00)             // Extension: server_name
+	hello = append(hello, 0x00, 0x00) // Extension: server_name
 	sniExtLen := 2 + 1 + 2 + sniLen
 	hello = append(hello, byte(sniExtLen>>8), byte(sniExtLen))
 	hello = append(hello, byte((sniLen+3)>>8), byte(sniLen+3)) // server_name list length
-	hello = append(hello, 0x00)                    // host_name type
-	hello = append(hello, byte(sniLen>>8), byte(sniLen)) // host_name length
+	hello = append(hello, 0x00)                                // host_name type
+	hello = append(hello, byte(sniLen>>8), byte(sniLen))       // host_name length
 	hello = append(hello, []byte(host)...)
 
 	// Fix lengths
@@ -331,14 +331,14 @@ func buildMalformedHeartbeat() []byte {
 	var req []byte
 
 	// TLS Record header
-	req = append(req, 0x18)          // Heartbeat record type (24)
-	req = append(req, 0x03, 0x03)    // TLS 1.2
-	req = append(req, 0x00, 0x03)    // Record length: 3 bytes
+	req = append(req, 0x18)       // Heartbeat record type (24)
+	req = append(req, 0x03, 0x03) // TLS 1.2
+	req = append(req, 0x00, 0x03) // Record length: 3 bytes
 
 	// Heartbeat message
-	req = append(req, 0x01)          // Type: Request
-	req = append(req, 0x40, 0x00)    // Payload length: 16384 (0x4000) - MUCH more than actual payload
-	req = append(req, 0x48)          // Actual payload: just 'H' (1 byte)
+	req = append(req, 0x01)       // Type: Request
+	req = append(req, 0x40, 0x00) // Payload length: 16384 (0x4000) - MUCH more than actual payload
+	req = append(req, 0x48)       // Actual payload: just 'H' (1 byte)
 
 	return req
 }
@@ -429,10 +429,10 @@ func checkCCSInjection(addr string) (bool, string) {
 	// Send a premature ChangeCipherSpec message
 	// TLS record type 20 = ChangeCipherSpec
 	ccsMessage := []byte{
-		0x14,                   // Record type: ChangeCipherSpec (20)
-		0x03, 0x03,             // TLS 1.2
-		0x00, 0x01,             // Length: 1
-		0x01,                   // ChangeCipherSpec message
+		0x14,       // Record type: ChangeCipherSpec (20)
+		0x03, 0x03, // TLS 1.2
+		0x00, 0x01, // Length: 1
+		0x01, // ChangeCipherSpec message
 	}
 
 	if _, err := conn.Write(ccsMessage); err != nil {
@@ -661,16 +661,16 @@ func buildCompressionClientHello(addr string) []byte {
 	var hello []byte
 
 	// TLS Record header
-	hello = append(hello, 0x16)                   // Handshake
-	hello = append(hello, 0x03, 0x01)             // TLS 1.0 record version
-	hello = append(hello, 0x00, 0x00)             // Length placeholder
+	hello = append(hello, 0x16)       // Handshake
+	hello = append(hello, 0x03, 0x01) // TLS 1.0 record version
+	hello = append(hello, 0x00, 0x00) // Length placeholder
 
 	// Handshake header
-	hello = append(hello, 0x01)                    // ClientHello
-	hello = append(hello, 0x00, 0x00, 0x00)       // Length placeholder
+	hello = append(hello, 0x01)             // ClientHello
+	hello = append(hello, 0x00, 0x00, 0x00) // Length placeholder
 
 	// ClientHello body
-	hello = append(hello, 0x03, 0x03)              // TLS 1.2
+	hello = append(hello, 0x03, 0x03) // TLS 1.2
 
 	// Random (32 bytes)
 	for i := 0; i < 32; i++ {
@@ -682,11 +682,11 @@ func buildCompressionClientHello(addr string) []byte {
 
 	// Cipher suites
 	hello = append(hello, 0x00, 0x04)
-	hello = append(hello, 0xC0, 0x2F)             // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	hello = append(hello, 0x00, 0x9C)             // TLS_RSA_WITH_AES_128_GCM_SHA256
+	hello = append(hello, 0xC0, 0x2F) // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	hello = append(hello, 0x00, 0x9C) // TLS_RSA_WITH_AES_128_GCM_SHA256
 
 	// Compression methods - advertise DEFLATE (1) and NULL (0)
-	hello = append(hello, 0x02, 0x01, 0x00)       // 2 methods: DEFLATE, NULL
+	hello = append(hello, 0x02, 0x01, 0x00) // 2 methods: DEFLATE, NULL
 
 	// Extensions
 	extLen := 5 + 1 + 2 + 1 + 2 + sniLen
@@ -826,13 +826,13 @@ func checkDROWN(addr string) (bool, string) {
 	// Version (2 bytes: 0x0002 = SSLv2) | Cipher spec length | Session ID length | Challenge length
 	ssl2Hello := []byte{
 		// SSLv2 ClientHello header
-		0x80,             // High bit set = 2-byte length header
-		0x26,             // Length: 38 bytes
-		0x01,             // Message type: ClientHello
-		0x00, 0x02,       // Version: SSLv2 (0x0002)
-		0x00, 0x15,       // Cipher spec length: 21 bytes (7 cipher specs × 3 bytes each)
-		0x00, 0x00,       // Session ID length: 0
-		0x00, 0x10,       // Challenge length: 16 bytes
+		0x80,       // High bit set = 2-byte length header
+		0x26,       // Length: 38 bytes
+		0x01,       // Message type: ClientHello
+		0x00, 0x02, // Version: SSLv2 (0x0002)
+		0x00, 0x15, // Cipher spec length: 21 bytes (7 cipher specs × 3 bytes each)
+		0x00, 0x00, // Session ID length: 0
+		0x00, 0x10, // Challenge length: 16 bytes
 		// Cipher specs (3 bytes each, SSLv2 format)
 		0x01, 0x00, 0x80, // SSL_CK_RC4_128_WITH_MD5
 		0x02, 0x00, 0x80, // SSL_CK_RC4_128_EXPORT40_WITH_MD5

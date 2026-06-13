@@ -7,13 +7,13 @@ import (
 
 // PolicyAnalysisResult represents the result of certificate policy analysis.
 type PolicyAnalysisResult struct {
-	Target         string        `json:"target"`
-	ValidationType string        `json:"validation_type"` // DV, OV, EV, or Unknown
-	PolicyOIDs     []PolicyOID   `json:"policy_oids"`
-	HasPolicies    bool          `json:"has_policies"`
-	Issues         []string      `json:"issues,omitempty"`
-	IsCompliant    bool          `json:"is_compliant"`
-	Detail         string        `json:"detail,omitempty"`
+	Target         string      `json:"target"`
+	ValidationType string      `json:"validation_type"` // DV, OV, EV, or Unknown
+	PolicyOIDs     []PolicyOID `json:"policy_oids"`
+	HasPolicies    bool        `json:"has_policies"`
+	Issues         []string    `json:"issues,omitempty"`
+	IsCompliant    bool        `json:"is_compliant"`
+	Detail         string      `json:"detail,omitempty"`
 }
 
 // PolicyOID represents a certificate policy OID with its known meaning.
@@ -26,14 +26,14 @@ type PolicyOID struct {
 // Known policy OIDs for major CAs
 var knownPolicyOIDs = map[string]PolicyOID{
 	// DigiCert
-	"2.16.840.1.114412.1.1":  {OID: "2.16.840.1.114412.1.1", Description: "DigiCert DV", Type: "DV"},
-	"2.16.840.1.114412.1.2":  {OID: "2.16.840.1.114412.1.2", Description: "DigiCert OV", Type: "OV"},
-	"2.16.840.1.114412.1.3":  {OID: "2.16.840.1.114412.1.3", Description: "DigiCert EV", Type: "EV"},
+	"2.16.840.1.114412.1.1": {OID: "2.16.840.1.114412.1.1", Description: "DigiCert DV", Type: "DV"},
+	"2.16.840.1.114412.1.2": {OID: "2.16.840.1.114412.1.2", Description: "DigiCert OV", Type: "OV"},
+	"2.16.840.1.114412.1.3": {OID: "2.16.840.1.114412.1.3", Description: "DigiCert EV", Type: "EV"},
 	// Let's Encrypt
-	"2.23.140.1.2.1":         {OID: "2.23.140.1.2.1", Description: "Domain Validated", Type: "DV"},
+	"2.23.140.1.2.1": {OID: "2.23.140.1.2.1", Description: "Domain Validated", Type: "DV"},
 	// Global CA/B Forum OIDs
-	"2.23.140.1.2.2":         {OID: "2.23.140.1.2.2", Description: "Organization Validated", Type: "OV"},
-	"2.23.140.1.1":           {OID: "2.23.140.1.1", Description: "Extended Validation", Type: "EV"},
+	"2.23.140.1.2.2": {OID: "2.23.140.1.2.2", Description: "Organization Validated", Type: "OV"},
+	"2.23.140.1.1":   {OID: "2.23.140.1.1", Description: "Extended Validation", Type: "EV"},
 	// Sectigo (formerly Comodo)
 	"1.3.6.1.4.1.6449.1.2.1.5.1": {OID: "1.3.6.1.4.1.6449.1.2.1.5.1", Description: "Sectigo DV", Type: "DV"},
 	"1.3.6.1.4.1.6449.1.2.2.6.1": {OID: "1.3.6.1.4.1.6449.1.2.2.6.1", Description: "Sectigo OV", Type: "OV"},
@@ -43,9 +43,9 @@ var knownPolicyOIDs = map[string]PolicyOID{
 	"2.16.840.1.114413.1.7.23.2": {OID: "2.16.840.1.114413.1.7.23.2", Description: "GoDaddy OV", Type: "OV"},
 	"2.16.840.1.114413.1.7.23.3": {OID: "2.16.840.1.114413.1.7.23.3", Description: "GoDaddy EV", Type: "EV"},
 	// GlobalSign
-	"1.3.6.1.4.1.4146.1.1":  {OID: "1.3.6.1.4.1.4146.1.1", Description: "GlobalSign DV", Type: "DV"},
-	"1.3.6.1.4.1.4146.1.2":  {OID: "1.3.6.1.4.1.4146.1.2", Description: "GlobalSign OV", Type: "OV"},
-	"1.3.6.1.4.1.4146.1.3":  {OID: "1.3.6.1.4.1.4146.1.3", Description: "GlobalSign EV", Type: "EV"},
+	"1.3.6.1.4.1.4146.1.1": {OID: "1.3.6.1.4.1.4146.1.1", Description: "GlobalSign DV", Type: "DV"},
+	"1.3.6.1.4.1.4146.1.2": {OID: "1.3.6.1.4.1.4146.1.2", Description: "GlobalSign OV", Type: "OV"},
+	"1.3.6.1.4.1.4146.1.3": {OID: "1.3.6.1.4.1.4146.1.3", Description: "GlobalSign EV", Type: "EV"},
 	// Entrust
 	"2.16.840.1.114028.10.1.2": {OID: "2.16.840.1.114028.10.1.2", Description: "Entrust DV", Type: "DV"},
 	"2.16.840.1.114028.10.1.4": {OID: "2.16.840.1.114028.10.1.4", Description: "Entrust OV", Type: "OV"},

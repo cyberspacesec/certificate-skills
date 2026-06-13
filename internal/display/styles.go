@@ -75,9 +75,9 @@ var (
 			Padding(1, 2)
 
 	warningBoxStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(warning).
-				Padding(1, 2)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(warning).
+			Padding(1, 2)
 
 	errorBoxStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).

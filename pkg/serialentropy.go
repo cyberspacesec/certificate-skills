@@ -10,16 +10,16 @@ import (
 
 // SerialEntropyResult represents the result of serial number entropy analysis.
 type SerialEntropyResult struct {
-	Target      string  `json:"target"`
-	SerialHex   string  `json:"serial_hex"`
-	BitLength   int     `json:"bit_length"`
-	IsCompliant bool    `json:"is_compliant"`  // CA/B BR requires >= 64 bits entropy
-	EntropyEstimate float64 `json:"entropy_estimate"` // Estimated Shannon entropy bits
-	HammingWeight   int     `json:"hamming_weight"`    // Number of 1 bits
-	HammingRatio    float64 `json:"hamming_ratio"`     // Ratio of 1 bits to total bits
-	IsSequential    bool    `json:"is_sequential"`     // Looks like sequential numbering
-	Issues      []string `json:"issues,omitempty"`
-	Detail      string   `json:"detail,omitempty"`
+	Target          string   `json:"target"`
+	SerialHex       string   `json:"serial_hex"`
+	BitLength       int      `json:"bit_length"`
+	IsCompliant     bool     `json:"is_compliant"`     // CA/B BR requires >= 64 bits entropy
+	EntropyEstimate float64  `json:"entropy_estimate"` // Estimated Shannon entropy bits
+	HammingWeight   int      `json:"hamming_weight"`   // Number of 1 bits
+	HammingRatio    float64  `json:"hamming_ratio"`    // Ratio of 1 bits to total bits
+	IsSequential    bool     `json:"is_sequential"`    // Looks like sequential numbering
+	Issues          []string `json:"issues,omitempty"`
+	Detail          string   `json:"detail,omitempty"`
 }
 
 // CheckSerialEntropy analyzes the serial number entropy of a certificate.

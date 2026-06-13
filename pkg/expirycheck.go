@@ -10,21 +10,21 @@ type ExpiryMonitorResult struct {
 	Targets       []ExpiryEntry `json:"targets"`
 	TotalCount    int           `json:"total_count"`
 	ExpiredCount  int           `json:"expired_count"`
-	CriticalCount int           `json:"critical_count"`  // ≤ 7 days
-	WarningCount  int           `json:"warning_count"`   // ≤ 30 days
-	HealthyCount  int           `json:"healthy_count"`   // > 30 days
+	CriticalCount int           `json:"critical_count"` // ≤ 7 days
+	WarningCount  int           `json:"warning_count"`  // ≤ 30 days
+	HealthyCount  int           `json:"healthy_count"`  // > 30 days
 	ErrorCount    int           `json:"error_count"`
 }
 
 // ExpiryEntry represents the expiry status of a single target.
 type ExpiryEntry struct {
-	Target         string `json:"target"`
-	DaysUntilExpiry int   `json:"days_until_expiry"`
-	ExpirationDate string `json:"expiration_date"`
-	Status         string `json:"status"` // Expired, Critical, Warning, Healthy
-	Issuer         string `json:"issuer,omitempty"`
-	Subject        string `json:"subject,omitempty"`
-	Error          string `json:"error,omitempty"`
+	Target          string `json:"target"`
+	DaysUntilExpiry int    `json:"days_until_expiry"`
+	ExpirationDate  string `json:"expiration_date"`
+	Status          string `json:"status"` // Expired, Critical, Warning, Healthy
+	Issuer          string `json:"issuer,omitempty"`
+	Subject         string `json:"subject,omitempty"`
+	Error           string `json:"error,omitempty"`
 }
 
 // CertExpiryMonitor checks the expiration status of certificates for

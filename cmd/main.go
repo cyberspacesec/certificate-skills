@@ -36,7 +36,7 @@ and cyberspace mapping capabilities.
 
 Designed for security researchers, system administrators, and
 penetration testers who need to work with SSL/TLS certificates.`,
-	Version: version,
+	Version:      version,
 	SilenceUsage: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Show banner unless output is JSON

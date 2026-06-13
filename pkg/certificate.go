@@ -24,20 +24,20 @@ type BatchResult struct {
 
 // CertInfo 证书信息结构体
 type CertInfo struct {
-	Subject            string           `json:"subject"`
-	Issuer             string           `json:"issuer"`
-	SerialNumber       string           `json:"serial_number"`
-	NotBefore          time.Time        `json:"not_before"`
-	NotAfter           time.Time        `json:"not_after"`
-	DNSNames           []string         `json:"dns_names"`
-	IPAddresses        []string         `json:"ip_addresses"`
-	PublicKeyAlgorithm string           `json:"public_key_algorithm"`
-	SignatureAlgorithm string           `json:"signature_algorithm"`
-	KeySize            int              `json:"key_size"`
-	KeyUsage           []string         `json:"key_usage"`
-	ExtKeyUsage        []string         `json:"ext_key_usage"`
-	IsCA               bool             `json:"is_ca"`
-	Version            int              `json:"version"`
+	Subject            string            `json:"subject"`
+	Issuer             string            `json:"issuer"`
+	SerialNumber       string            `json:"serial_number"`
+	NotBefore          time.Time         `json:"not_before"`
+	NotAfter           time.Time         `json:"not_after"`
+	DNSNames           []string          `json:"dns_names"`
+	IPAddresses        []string          `json:"ip_addresses"`
+	PublicKeyAlgorithm string            `json:"public_key_algorithm"`
+	SignatureAlgorithm string            `json:"signature_algorithm"`
+	KeySize            int               `json:"key_size"`
+	KeyUsage           []string          `json:"key_usage"`
+	ExtKeyUsage        []string          `json:"ext_key_usage"`
+	IsCA               bool              `json:"is_ca"`
+	Version            int               `json:"version"`
 	Fingerprints       map[string]string `json:"fingerprints"`
 }
 
@@ -51,14 +51,14 @@ type CertChain struct {
 
 // SSLInfo SSL连接信息
 type SSLInfo struct {
-	TLSVersion    string           `json:"tls_version"`
-	CipherSuite   string           `json:"cipher_suite"`
-	PeerCerts     CertChain        `json:"peer_certificates"`
-	ConnectedAt   time.Time        `json:"connected_at"`
-	HandshakeTime time.Duration    `json:"handshake_time"`
-	SupportsHTTP2 bool             `json:"supports_http2"`
-	HasOCSPStaple bool             `json:"has_ocsp_staple"`
-	OCSPResponse  []byte           `json:"ocsp_response,omitempty"`
+	TLSVersion    string        `json:"tls_version"`
+	CipherSuite   string        `json:"cipher_suite"`
+	PeerCerts     CertChain     `json:"peer_certificates"`
+	ConnectedAt   time.Time     `json:"connected_at"`
+	HandshakeTime time.Duration `json:"handshake_time"`
+	SupportsHTTP2 bool          `json:"supports_http2"`
+	HasOCSPStaple bool          `json:"has_ocsp_staple"`
+	OCSPResponse  []byte        `json:"ocsp_response,omitempty"`
 }
 
 // GetCertFromDomain 从域名获取证书

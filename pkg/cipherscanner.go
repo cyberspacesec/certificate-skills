@@ -38,17 +38,17 @@ type CipherScanSummary struct {
 // Weak cipher suite IDs (IANA assignments) — Go doesn't export all as constants.
 var weakCipherIDs = map[uint16]bool{
 	// RC4 ciphers
-	0x0005: true, // TLS_RSA_WITH_RC4_128_SHA
-	0x0004: true, // TLS_RSA_WITH_RC4_128_MD5
+	0x0005:   true, // TLS_RSA_WITH_RC4_128_SHA
+	0x0004:   true, // TLS_RSA_WITH_RC4_128_MD5
 	0x00C011: true, // TLS_ECDHE_RSA_WITH_RC4_128_SHA
 	0x00C007: true, // TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
 	// 3DES
-	0x000A: true, // TLS_RSA_WITH_3DES_EDE_CBC_SHA
+	0x000A:   true, // TLS_RSA_WITH_3DES_EDE_CBC_SHA
 	0x00C012: true, // TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
 	0x00C008: true, // TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA
 	// NULL ciphers
-	0x0002: true, // TLS_RSA_WITH_NULL_SHA
-	0x003B: true, // TLS_RSA_WITH_NULL_SHA256
+	0x0002:   true, // TLS_RSA_WITH_NULL_SHA
+	0x003B:   true, // TLS_RSA_WITH_NULL_SHA256
 	0x00C010: true, // TLS_ECDHE_RSA_WITH_NULL_SHA
 	0x00C006: true, // TLS_ECDHE_ECDSA_WITH_NULL_SHA
 	// EXPORT ciphers
@@ -107,9 +107,9 @@ func getCipherSuitesForVersion(version uint16) []uint16 {
 		tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
 		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
 		// Weak ciphers (using IANA IDs)
-		0x0005, // TLS_RSA_WITH_RC4_128_SHA
+		0x0005,   // TLS_RSA_WITH_RC4_128_SHA
 		0x00C011, // TLS_ECDHE_RSA_WITH_RC4_128_SHA
-		0x0002, // TLS_RSA_WITH_NULL_SHA
+		0x0002,   // TLS_RSA_WITH_NULL_SHA
 		0x00C010, // TLS_ECDHE_RSA_WITH_NULL_SHA
 	}
 }

@@ -6,27 +6,27 @@ import (
 
 // EVResult represents the result of an Extended Validation (EV) certificate detection.
 type EVResult struct {
-	Target        string   `json:"target"`
-	IsEV          bool     `json:"is_ev"`
-	EVIssuer      string   `json:"ev_issuer,omitempty"`
-	Organization  string   `json:"organization,omitempty"`
-	BusinessCategory string `json:"business_category,omitempty"`
-	Jurisdiction  string   `json:"jurisdiction,omitempty"`
-	SerialNumber  string   `json:"serial_number,omitempty"`
-	Reason        string   `json:"reason,omitempty"`
-	EVOIDs        []string `json:"ev_oids,omitempty"`
+	Target           string   `json:"target"`
+	IsEV             bool     `json:"is_ev"`
+	EVIssuer         string   `json:"ev_issuer,omitempty"`
+	Organization     string   `json:"organization,omitempty"`
+	BusinessCategory string   `json:"business_category,omitempty"`
+	Jurisdiction     string   `json:"jurisdiction,omitempty"`
+	SerialNumber     string   `json:"serial_number,omitempty"`
+	Reason           string   `json:"reason,omitempty"`
+	EVOIDs           []string `json:"ev_oids,omitempty"`
 }
 
 // Known EV OID policy identifiers from CA/Browser Forum EV guidelines
 var evPolicyOIDs = map[string]string{
 	// DigiCert
-	"2.16.840.1.114412.2.1":   "DigiCert EV",
-	"2.16.840.1.114412.1.2":   "DigiCert EV",
-	"2.16.840.1.114412.4.1":   "DigiCert EV",
-	"2.16.840.1.114412.4.2":   "DigiCert EV",
-	"2.16.840.1.114412.4.3":   "DigiCert EV",
+	"2.16.840.1.114412.2.1": "DigiCert EV",
+	"2.16.840.1.114412.1.2": "DigiCert EV",
+	"2.16.840.1.114412.4.1": "DigiCert EV",
+	"2.16.840.1.114412.4.2": "DigiCert EV",
+	"2.16.840.1.114412.4.3": "DigiCert EV",
 	// GlobalSign
-	"1.3.6.1.4.1.4146.1.1":    "GlobalSign EV",
+	"1.3.6.1.4.1.4146.1.1": "GlobalSign EV",
 	// GoDaddy
 	"2.16.840.1.114413.1.7.23.3": "GoDaddy EV",
 	// Entrust
@@ -37,7 +37,7 @@ var evPolicyOIDs = map[string]string{
 	// Camerfirma
 	"1.3.6.1.4.1.17326.4.1.2": "Camerfirma EV",
 	// Trustwave
-	"2.16.840.1.114404.1.1":   "Trustwave EV",
+	"2.16.840.1.114404.1.1": "Trustwave EV",
 	// Symantec/VeriSign
 	"2.16.840.1.113733.1.7.23.6": "Symantec/VeriSign EV",
 	"2.16.840.1.113733.1.7.1.6":  "Symantec/VeriSign EV",

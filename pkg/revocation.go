@@ -15,35 +15,35 @@ import (
 
 // RevocationResult represents the result of a certificate revocation check.
 type RevocationResult struct {
-	Target          string            `json:"target"`
-	OCSPStatus      OCSPStatus        `json:"ocsp_status"`
-	CRLStatus       CRLStatus         `json:"crl_status"`
-	OverallStatus   string            `json:"overall_status"`
-	RevocationInfo  string            `json:"revocation_info,omitempty"`
-	Error           string            `json:"error,omitempty"`
+	Target         string     `json:"target"`
+	OCSPStatus     OCSPStatus `json:"ocsp_status"`
+	CRLStatus      CRLStatus  `json:"crl_status"`
+	OverallStatus  string     `json:"overall_status"`
+	RevocationInfo string     `json:"revocation_info,omitempty"`
+	Error          string     `json:"error,omitempty"`
 }
 
 // OCSPStatus represents the result of an OCSP check.
 type OCSPStatus struct {
-	Checked       bool   `json:"checked"`
-	Status        string `json:"status"`         // Good, Revoked, Unknown
-	RevokedAt     string `json:"revoked_at,omitempty"`
+	Checked          bool   `json:"checked"`
+	Status           string `json:"status"` // Good, Revoked, Unknown
+	RevokedAt        string `json:"revoked_at,omitempty"`
 	RevocationReason string `json:"revocation_reason,omitempty"`
-	ThisUpdate    string `json:"this_update,omitempty"`
-	NextUpdate    string `json:"next_update,omitempty"`
-	OCSPURL       string `json:"ocsp_url,omitempty"`
-	Error         string `json:"error,omitempty"`
+	ThisUpdate       string `json:"this_update,omitempty"`
+	NextUpdate       string `json:"next_update,omitempty"`
+	OCSPURL          string `json:"ocsp_url,omitempty"`
+	Error            string `json:"error,omitempty"`
 }
 
 // CRLStatus represents the result of a CRL check.
 type CRLStatus struct {
-	Checked       bool     `json:"checked"`
-	Status        string   `json:"status"` // Good, Revoked, Unknown
+	Checked        bool     `json:"checked"`
+	Status         string   `json:"status"` // Good, Revoked, Unknown
 	RevokedSerials []string `json:"revoked_serials,omitempty"`
-	CRLURL        string   `json:"crl_url,omitempty"`
-	ThisUpdate    string   `json:"this_update,omitempty"`
-	NextUpdate    string   `json:"next_update,omitempty"`
-	Error         string   `json:"error,omitempty"`
+	CRLURL         string   `json:"crl_url,omitempty"`
+	ThisUpdate     string   `json:"this_update,omitempty"`
+	NextUpdate     string   `json:"next_update,omitempty"`
+	Error          string   `json:"error,omitempty"`
 }
 
 // CheckRevocation checks the revocation status of a certificate
@@ -306,15 +306,15 @@ func determineOverallStatus(ocsp OCSPStatus, crl CRLStatus) string {
 // revocationReasonString converts a CRL revocation reason code to a string.
 func revocationReasonString(reason int) string {
 	reasons := map[int]string{
-		0: "unspecified",
-		1: "key compromise",
-		2: "CA compromise",
-		3: "affiliation changed",
-		4: "superseded",
-		5: "cessation of operation",
-		6: "certificate hold",
-		8: "remove from CRL",
-		9: "privilege withdrawn",
+		0:  "unspecified",
+		1:  "key compromise",
+		2:  "CA compromise",
+		3:  "affiliation changed",
+		4:  "superseded",
+		5:  "cessation of operation",
+		6:  "certificate hold",
+		8:  "remove from CRL",
+		9:  "privilege withdrawn",
 		10: "AA compromise",
 	}
 
@@ -323,4 +323,3 @@ func revocationReasonString(reason int) string {
 	}
 	return fmt.Sprintf("unknown reason (%d)", reason)
 }
-

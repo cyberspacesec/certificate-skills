@@ -21,7 +21,7 @@ type CAAResult struct {
 // CAARecord represents a single CAA DNS record.
 type CAARecord struct {
 	Flag  uint8  `json:"flag"`
-	Tag   string `json:"tag"`   // issue, issuewild, iodef
+	Tag   string `json:"tag"` // issue, issuewild, iodef
 	Value string `json:"value"`
 }
 

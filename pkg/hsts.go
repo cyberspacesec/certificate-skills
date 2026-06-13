@@ -11,12 +11,12 @@ import (
 
 // HSTSResult represents the result of an HSTS check.
 type HSTSResult struct {
-	Enabled         bool   `json:"enabled"`
-	MaxAge          int    `json:"max_age"`
-	IncludeSubDomains bool  `json:"include_sub_domains"`
-	Preload         bool   `json:"preload"`
-	RawHeader       string `json:"raw_header"`
-	Error           string `json:"error,omitempty"`
+	Enabled           bool   `json:"enabled"`
+	MaxAge            int    `json:"max_age"`
+	IncludeSubDomains bool   `json:"include_sub_domains"`
+	Preload           bool   `json:"preload"`
+	RawHeader         string `json:"raw_header"`
+	Error             string `json:"error,omitempty"`
 }
 
 // CheckHSTS checks if a domain has HSTS (HTTP Strict Transport Security) enabled
