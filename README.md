@@ -90,12 +90,77 @@ A comprehensive SSL/TLS certificate security toolkit and SDK for Go — designed
 
 ## 📦 Installation
 
-```bash
-# Build from source
-go build -o cert-hacker ./cmd/
+### Download Pre-built Binaries (Recommended)
 
-# Or install the MCP server
-go build -o cert-hacker-mcp ./cmd/mcp/
+Download the latest release for your platform from [GitHub Releases](https://github.com/cyberspacesec/certificate-skills/releases/latest):
+
+```bash
+# Linux x86_64
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+sudo mv cert-skills /usr/local/bin/
+
+# Linux ARM64 (Apple Silicon Linux, AWS Graviton, etc.)
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_aarch64.tar.gz | tar xz
+sudo mv cert-skills /usr/local/bin/
+
+# macOS (Apple Silicon)
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
+sudo mv cert-skills /usr/local/bin/
+
+# macOS (Intel)
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_x86_64.tar.gz | tar xz
+sudo mv cert-skills /usr/local/bin/
+
+# Windows (PowerShell)
+Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
+Expand-Archive cert-skills.zip
+```
+
+### Available Platforms
+
+| OS | Architecture | Binary |
+|----|-------------|--------|
+| Linux | x86_64 / amd64 | `certificate-skills_*_linux_x86_64.tar.gz` |
+| Linux | ARM64 / aarch64 | `certificate-skills_*_linux_aarch64.tar.gz` |
+| Linux | ARM (v7) | `certificate-skills_*_linux_arm.tar.gz` |
+| Linux | i386 | `certificate-skills_*_linux_i386.tar.gz` |
+| macOS | Apple Silicon (aarch64) | `certificate-skills_*_darwin_aarch64.tar.gz` |
+| macOS | Intel (x86_64) | `certificate-skills_*_darwin_x86_64.tar.gz` |
+| Windows | x86_64 | `certificate-skills_*_windows_x86_64.zip` |
+| Windows | i386 | `certificate-skills_*_windows_i386.zip` |
+| FreeBSD | x86_64 | `certificate-skills_*_freebsd_x86_64.tar.gz` |
+
+Two binaries are provided for each platform:
+- **`cert-skills`** — CLI tool (39 commands)
+- **`cert-skills-mcp`** — MCP server for AI agents (40 tools)
+
+### Build from Source
+
+```bash
+# Requires Go 1.23+
+git clone https://github.com/cyberspacesec/certificate-skills.git
+cd certificate-skills
+go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
+go build -trimpath -ldflags "-s -w" -o cert-skills-mcp ./cmd/mcp/
+```
+
+### Install MCP Server for Claude Code
+
+Add to your `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "certificate-skills": {
+      "command": "/path/to/cert-skills-mcp"
+    }
+  }
+}
+```
+
+Or use with stdio transport (default):
+```bash
+cert-skills-mcp --transport stdio
 ```
 
 ---
