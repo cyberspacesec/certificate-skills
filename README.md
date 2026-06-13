@@ -1,24 +1,32 @@
-# cert-hacker 🔒
+# cert-skills 🔒
 
-**Certificate Security Toolkit for Cyberspace Mapping**
+**AI-Native Certificate Security Toolkit & SDK**
 
-A comprehensive SSL/TLS certificate security toolkit and SDK for Go — designed for security researchers, system administrators, penetration testers, and cyberspace mapping operations.
+A comprehensive SSL/TLS certificate security toolkit and Go SDK — designed for AI agents, security researchers, and cyberspace mapping operations. Works as a CLI, Go library, and MCP server.
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Server-green.svg)](https://modelcontextprotocol.io)
+[![Release](https://img.shields.io/github/v/release/cyberspacesec/certificate-skills?include_prereleases)](https://github.com/cyberspacesec/certificate-skills/releases/latest)
 
-> **🤖 MCP Server**: This project runs as an MCP (Model Context Protocol) server, providing 40 certificate security tools for AI agents like Claude Code.
+> 🤖 **AI-Native**: This project is designed as an AI-first toolkit. It ships as an MCP server with 40 tools that AI agents can directly invoke, plus a Go SDK for programmatic use and a CLI for humans.
+
+---
+
+## 🌍 Languages
+
+**English** (default) | [简体中文](#-简体中文)
 
 ---
 
 ## 📋 Table of Contents
 
 - [Features](#-features)
+- [Quick Start](#-quick-start)
 - [Installation](#-installation)
 - [CLI Usage](#-cli-usage)
 - [Go SDK](#-go-sdk)
-- [MCP Server](#-mcp-server)
+- [AI Integration (MCP)](#-ai-integration-mcp)
 - [Security Checks](#-security-checks)
 - [Skills](#-skills)
 - [Architecture](#-architecture)
@@ -41,11 +49,11 @@ A comprehensive SSL/TLS certificate security toolkit and SDK for Go — designed
 ### 🛡️ Security Analysis
 | Capability | Description |
 |-----------|-------------|
-| Security Scoring | 0-100 security score with Critical/High/Medium/Good levels |
-| 18 Cert Security Checks | From weak signatures to name constraints (CERT-001 to CERT-018) |
+| Security Scoring | 0-100 security score with severity levels |
+| 18 Cert Security Checks | Weak signatures → name constraints (CERT-001 to CERT-018) |
 | 11 TLS Vulnerability Scans | Heartbleed, POODLE, ROBOT, CCS, FREAK, Logjam, Sweet32, BEAST, CRIME, DROWN, Renegotiation |
 | Distrusted CA Detection | DigiNotar, WoSign, StartCom, Symantec, CNNIC, TrustCor, DarkMatter |
-| OCSP Must-Staple | RFC 7633 compliance — Must-Staple without staple = hard-fail |
+| OCSP Must-Staple | RFC 7633 compliance check |
 | Key Usage Compliance | RFC 5280 and CA/B BR validation |
 | Serial Entropy Analysis | CA/B BR 64-bit entropy requirement |
 | Name Constraints | CA trust boundary violation detection |
@@ -63,8 +71,7 @@ A comprehensive SSL/TLS certificate security toolkit and SDK for Go — designed
 ### 🌐 Cyberspace Mapping
 | Capability | Description |
 |-----------|-------------|
-| CT Log Search | Search Certificate Transparency logs by domain |
-| CT Fingerprint Search | Search CT logs by certificate fingerprint |
+| CT Log Search | Search Certificate Transparency logs by domain or fingerprint |
 | CT Subdomain Enumeration | Discover subdomains through CT certificates |
 | JARM Fingerprinting | Server identification and C2 detection |
 | JA3/JA3S Fingerprinting | Client and server TLS fingerprinting |
@@ -79,35 +86,50 @@ A comprehensive SSL/TLS certificate security toolkit and SDK for Go — designed
 | Expiry Monitor | Multi-target certificate expiration monitoring |
 | Revocation Check | OCSP and CRL revocation status |
 
-### 🎨 Terminal UI
-- Cyberpunk-styled terminal output with lipgloss (neon green + cyan)
-- JSON output mode for machine-readable results
-- ASCII art banner
-- Colored severity badges (💀🚨⚠️✅)
-- Visual score bars (████████░░░░ 80/100)
+---
+
+## 🚀 Quick Start
+
+```bash
+# Install (Linux/macOS)
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+sudo mv cert-skills /usr/local/bin/
+
+# Analyze a domain
+cert-skills analyze google.com
+
+# Security scan
+cert-skills scan-cert-security example.com
+
+# Search CT logs
+cert-skills search-ct example.com
+
+# JARM fingerprint
+cert-skills jarm suspicious-server.com
+```
 
 ---
 
 ## 📦 Installation
 
-### Download Pre-built Binaries (Recommended)
+### Pre-built Binaries (Recommended)
 
-Download the latest release for your platform from [GitHub Releases](https://github.com/cyberspacesec/certificate-skills/releases/latest):
+Download from [GitHub Releases](https://github.com/cyberspacesec/certificate-skills/releases/latest):
 
 ```bash
 # Linux x86_64
 curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
 sudo mv cert-skills /usr/local/bin/
 
-# Linux ARM64 (Apple Silicon Linux, AWS Graviton, etc.)
+# Linux ARM64 (AWS Graviton, Raspberry Pi 5, etc.)
 curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_aarch64.tar.gz | tar xz
 sudo mv cert-skills /usr/local/bin/
 
-# macOS (Apple Silicon)
+# macOS Apple Silicon
 curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
 sudo mv cert-skills /usr/local/bin/
 
-# macOS (Intel)
+# macOS Intel
 curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_x86_64.tar.gz | tar xz
 sudo mv cert-skills /usr/local/bin/
 
@@ -118,21 +140,19 @@ Expand-Archive cert-skills.zip
 
 ### Available Platforms
 
-| OS | Architecture | Binary |
-|----|-------------|--------|
-| Linux | x86_64 / amd64 | `certificate-skills_*_linux_x86_64.tar.gz` |
-| Linux | ARM64 / aarch64 | `certificate-skills_*_linux_aarch64.tar.gz` |
-| Linux | ARM (v7) | `certificate-skills_*_linux_arm.tar.gz` |
+| OS | Architecture | File |
+|----|-------------|------|
+| Linux | x86_64 | `certificate-skills_*_linux_x86_64.tar.gz` |
+| Linux | ARM64 | `certificate-skills_*_linux_aarch64.tar.gz` |
+| Linux | ARM v7 | `certificate-skills_*_linux_arm.tar.gz` |
 | Linux | i386 | `certificate-skills_*_linux_i386.tar.gz` |
-| macOS | Apple Silicon (aarch64) | `certificate-skills_*_darwin_aarch64.tar.gz` |
-| macOS | Intel (x86_64) | `certificate-skills_*_darwin_x86_64.tar.gz` |
+| macOS | Apple Silicon | `certificate-skills_*_darwin_aarch64.tar.gz` |
+| macOS | Intel | `certificate-skills_*_darwin_x86_64.tar.gz` |
 | Windows | x86_64 | `certificate-skills_*_windows_x86_64.zip` |
 | Windows | i386 | `certificate-skills_*_windows_i386.zip` |
 | FreeBSD | x86_64 | `certificate-skills_*_freebsd_x86_64.tar.gz` |
 
-Two binaries are provided for each platform:
-- **`cert-skills`** — CLI tool (39 commands)
-- **`cert-skills-mcp`** — MCP server for AI agents (40 tools)
+Two binaries per platform: **`cert-skills`** (CLI) and **`cert-skills-mcp`** (MCP server).
 
 ### Build from Source
 
@@ -140,27 +160,21 @@ Two binaries are provided for each platform:
 # Requires Go 1.23+
 git clone https://github.com/cyberspacesec/certificate-skills.git
 cd certificate-skills
+
+# Build CLI
 go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
+
+# Build MCP Server
 go build -trimpath -ldflags "-s -w" -o cert-skills-mcp ./cmd/mcp/
+
+# Or install globally
+go install ./cmd/
 ```
 
-### Install MCP Server for Claude Code
+### Go Module
 
-Add to your `.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "certificate-skills": {
-      "command": "/path/to/cert-skills-mcp"
-    }
-  }
-}
-```
-
-Or use with stdio transport (default):
 ```bash
-cert-skills-mcp --transport stdio
+go get github.com/cyberspacesec/certificate-skills/pkg
 ```
 
 ---
@@ -168,62 +182,54 @@ cert-skills-mcp --transport stdio
 ## 🖥️ CLI Usage
 
 ```bash
-# Certificate information
-cert-hacker info google.com
-cert-hacker info google.com baidu.com github.com     # Batch
-cert-hacker info cert.pem                              # Local file
-
 # Security analysis
-cert-hacker analyze google.com                         # Full security scoring
-cert-hacker scan-cert-security google.com              # 18 cert security checks
-cert-hacker scan-vulns google.com                      # 11 TLS vulnerability scans
+cert-skills analyze google.com                         # Full security scoring (0-100)
+cert-skills scan-cert-security google.com              # 18 cert security checks
+cert-skills scan-vulns google.com                      # 11 TLS vulnerability scans
+cert-skills scan-protocols google.com                  # TLS version scan
+cert-skills scan-ciphers google.com                    # Cipher suite scan
 
-# Certificate fingerprinting
-cert-hacker fingerprint google.com                     # SHA-256, SHA-1, MD5, SPKI
-cert-hacker fingerprint cert.pem                       # From file
+# Certificate operations
+cert-skills info google.com                            # Certificate information
+cert-skills info google.com baidu.com                  # Batch info
+cert-skills fingerprint google.com                     # SHA-256/SHA-1/MD5/SPKI
+cert-skills compare -1 google.com -2 baidu.com         # Compare certificates
+cert-skills download google.com                        # Download cert chain
+cert-skills parse cert.pem                             # Parse local file
+cert-skills validate -c cert.pem -k key.pem            # Validate cert-key pair
 
-# Certificate generation
-cert-hacker generate -n test.local -k ecdsa            # ECDSA self-signed
-cert-hacker generate -n test.local --is-ca             # CA certificate
-cert-hacker generate-csr -n example.com                # CSR for CA submission
-
-# Certificate comparison
-cert-hacker compare -1 google.com -2 baidu.com
-
-# CT log searches
-cert-hacker search-ct example.com                      # Search by domain
-cert-hacker ct-enumerate example.com                   # Enumerate subdomains
+# PKI operations
+cert-skills generate -n test.local -k ecdsa            # Generate self-signed
+cert-skills generate-csr -n example.com                # Generate CSR
 
 # Security checks
-cert-hacker check-distrusted-ca example.com            # Distrusted CA detection
-cert-hacker check-ocsp-must-staple example.com         # OCSP Must-Staple
-cert-hacker check-key-usage example.com                # Key usage compliance
-cert-hacker check-serial-entropy example.com           # Serial entropy
-cert-hacker check-policy example.com                   # Policy OID analysis
-cert-hacker check-name-constraints example.com         # Name constraints
-cert-hacker check-bundle example.com                   # Bundle completeness
+cert-skills check-distrusted-ca example.com            # Distrusted CA detection
+cert-skills check-ocsp-must-staple example.com         # OCSP Must-Staple
+cert-skills check-key-usage example.com                # Key usage compliance
+cert-skills check-serial-entropy example.com           # Serial entropy
+cert-skills check-policy example.com                   # Policy OID analysis
+cert-skills check-name-constraints example.com         # Name constraints
+cert-skills check-bundle example.com                   # Bundle completeness
+cert-skills check-revocation example.com               # OCSP/CRL revocation
+cert-skills check-hsts example.com                     # HSTS status
+cert-skills check-caa example.com                      # CAA records
+cert-skills check-sct example.com                      # SCT compliance
 
-# TLS scanning
-cert-hacker scan-protocols example.com                 # TLS version scan
-cert-hacker scan-ciphers example.com                   # Cipher suite scan
-cert-hacker jarm example.com                           # JARM fingerprint
-cert-hacker ja3 example.com                            # JA3 fingerprint
-
-# Other checks
-cert-hacker check-revocation example.com               # OCSP/CRL revocation
-cert-hacker check-hsts example.com                     # HSTS status
-cert-hacker check-caa example.com                      # CAA records
-cert-hacker check-sct example.com                      # SCT compliance
-cert-hacker detect-ev example.com                      # EV detection
-cert-hacker check-wildcard example.com                 # Wildcard analysis
-cert-hacker verify-hostname example.com                # Hostname verification
-cert-hacker verify-chain example.com                   # Chain verification
-cert-hacker check-pfs example.com                      # Perfect Forward Secrecy
-cert-hacker expiry-monitor -t "a.com,b.com"            # Expiry monitoring
+# Cyberspace mapping
+cert-skills search-ct example.com                      # Search CT logs
+cert-skills ct-enumerate example.com                   # Enumerate subdomains
+cert-skills jarm example.com                           # JARM fingerprint
+cert-skills ja3 example.com                            # JA3 fingerprint
+cert-skills detect-ev example.com                      # EV detection
+cert-skills check-wildcard example.com                 # Wildcard analysis
+cert-skills get-trusted-domains example.com            # Extract domains
+cert-skills verify-hostname example.com                # Hostname verification
+cert-skills verify-chain example.com                   # Chain verification
+cert-skills check-pfs example.com                      # PFS support
+cert-skills expiry-monitor -t "a.com,b.com"            # Expiry monitoring
 
 # Output formats
-cert-hacker info google.com -o json                    # JSON output
-cert-hacker analyze google.com -o json                 # Machine-readable
+cert-skills info google.com -o json                    # JSON output
 ```
 
 ---
@@ -233,7 +239,7 @@ cert-hacker analyze google.com -o json                 # Machine-readable
 ### Online Analysis (requires network)
 
 ```go
-import pkg "github.com/cyberspacesec/certificate-hacker/pkg"
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
 
 // Full security analysis with scoring
 result, err := pkg.AnalyzeSecurity("google.com")
@@ -242,7 +248,7 @@ result, err := pkg.AnalyzeSecurity("google.com")
 certResult, err := pkg.ScanCertSecurity("google.com")
 
 // TLS vulnerability scan (11 checks)
-vulnResult, err := pkg.ScanVulnerabilities("google.com")
+vulnResult, err := pkg.VulnerabilityScan("google.com")
 
 // Check for distrusted CAs
 distrustedResult, err := pkg.CheckDistrustedCA("google.com")
@@ -252,6 +258,22 @@ keyUsageResult, err := pkg.CheckKeyUsageCompliance("google.com")
 
 // Serial number entropy
 entropyResult, err := pkg.CheckSerialEntropy("google.com")
+
+// JARM/JA3 fingerprinting
+jarmResult, err := pkg.JARMScan("google.com")
+ja3Result, err := pkg.JA3Scan("google.com")
+
+// CT log search
+ctResult, err := pkg.CTSearch("example.com")
+
+// Subdomain enumeration
+subdomains, err := pkg.CTEnumerateSubdomains("example.com")
+
+// HSTS check
+hstsResult, err := pkg.CheckHSTS("example.com")
+
+// Revocation check
+revResult, err := pkg.CheckRevocation("example.com")
 ```
 
 ### Offline Analysis (no network required)
@@ -281,35 +303,107 @@ import "errors"
 result, err := pkg.AnalyzeSecurity("unreachable.example.com")
 if err != nil {
     if errors.Is(err, pkg.ErrConnectionFailed) {
-        // Handle connection failure
+        // Connection failure
     } else if errors.Is(err, pkg.ErrDNSResolution) {
-        // Handle DNS failure
+        // DNS failure
     } else if errors.Is(err, pkg.ErrCertNotFound) {
-        // Handle no certificate
+        // No certificate found
+    } else if errors.Is(err, pkg.ErrCertParseFailed) {
+        // Parse error
     }
 }
 ```
 
+### Full SDK Reference
+
+| Function | Description | Network |
+|----------|-------------|---------|
+| `AnalyzeSecurity(target)` | Full security analysis (0-100 score) | ✅ |
+| `AnalyzeSecurityFromCert(cert, host)` | Offline security analysis | ❌ |
+| `ScanCertSecurity(target)` | 18 cert security checks | ✅ |
+| `ScanCertSecurityFromChain(cert, host, state)` | Offline cert security checks | ❌ |
+| `VulnerabilityScan(target)` | 11 TLS vulnerability scans | ✅ |
+| `BatchAnalyzeSecurity(targets)` | Batch security analysis | ✅ |
+| `CheckDistrustedCA(target)` | Distrusted CA detection | ✅ |
+| `CheckDistrustedCAFromCert(chain)` | Offline distrusted CA check | ❌ |
+| `CheckKeyUsageCompliance(target)` | Key usage compliance | ✅ |
+| `CheckKeyUsageFromCert(cert)` | Offline key usage check | ❌ |
+| `CheckPolicyAnalysis(target)` | Policy OID analysis | ✅ |
+| `CheckPolicyFromCert(cert)` | Offline policy analysis | ❌ |
+| `CheckNameConstraints(target)` | Name constraints check | ✅ |
+| `CheckNameConstraintsFromCert(chain)` | Offline name constraints | ❌ |
+| `CheckSerialEntropy(target)` | Serial entropy analysis | ✅ |
+| `AnalyzeSerialNumberFromCert(cert)` | Offline serial analysis | ❌ |
+| `CheckOCSPMustStaple(target)` | OCSP Must-Staple check | ✅ |
+| `CheckBundleCompleteness(target)` | Bundle completeness check | ✅ |
+| `CheckRevocation(target)` | OCSP/CRL revocation check | ✅ |
+| `CheckHSTS(target)` | HSTS status check | ✅ |
+| `CheckCAA(target)` | CAA record check | ✅ |
+| `CheckSCT(target)` | SCT compliance check | ✅ |
+| `CheckPFS(target)` | PFS support check | ✅ |
+| `CheckSessionResumption(target)` | Session resumption check | ✅ |
+| `CheckWildcard(target)` | Wildcard analysis | ✅ |
+| `DetectEV(target)` | EV certificate detection | ✅ |
+| `VerifyCertChain(target)` | Chain verification | ✅ |
+| `VerifyHostname(target)` | Hostname verification | ✅ |
+| `CertExpiryMonitor(targets)` | Expiration monitoring | ✅ |
+| `GetTrustedDomains(target)` | Domain extraction | ✅ |
+| `CTSearch(domain)` | CT log domain search | ✅ |
+| `CTSearchByFingerprint(fp)` | CT log fingerprint search | ✅ |
+| `CTEnumerateSubdomains(domain)` | CT subdomain enumeration | ✅ |
+| `JARMScan(target)` | JARM fingerprinting | ✅ |
+| `JA3Scan(target)` | JA3/JA3S fingerprinting | ✅ |
+| `GenerateSelfSignedCert(...)` | Certificate generation | ❌ |
+| `GenerateCSR(...)` | CSR generation | ❌ |
+| `DownloadCertsFromDomain(target)` | Certificate download | ✅ |
+| `CompareCerts(cert1, cert2)` | Certificate comparison | ❌ |
+| `GenerateFingerprints(cert)` | Fingerprint generation | ❌ |
+| `ValidateCertificateFiles(cert, key)` | Cert-key validation | ❌ |
+| `ValidateFingerprint(fp, type)` | Fingerprint format validation | ❌ |
+
 ---
 
-## 🤖 MCP Server
+## 🤖 AI Integration (MCP)
 
-Run as an MCP server for AI agents:
+### One-Click Setup for Claude Code
 
-```bash
-# Build and run
-go build -o cert-hacker-mcp ./cmd/mcp/
-./cert-hacker-mcp
+Add this to your `.claude/settings.json`:
 
-# Or use with Claude Code
-# Add to .claude/settings.json:
+```json
 {
   "mcpServers": {
-    "certificate-hacker": {
-      "command": "/path/to/cert-hacker-mcp"
+    "certificate-skills": {
+      "command": "cert-skills-mcp",
+      "args": []
     }
   }
 }
+```
+
+Or if you don't have the binary installed, use npx:
+
+```json
+{
+  "mcpServers": {
+    "certificate-skills": {
+      "command": "npx",
+      "args": ["-y", "certificate-skills-mcp"]
+    }
+  }
+}
+```
+
+### MCP Transport Modes
+
+```bash
+# stdio (default, for Claude Code)
+cert-skills-mcp
+
+# HTTP (modern MCP transport)
+cert-skills-mcp --transport http --addr :8080
+
+# SSE (legacy MCP transport)
+cert-skills-mcp --transport sse --addr :8080
 ```
 
 ### Available MCP Tools (40)
@@ -323,7 +417,7 @@ go build -o cert-hacker-mcp ./cmd/mcp/
 | `cert_parse` | Parse local certificate file |
 | `cert_download` | Download certificate chain |
 | `cert_generate` | Generate self-signed certificate |
-| `cert_generate_csr` | Generate Certificate Signing Request |
+| `cert_generate_csr` | Generate CSR |
 | `cert_analyze_security` | Full security analysis with scoring |
 | `cert_batch_analyze` | Batch analyze multiple domains |
 | `cert_fingerprint_domain` | Generate fingerprints from domain |
@@ -331,10 +425,10 @@ go build -o cert-hacker-mcp ./cmd/mcp/
 | `cert_compare` | Compare two certificates |
 | `cert_validate_files` | Validate certificate-key pair |
 | `cert_validate_fingerprint` | Validate fingerprint format |
-| `cert_scan_protocols` | Scan supported TLS protocols |
-| `cert_scan_ciphers` | Scan supported cipher suites |
+| `cert_scan_protocols` | Scan TLS protocols |
+| `cert_scan_ciphers` | Scan cipher suites |
 | `cert_scan_vulnerabilities` | Scan TLS vulnerabilities (11) |
-| `cert_scan_cert_security` | Scan certificate security (18) |
+| `cert_scan_cert_security` | Scan cert security (18) |
 | `cert_search_ct` | Search CT logs by domain |
 | `cert_search_ct_fingerprint` | Search CT logs by fingerprint |
 | `cert_ct_enumerate` | Enumerate subdomains via CT |
@@ -383,11 +477,11 @@ go build -o cert-hacker-mcp ./cmd/mcp/
 | CERT-011 | Wildcard Certificate Risk | Low |
 | CERT-012 | Internal Name (.local, .internal) | High |
 | CERT-013 | Untrusted Chain | High |
-| CERT-014 | **Distrusted CA** (DigiNotar, WoSign, etc.) | **Critical** |
-| CERT-015 | **OCSP Must-Staple Violation** | **High** |
-| CERT-016 | **Key Usage Non-Compliance** | **High** |
-| CERT-017 | **Low Serial Entropy** | **Medium** |
-| CERT-018 | **Name Constraint Violation** | **High** |
+| CERT-014 | Distrusted CA | Critical |
+| CERT-015 | OCSP Must-Staple Violation | High |
+| CERT-016 | Key Usage Non-Compliance | High |
+| CERT-017 | Low Serial Entropy | Medium |
+| CERT-018 | Name Constraint Violation | High |
 
 ### TLS Vulnerability Scans (11 checks)
 
@@ -425,24 +519,22 @@ See [skills/](skills/) directory for all skill documents.
 ## 🏗️ Architecture
 
 ```
-certificate-hacker/
+certificate-skills/
 ├── cmd/
-│   ├── main.go              # CLI entry point (Cobra-based)
+│   ├── main.go              # CLI (Cobra, 39 commands)
 │   └── mcp/                 # MCP server entry point
 ├── internal/
-│   ├── display/             # Terminal UI styling (lipgloss)
-│   └── mcpserver/           # MCP server implementation
-│       ├── tools.go         # 40 MCP tool definitions
-│       └── handlers.go      # MCP request handlers
-├── pkg/                     # Public SDK (importable Go package)
+│   ├── display/             # Terminal UI (lipgloss)
+│   └── mcpserver/           # MCP server (40 tools)
+├── pkg/                     # Go SDK (importable package)
 │   ├── certificate.go       # Core certificate operations
 │   ├── security.go          # Security analysis & scoring
+│   ├── offline.go           # Offline/from-cert SDK functions
+│   ├── certerrors.go        # Structured error types
 │   ├── certvulnscan.go      # 18 cert security checks
 │   ├── vulnscanner.go       # 11 TLS vulnerability scans
-│   ├── offline.go           # Offline/from-cert analysis functions
-│   ├── certerrors.go        # Structured error types
 │   ├── distrustedca.go      # Distrusted CA detection
-│   ├── ocspmuststaple.go    # OCSP Must-Staple check
+│   ├── ocspmuststaple.go    # OCSP Must-Staple
 │   ├── keyusagecompliance.go # Key usage validation
 │   ├── serialentropy.go     # Serial entropy analysis
 │   ├── policyanalysis.go    # Policy OID analysis
@@ -450,27 +542,15 @@ certificate-hacker/
 │   ├── bundlecheck.go       # Bundle completeness
 │   ├── cipherscanner.go     # Cipher suite scanner
 │   ├── tlsscanner.go        # TLS protocol scanner
-│   ├── jarm.go              # JARM fingerprinting
-│   ├── ja3.go               # JA3/JA3S fingerprinting
+│   ├── jarm.go / ja3.go     # TLS fingerprinting
 │   ├── ctlog.go             # CT log search
 │   ├── revocation.go        # OCSP/CRL revocation
-│   ├── hsts.go              # HSTS checking
-│   ├── caa.go               # CAA checking
-│   ├── sct.go               # SCT verification
-│   ├── evcert.go            # EV detection
-│   ├── chainverify.go       # Chain verification
-│   ├── hostnameverify.go    # Hostname verification
-│   ├── pfs.go               # PFS checking
-│   ├── sessionresumption.go # Session resumption
-│   ├── expirycheck.go       # Expiry monitoring
-│   ├── generator.go         # Certificate generation
-│   ├── fingerprint.go       # Fingerprint generation
-│   ├── comparator.go        # Certificate comparison
-│   ├── downloader.go        # Certificate download
-│   ├── wildcard.go          # Wildcard analysis
-│   └── generator_test.go    # Unit tests
+│   ├── hsts.go / caa.go     # HSTS & CAA
+│   └── ... (30+ source files)
 ├── skills/                  # 38 skill documents (SKILL.md)
-└── go.mod
+├── .goreleaser.yml          # Cross-platform release config
+├── .github/workflows/       # CI/CD pipelines
+└── Dockerfile               # Multi-arch Docker build
 ```
 
 ---
@@ -484,11 +564,85 @@ certificate-hacker/
 | Skills | 38 |
 | Cert Security Checks | 18 |
 | TLS Vulnerability Scans | 11 |
-| Go Package Functions | 50+ |
+| Go SDK Functions | 50+ |
 | Offline SDK Functions | 7 |
+| Supported Platforms | 9 |
+| Structured Error Types | 15 |
+
+---
+
+## 🇨🇳 简体中文
+
+### 简介
+
+`cert-skills` 是一个 AI 原生的证书安全工具包和 Go SDK，专为 AI Agent、安全研究员和网络空间测绘设计。支持三种使用方式：CLI 命令行、Go SDK 编程调用、MCP 服务接入 AI。
+
+### 安装
+
+```bash
+# Linux x86_64
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+sudo mv cert-skills /usr/local/bin/
+
+# macOS Apple Silicon
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
+sudo mv cert-skills /usr/local/bin/
+
+# 从源码编译
+git clone https://github.com/cyberspacesec/certificate-skills.git
+cd certificate-skills && go build -o cert-skills ./cmd/
+```
+
+### CLI 使用
+
+```bash
+cert-skills analyze google.com              # 安全评分 (0-100)
+cert-skills scan-cert-security example.com  # 18项证书安全检查
+cert-skills scan-vulns example.com          # 11项TLS漏洞扫描
+cert-skills search-ct example.com           # CT日志搜索
+cert-skills jarm suspicious.com             # JARM指纹
+```
+
+### Go SDK
+
+```go
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
+
+result, err := pkg.AnalyzeSecurity("google.com")       // 在线分析
+keyUsage := pkg.CheckKeyUsageFromCert(cert)             // 离线分析
+distrusted := pkg.CheckDistrustedCAFromCert(chain)      // 离线检查
+```
+
+### AI 接入 (MCP)
+
+复制以下配置到 `.claude/settings.json` 即可一键接入：
+
+```json
+{
+  "mcpServers": {
+    "certificate-skills": {
+      "command": "cert-skills-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+接入后，AI Agent 可直接调用 40 个证书安全工具，包括安全评分、漏洞扫描、CT日志搜索、JARM指纹、吊销检查等全部能力。
+
+### 核心能力
+
+| 类别 | 数量 | 说明 |
+|------|------|------|
+| CLI 命令 | 39 | 全部SDK能力通过CLI暴露 |
+| MCP 工具 | 40 | AI Agent 直接调用 |
+| 证书安全检查 | 18 | CERT-001 到 CERT-018 |
+| TLS 漏洞扫描 | 11 | Heartbleed 到 DROWN |
+| Go SDK 函数 | 50+ | 含 7 个离线分析函数 |
+| 支持平台 | 9 | Linux/macOS/Windows/FreeBSD |
 
 ---
 
 ## 📄 License
 
-MIT License. See [LICENSE](LICENSE) for details.
+[MIT License](LICENSE)

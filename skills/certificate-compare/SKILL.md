@@ -42,6 +42,48 @@ cert_compare target="example.com"
 3. Review fingerprint match results
 4. Check specific differences if certificates differ
 
+## Installation
+
+### Download Binary
+
+```bash
+# Linux x86_64
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+
+# macOS Apple Silicon
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
+
+# Windows (PowerShell)
+Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
+Expand-Archive cert-skills.zip
+```
+
+### Build from Source
+
+```bash
+git clone https://github.com/cyberspacesec/certificate-skills.git
+cd certificate-skills
+go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
+```
+
+### Install Globally
+
+```bash
+sudo mv cert-skills /usr/local/bin/
+```
+
+### Verify Installation
+
+```bash
+cert-skills --version
+```
+
+### Install as Go Module
+
+```bash
+go get github.com/cyberspacesec/certificate-skills/pkg
+```
+
 ## Cyberspace Mapping Applications
 
 - Verify certificate deployment consistency across load balancers
