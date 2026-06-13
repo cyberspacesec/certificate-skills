@@ -8,8 +8,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"strings"
 	"time"
 )
@@ -113,7 +113,7 @@ func GetCertFromDomain(domain string) (*SSLInfo, error) {
 // GetCertFromFile 从文件读取证书（支持 PEM 和 DER 格式）
 func GetCertFromFile(filename string) (*CertInfo, error) {
 	// 读取文件内容
-	data, err := ioutil.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read certificate file: %v", err)
 	}
@@ -241,14 +241,25 @@ func buildCertInfo(cert *x509.Certificate) *CertInfo {
 	return info
 }
 
-// parseHostPort 解析主机名和端口
+// parseHostPort 解析主机名和端口 (支持 IPv6 地址如 [::1]:443)
 func parseHostPort(addr string) (host, port string) {
-	parts := strings.Split(addr, ":")
-	if len(parts) == 2 {
-		return parts[0], parts[1]
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		// No port specified, use default 443
+		return addr, "443"
 	}
-	// 默认使用443端口
-	return addr, "443"
+	return host, port
+}
+
+// IsFileTarget checks if a target string looks like a file path.
+func IsFileTarget(target string) bool {
+	fileExts := []string{".pem", ".crt", ".cer", ".der", ".p7b", ".p7c"}
+	for _, ext := range fileExts {
+		if strings.HasSuffix(strings.ToLower(target), ext) {
+			return true
+		}
+	}
+	return false
 }
 
 // getTLSVersionName 获取TLS版本名称

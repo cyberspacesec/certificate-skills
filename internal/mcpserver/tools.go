@@ -23,6 +23,31 @@ func Tools() []server.ServerTool {
 		{Tool: CertScanProtocolsTool, Handler: HandleCertScanProtocols},
 		{Tool: CertScanCiphersTool, Handler: HandleCertScanCiphers},
 		{Tool: CertCheckHSTSTool, Handler: HandleCertCheckHSTS},
+		{Tool: JARMScanTool, Handler: HandleJARMScan},
+		{Tool: JA3ScanTool, Handler: HandleJA3Scan},
+		{Tool: VulnScanTool, Handler: HandleVulnScan},
+		{Tool: CTSearchTool, Handler: HandleCTSearch},
+		{Tool: CheckRevocationTool, Handler: HandleCheckRevocation},
+		{Tool: CheckPFSTool, Handler: HandleCheckPFS},
+		{Tool: DetectEVTool, Handler: HandleDetectEV},
+		{Tool: VerifyCertChainTool, Handler: HandleVerifyCertChain},
+		{Tool: CheckSessionResumptionTool, Handler: HandleCheckSessionResumption},
+		{Tool: CertExpiryMonitorTool, Handler: HandleCertExpiryMonitor},
+		{Tool: CheckWildcardTool, Handler: HandleCheckWildcard},
+		{Tool: GetTrustedDomainsTool, Handler: HandleGetTrustedDomains},
+		{Tool: CheckCAATool, Handler: HandleCheckCAA},
+		{Tool: CheckSCTTool, Handler: HandleCheckSCT},
+		{Tool: VerifyHostnameTool, Handler: HandleVerifyHostname},
+		{Tool: ScanCertSecurityTool, Handler: HandleScanCertSecurity},
+		{Tool: CTEnumerateSubdomainsTool, Handler: HandleCTEnumerateSubdomains},
+		{Tool: SearchCTByFingerprintTool, Handler: HandleSearchCTByFingerprint},
+		{Tool: CheckDistrustedCATool, Handler: HandleCheckDistrustedCA},
+		{Tool: CheckOCSPMustStapleTool, Handler: HandleCheckOCSPMustStaple},
+		{Tool: CheckKeyUsageComplianceTool, Handler: HandleCheckKeyUsageCompliance},
+		{Tool: CheckSerialEntropyTool, Handler: HandleCheckSerialEntropy},
+		{Tool: CheckPolicyAnalysisTool, Handler: HandleCheckPolicyAnalysis},
+		{Tool: CheckNameConstraintsTool, Handler: HandleCheckNameConstraints},
+		{Tool: CheckBundleCompletenessTool, Handler: HandleCheckBundleCompleteness},
 	}
 }
 
@@ -221,6 +246,7 @@ var CertValidateFingerprintTool = mcp.NewTool("cert_validate_fingerprint",
 		mcp.Enum("md5", "sha1", "sha256"),
 	),
 )
+
 var CertDownloadTool = mcp.NewTool("cert_download",
 	mcp.WithDescription(
 		"Download SSL/TLS certificate chain from a remote domain and save as PEM files on disk. "+
@@ -269,5 +295,280 @@ var CertCheckHSTSTool = mcp.NewTool("cert_check_hsts",
 	mcp.WithString("target",
 		mcp.Required(),
 		mcp.Description("Domain name (e.g., 'example.com'). Default port is 443."),
+	),
+)
+
+var JARMScanTool = mcp.NewTool("cert_jarm",
+	mcp.WithDescription(
+		"Generate a JARM TLS server fingerprint by sending multiple TLS Client Hello probes "+
+			"and analyzing the server's responses. JARM is used for server identification, "+
+			"C2 infrastructure detection, and cyberspace mapping. Returns the JARM hash, "+
+			"negotiated TLS version, and cipher suite."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var JA3ScanTool = mcp.NewTool("cert_ja3",
+	mcp.WithDescription(
+		"Generate JA3 (client) and JA3S (server) TLS fingerprints by connecting to a target. "+
+			"JA3 fingerprints are MD5 hashes of TLS handshake parameters used for service "+
+			"identification, malware C2 detection, and cyberspace mapping. "+
+			"Returns both JA3 and JA3S hashes with raw fingerprint strings."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var VulnScanTool = mcp.NewTool("cert_scan_vulnerabilities",
+	mcp.WithDescription(
+		"Scan a server for known TLS vulnerabilities including Heartbleed, POODLE, ROBOT, "+
+			"CCS Injection, FREAK, Logjam, Sweet32, BEAST, CRIME, DROWN, and insecure renegotiation. "+
+			"Returns vulnerability status for each check with severity levels and a summary."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CTSearchTool = mcp.NewTool("cert_search_ct",
+	mcp.WithDescription(
+		"Search Certificate Transparency (CT) logs for certificates associated with a domain. "+
+			"Essential for cyberspace mapping - discovers subdomains, certificate issuance history, "+
+			"unauthorized certificates, and organizational infrastructure. "+
+			"Returns all certificates found with subdomain enumeration."),
+	mcp.WithString("domain",
+		mcp.Required(),
+		mcp.Description("Domain name to search for (e.g., 'example.com'). Searches for all subdomain certificates."),
+	),
+)
+
+var CheckRevocationTool = mcp.NewTool("cert_check_revocation",
+	mcp.WithDescription(
+		"Check the revocation status of a certificate using both OCSP (Online Certificate Status Protocol) "+
+			"and CRL (Certificate Revocation List). For domain targets, connects and checks the leaf certificate. "+
+			"For file targets, checks CRL only (OCSP requires issuer certificate). "+
+			"Returns OCSP and CRL status with overall revocation verdict."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name (e.g., 'example.com') or file path (e.g., '/path/to/cert.pem') to check."),
+	),
+)
+
+var CheckPFSTool = mcp.NewTool("cert_check_pfs",
+	mcp.WithDescription(
+		"Check whether a server supports Perfect Forward Secrecy (PFS). PFS ensures that "+
+			"even if the server's private key is compromised, past session keys cannot be derived. "+
+			"Checks ECDHE/DHE key exchange and lists PFS and non-PFS cipher suites."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var DetectEVTool = mcp.NewTool("cert_detect_ev",
+	mcp.WithDescription(
+		"Detect whether a domain's certificate is an Extended Validation (EV) certificate. "+
+			"EV certificates provide the highest level of identity assurance and display the "+
+			"organization name in the browser address bar. Checks certificate policy OIDs against "+
+			"known EV policy identifiers."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var VerifyCertChainTool = mcp.NewTool("cert_verify_chain",
+	mcp.WithDescription(
+		"Verify a server's certificate chain against the system trust store. Returns detailed "+
+			"information about each verified chain path, trust anchor, and any errors or warnings. "+
+			"Checks chain validity, hostname matching, expiration, and weak signature algorithms."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CheckSessionResumptionTool = mcp.NewTool("cert_check_session_resumption",
+	mcp.WithDescription(
+		"Check whether a server supports TLS session resumption via session IDs or "+
+			"session tickets (RFC 5077). Session resumption improves TLS handshake performance "+
+			"by allowing clients to reuse previously negotiated session parameters."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CertExpiryMonitorTool = mcp.NewTool("cert_expiry_monitor",
+	mcp.WithDescription(
+		"Monitor certificate expiration for multiple domains. Returns expiry status for each target "+
+			"categorized as Expired, Critical (<=7 days), Warning (<=30 days), or Healthy (>30 days). "+
+			"Useful for proactive certificate lifecycle management."),
+	mcp.WithArray("targets",
+		mcp.Required(),
+		mcp.Description("List of domain names or file paths to monitor (e.g., ['google.com', 'github.com', '/path/to/cert.pem'])"),
+	),
+)
+
+var CheckWildcardTool = mcp.NewTool("cert_check_wildcard",
+	mcp.WithDescription(
+		"Analyze wildcard certificate patterns in a domain's certificate. Detects wildcard SANs, "+
+			"classifies wildcard levels, assesses security risk, and lists covered domains. "+
+			"Essential for cyberspace mapping to understand certificate scope."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or file path to analyze for wildcard patterns."),
+	),
+)
+
+var GetTrustedDomainsTool = mcp.NewTool("cert_get_trusted_domains",
+	mcp.WithDescription(
+		"Extract all domain names trusted by a certificate, including wildcard expansions. "+
+			"Returns exact domains, wildcard domains, base domains, and organization info. "+
+			"Key for cyberspace mapping to understand what domain namespace a certificate covers."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CheckCAATool = mcp.NewTool("cert_check_caa",
+	mcp.WithDescription(
+		"Check DNS CAA (Certification Authority Authorization) records for a domain. "+
+			"Verifies if the issuing CA is authorized by CAA policy. Detects CAA misconfigurations "+
+			"and unauthorized certificate issuance."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name to check CAA records for (e.g., 'example.com')."),
+	),
+)
+
+var CheckSCTTool = mcp.NewTool("cert_check_sct",
+	mcp.WithDescription(
+		"Verify Signed Certificate Timestamps (SCTs) in a certificate. Checks if the certificate "+
+			"meets CA/Browser Forum CT requirements (2+ SCTs for standard validity). "+
+			"Missing SCTs indicate potential non-compliance or misissuance."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var VerifyHostnameTool = mcp.NewTool("cert_verify_hostname",
+	mcp.WithDescription(
+		"Verify that a server's certificate matches the requested hostname. Checks SAN/CN matching, "+
+			"detects hostname mismatches, wildcard matches, and RFC 6125 compliance. "+
+			"Critical for identifying misconfigured or potentially malicious certificates."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var ScanCertSecurityTool = mcp.NewTool("cert_scan_cert_security",
+	mcp.WithDescription(
+		"Perform certificate-specific security checks (not TLS protocol checks). Detects weak signatures, "+
+			"short keys, missing SANs, hostname mismatches, excessive validity, self-signed certs, "+
+			"expired/expiring certs, wildcard risks, internal names, and untrusted chains."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CTEnumerateSubdomainsTool = mcp.NewTool("cert_ct_enumerate",
+	mcp.WithDescription(
+		"Enumerate subdomains through Certificate Transparency logs. Enhanced CT search focused on "+
+			"cyberspace mapping - discovers all subdomains, groups by issuer, identifies wildcard domains, "+
+			"and tracks active vs expired certificates."),
+	mcp.WithString("domain",
+		mcp.Required(),
+		mcp.Description("Domain name to enumerate subdomains for (e.g., 'example.com')."),
+	),
+)
+
+var SearchCTByFingerprintTool = mcp.NewTool("cert_search_ct_fingerprint",
+	mcp.WithDescription(
+		"Search Certificate Transparency logs for a specific certificate by its SHA-256 fingerprint. "+
+			"Useful for tracking a specific certificate, verifying CT log inclusion, "+
+			"and finding all instances of a known certificate across CT logs."),
+	mcp.WithString("fingerprint",
+		mcp.Required(),
+		mcp.Description("SHA-256 fingerprint of the certificate (hex, with or without colons)."),
+	),
+)
+
+var CheckDistrustedCATool = mcp.NewTool("cert_check_distrusted_ca",
+	mcp.WithDescription(
+		"Check if a certificate chain contains any known distrusted or compromised "+
+			"Certificate Authorities (DigiNotar, WoSign, StartCom, Symantec legacy, CNNIC, TrustCor, etc.). "+
+			"Detects certificates that chain to CAs removed from browser root stores."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com:8443'). Default port is 443."),
+	),
+)
+
+var CheckOCSPMustStapleTool = mcp.NewTool("cert_check_ocsp_must_staple",
+	mcp.WithDescription(
+		"Check OCSP Must-Staple compliance (RFC 7633). A certificate with Must-Staple "+
+			"that fails to provide an OCSP staple causes hard-failures in compliant clients."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com'). Default port is 443."),
+	),
+)
+
+var CheckKeyUsageComplianceTool = mcp.NewTool("cert_check_key_usage",
+	mcp.WithDescription(
+		"Validate that a certificate's key usage extensions comply with RFC 5280 and "+
+			"CA/Browser Forum Baseline Requirements. Checks CA keyCertSign, leaf digitalSignature, etc."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com'). Default port is 443."),
+	),
+)
+
+var CheckSerialEntropyTool = mcp.NewTool("cert_check_serial_entropy",
+	mcp.WithDescription(
+		"Analyze certificate serial number entropy. CA/Browser Forum Baseline Requirements "+
+			"mandate at least 64 bits of entropy. Detects sequential, predictable, or low-entropy serials."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com'). Default port is 443."),
+	),
+)
+
+var CheckPolicyAnalysisTool = mcp.NewTool("cert_check_policy",
+	mcp.WithDescription(
+		"Analyze certificate policy OIDs beyond simple EV detection. Identifies DV/OV/EV validation type, "+
+			"unknown policy OIDs, and missing Certificate Policies on public CA-issued certificates."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com'). Default port is 443."),
+	),
+)
+
+var CheckNameConstraintsTool = mcp.NewTool("cert_check_name_constraints",
+	mcp.WithDescription(
+		"Check CA certificate Name Constraints and verify leaf certificate names comply with "+
+			"parent CA constraints. Detects trust boundary violations where certificates are issued "+
+			"outside a CA's permitted namespace."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com'). Default port is 443."),
+	),
+)
+
+var CheckBundleCompletenessTool = mcp.NewTool("cert_check_bundle",
+	mcp.WithDescription(
+		"Check if a server provides a complete certificate chain. If intermediates are missing, "+
+			"attempts to fetch them via AIA CA Issuers URLs and re-verify the chain."),
+	mcp.WithString("target",
+		mcp.Required(),
+		mcp.Description("Domain name or IP address with optional port (e.g., 'example.com'). Default port is 443."),
 	),
 )

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sort"
 	"strings"
 
-	"github.com/cyberspacesec/certificate-hacker/pkg"
+	"github.com/cyberspacesec/certificate-skills/internal/display"
+	"github.com/cyberspacesec/certificate-skills/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -19,21 +21,30 @@ var (
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n", display.Error(err.Error()))
 		os.Exit(1)
 	}
 }
 
 var rootCmd = &cobra.Command{
 	Use:   "cert-hacker",
-	Short: "Certificate security toolkit",
-	Long: `cert-hacker is a comprehensive certificate security toolkit that provides
-various certificate-related operations including downloading, parsing, analyzing,
-generating certificates and security testing tools.
+	Short: "Certificate security toolkit for cyberspace mapping",
+	Long: `cert-hacker is a comprehensive certificate security toolkit for
+cyberspace mapping and security assessment. It provides certificate
+downloading, parsing, analysis, generation, vulnerability scanning,
+and cyberspace mapping capabilities.
 
-This tool is designed for security researchers, system administrators, and
+Designed for security researchers, system administrators, and
 penetration testers who need to work with SSL/TLS certificates.`,
 	Version: version,
+	SilenceUsage: true,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Show banner unless output is JSON
+		outputFormat, _ := cmd.Flags().GetString("output")
+		if outputFormat != "json" {
+			display.Banner()
+		}
+	},
 }
 
 func init() {
@@ -82,6 +93,35 @@ func init() {
 	validateFingerprintCmd.Flags().StringP("fingerprint", "f", "", "Fingerprint hex string to validate")
 	validateFingerprintCmd.Flags().StringP("hash-type", "", "", "Hash algorithm (md5, sha1, sha256)")
 
+	// scan-ciphers 命令参数
+	scanCiphersCmd.Flags().String("tls-version", "", "TLS version to scan (1.0, 1.1, 1.2, 1.3)")
+
+	// check-hsts 命令
+	rootCmd.AddCommand(checkHSTSCmd)
+	rootCmd.AddCommand(checkWildcardCmd)
+	rootCmd.AddCommand(getTrustedDomainsCmd)
+	rootCmd.AddCommand(checkCAACmd)
+	rootCmd.AddCommand(checkSCTCmd)
+	rootCmd.AddCommand(verifyHostnameCmd)
+	rootCmd.AddCommand(scanCertSecurityCmd)
+	rootCmd.AddCommand(ctEnumerateCmd)
+	rootCmd.AddCommand(searchCTByFingerprintCmd)
+	rootCmd.AddCommand(checkDistrustedCACmd)
+	rootCmd.AddCommand(checkOCSPMustStapleCmd)
+	rootCmd.AddCommand(checkKeyUsageComplianceCmd)
+	rootCmd.AddCommand(checkSerialEntropyCmd)
+	rootCmd.AddCommand(checkPolicyAnalysisCmd)
+	rootCmd.AddCommand(checkNameConstraintsCmd)
+	rootCmd.AddCommand(checkBundleCompletenessCmd)
+	rootCmd.AddCommand(checkPFSCmd)
+	rootCmd.AddCommand(detectEVCmd)
+	rootCmd.AddCommand(verifyChainCmd)
+	rootCmd.AddCommand(checkSessionResumptionCmd)
+	rootCmd.AddCommand(expiryMonitorCmd)
+
+	// expiry-monitor command parameters
+	expiryMonitorCmd.Flags().StringP("targets", "t", "", "Comma-separated list of domains or files to monitor")
+
 	rootCmd.AddCommand(infoCmd)
 	rootCmd.AddCommand(downloadCmd)
 	rootCmd.AddCommand(parseCmd)
@@ -95,6 +135,11 @@ func init() {
 	rootCmd.AddCommand(validateFingerprintCmd)
 	rootCmd.AddCommand(scanProtocolsCmd)
 	rootCmd.AddCommand(scanCiphersCmd)
+	rootCmd.AddCommand(jarmCmd)
+	rootCmd.AddCommand(ja3Cmd)
+	rootCmd.AddCommand(scanVulnsCmd)
+	rootCmd.AddCommand(searchCTCmd)
+	rootCmd.AddCommand(checkRevocationCmd)
 }
 
 // --- Command Definitions ---
@@ -178,10 +223,10 @@ var downloadCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Printf("Certificate Download Complete!\n")
-		fmt.Printf("=============================\n")
-		fmt.Printf("Target: %s\n", result.Target)
-		fmt.Printf("Chain Length: %d certificates\n", result.ChainLength)
+		fmt.Println(display.SectionHeader("Certificate Download Complete"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		fmt.Println(display.BulletKeyValue("Chain Length", fmt.Sprintf("%d certificates", result.ChainLength)))
 		fmt.Printf("\nSaved Files:\n")
 		for _, f := range result.SavedFiles {
 			fmt.Printf("  - %s\n", f)
@@ -351,7 +396,7 @@ Examples:
 		target := args[0]
 		outputFormat, _ := cmd.Flags().GetString("output")
 
-		fmt.Printf("Analyzing SSL/TLS security for: %s\n", target)
+		fmt.Println(display.SectionHeader(fmt.Sprintf("Security Analysis: %s", target)))
 
 		analysis, err := pkg.AnalyzeSecurity(target)
 		if err != nil {
@@ -406,11 +451,11 @@ Examples:
 		}
 
 		fmt.Printf("\nBatch Security Analysis Report\n")
-		fmt.Printf("==============================\n")
+		fmt.Println(display.Separator())
 		fmt.Printf("Total Targets: %d\n", result.TotalCount)
-		fmt.Printf("Summary: ✅ Good: %d | ⚠️ Medium: %d | 🚨 High: %d | 💀 Critical: %d\n",
+		fmt.Printf("Summary: ✅ Good: %d | ⚠️ Medium: %d | 🚨 Low: %d | 💀 Critical: %d\n",
 			result.Summary.GoodCount, result.Summary.MediumCount,
-			result.Summary.HighCount, result.Summary.CriticalCount)
+			result.Summary.LowCount, result.Summary.CriticalCount)
 		fmt.Printf("Average Score: %d/100\n\n", result.Summary.AverageScore)
 
 		for i, a := range result.Results {
@@ -420,7 +465,7 @@ Examples:
 				levelIcon = "✅"
 			case "Medium":
 				levelIcon = "⚠️"
-			case "High":
+			case "Low":
 				levelIcon = "🚨"
 			case "Critical":
 				levelIcon = "💀"
@@ -553,8 +598,8 @@ Examples:
 			return
 		}
 
-		fmt.Printf("\nCertificate Comparison\n")
-		fmt.Printf("======================\n")
+		fmt.Println(display.SectionHeader("Certificate Comparison"))
+		fmt.Println(display.Separator())
 		if comparison.Match {
 			fmt.Printf("✅ Certificates MATCH (identical SHA-256 fingerprint)\n")
 		} else {
@@ -697,8 +742,8 @@ Examples:
 			return
 		}
 
-		fmt.Printf("\nTLS Protocol Scan Results\n")
-		fmt.Printf("=========================\n")
+		fmt.Println(display.SectionHeader("TLS Protocol Scan Results"))
+		fmt.Println(display.Separator())
 		fmt.Printf("Target: %s\n\n", result.Target)
 
 		for _, p := range result.Protocols {
@@ -745,10 +790,25 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
 		outputFormat, _ := cmd.Flags().GetString("output")
+		tlsVersionStr, _ := cmd.Flags().GetString("tls-version")
+
+		var tlsVersion uint16
+		switch tlsVersionStr {
+		case "1.0":
+			tlsVersion = 0x0301
+		case "1.1":
+			tlsVersion = 0x0302
+		case "1.2":
+			tlsVersion = 0x0303
+		case "1.3":
+			tlsVersion = 0x0304
+		default:
+			tlsVersion = 0 // auto-detect
+		}
 
 		fmt.Printf("Scanning cipher suites for: %s\n", target)
 
-		result, err := pkg.CipherSuiteScan(target, 0)
+		result, err := pkg.CipherSuiteScan(target, tlsVersion)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error scanning cipher suites: %v\n", err)
 			os.Exit(1)
@@ -760,8 +820,8 @@ Examples:
 			return
 		}
 
-		fmt.Printf("\nCipher Suite Scan Results\n")
-		fmt.Printf("=========================\n")
+		fmt.Println(display.SectionHeader("Cipher Suite Scan Results"))
+		fmt.Println(display.Separator())
 		fmt.Printf("Target: %s | TLS Version: %s\n\n", result.Target, result.TLSVersion)
 
 		fmt.Printf("Supported Cipher Suites:\n")
@@ -800,48 +860,46 @@ func displayCertInfo(certInfo *pkg.CertInfo, format string) {
 	if format == "json" {
 		data, err := json.MarshalIndent(certInfo, "", "  ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+			fmt.Fprintf(os.Stderr, "%s\n", display.Error(fmt.Sprintf("marshaling JSON: %v", err)))
 			return
 		}
 		fmt.Println(string(data))
 		return
 	}
 
-	fmt.Printf("Certificate Information:\n")
-	fmt.Printf("========================\n")
-	fmt.Printf("Subject: %s\n", certInfo.Subject)
-	fmt.Printf("Issuer: %s\n", certInfo.Issuer)
-	fmt.Printf("Serial Number: %s\n", certInfo.SerialNumber)
-	fmt.Printf("Valid From: %s\n", certInfo.NotBefore.Format("2006-01-02 15:04:05 UTC"))
-	fmt.Printf("Valid To: %s\n", certInfo.NotAfter.Format("2006-01-02 15:04:05 UTC"))
-	fmt.Printf("Version: %d\n", certInfo.Version)
-	fmt.Printf("Is CA: %t\n", certInfo.IsCA)
-	fmt.Printf("Public Key Algorithm: %s\n", certInfo.PublicKeyAlgorithm)
+	fmt.Println(display.SectionHeader("Certificate Information"))
+	fmt.Println(display.BulletKeyValue("Subject", certInfo.Subject))
+	fmt.Println(display.BulletKeyValue("Issuer", certInfo.Issuer))
+	fmt.Println(display.BulletKeyValue("Serial", certInfo.SerialNumber))
+	fmt.Println(display.BulletKeyValue("Valid From", certInfo.NotBefore.Format("2006-01-02 15:04:05 UTC")))
+	fmt.Println(display.BulletKeyValue("Valid To", certInfo.NotAfter.Format("2006-01-02 15:04:05 UTC")))
+	fmt.Println(display.BulletKeyValue("Version", fmt.Sprintf("%d", certInfo.Version)))
+	fmt.Println(display.BulletKeyValue("Is CA", display.BoolIcon(certInfo.IsCA)))
+	fmt.Println(display.BulletKeyValue("Key Algorithm", certInfo.PublicKeyAlgorithm))
 	if certInfo.KeySize > 0 {
-		fmt.Printf("Key Size: %d bits\n", certInfo.KeySize)
+		fmt.Println(display.BulletKeyValue("Key Size", fmt.Sprintf("%d bits", certInfo.KeySize)))
 	}
-	fmt.Printf("Signature Algorithm: %s\n", certInfo.SignatureAlgorithm)
+	fmt.Println(display.BulletKeyValue("Signature", certInfo.SignatureAlgorithm))
 
 	if len(certInfo.DNSNames) > 0 {
-		fmt.Printf("DNS Names: %s\n", strings.Join(certInfo.DNSNames, ", "))
+		fmt.Println(display.BulletKeyValue("DNS Names", strings.Join(certInfo.DNSNames, ", ")))
 	}
 
 	if len(certInfo.IPAddresses) > 0 {
-		fmt.Printf("IP Addresses: %s\n", strings.Join(certInfo.IPAddresses, ", "))
+		fmt.Println(display.BulletKeyValue("IP Addresses", strings.Join(certInfo.IPAddresses, ", ")))
 	}
 
 	if len(certInfo.KeyUsage) > 0 {
-		fmt.Printf("Key Usage: %s\n", strings.Join(certInfo.KeyUsage, ", "))
+		fmt.Println(display.BulletKeyValue("Key Usage", strings.Join(certInfo.KeyUsage, ", ")))
 	}
 
 	if len(certInfo.ExtKeyUsage) > 0 {
-		fmt.Printf("Extended Key Usage: %s\n", strings.Join(certInfo.ExtKeyUsage, ", "))
+		fmt.Println(display.BulletKeyValue("Ext Key Usage", strings.Join(certInfo.ExtKeyUsage, ", ")))
 	}
 
-	fmt.Printf("\nFingerprints:\n")
-	fmt.Printf("=============\n")
+	fmt.Println(display.SectionHeader("Fingerprints"))
 	for hashType, fingerprint := range certInfo.Fingerprints {
-		fmt.Printf("%-20s: %s\n", strings.ToUpper(hashType), fingerprint)
+		fmt.Println(display.BulletKeyValue(strings.ToUpper(hashType), fingerprint))
 	}
 }
 
@@ -849,32 +907,29 @@ func displaySSLInfo(sslInfo *pkg.SSLInfo, format string) {
 	if format == "json" {
 		data, err := json.MarshalIndent(sslInfo, "", "  ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+			fmt.Fprintf(os.Stderr, "%s\n", display.Error(fmt.Sprintf("marshaling JSON: %v", err)))
 			return
 		}
 		fmt.Println(string(data))
 		return
 	}
 
-	fmt.Printf("SSL/TLS Connection Information:\n")
-	fmt.Printf("===============================\n")
-	fmt.Printf("TLS Version: %s\n", sslInfo.TLSVersion)
-	fmt.Printf("Cipher Suite: %s\n", sslInfo.CipherSuite)
-	fmt.Printf("HTTP/2 Support: %s\n", boolIcon(sslInfo.SupportsHTTP2))
-	fmt.Printf("OCSP Stapling: %s\n", boolIcon(sslInfo.HasOCSPStaple))
-	fmt.Printf("Handshake Time: %v\n", sslInfo.HandshakeTime)
-	fmt.Printf("Connected At: %s\n", sslInfo.ConnectedAt.Format("2006-01-02 15:04:05 UTC"))
+	fmt.Println(display.SectionHeader("SSL/TLS Connection Information"))
+	fmt.Println(display.BulletKeyValue("TLS Version", sslInfo.TLSVersion))
+	fmt.Println(display.BulletKeyValue("Cipher Suite", sslInfo.CipherSuite))
+	fmt.Println(display.BulletKeyValue("HTTP/2", display.BoolIcon(sslInfo.SupportsHTTP2)))
+	fmt.Println(display.BulletKeyValue("OCSP Stapling", display.BoolIcon(sslInfo.HasOCSPStaple)))
+	fmt.Println(display.BulletKeyValue("Handshake Time", sslInfo.HandshakeTime.String()))
+	fmt.Println(display.BulletKeyValue("Connected At", sslInfo.ConnectedAt.Format("2006-01-02 15:04:05 UTC")))
 
-	fmt.Printf("\nCertificate Chain (%d certificates):\n", sslInfo.PeerCerts.ChainLength)
-	fmt.Printf("=====================================\n")
+	fmt.Println(display.SectionHeader(fmt.Sprintf("Certificate Chain (%d)", sslInfo.PeerCerts.ChainLength)))
 
 	for i, cert := range sslInfo.PeerCerts.Certificates {
-		fmt.Printf("\nCertificate %d:\n", i+1)
-		fmt.Printf("--------------\n")
-		displayCertInfo(&cert, "text")
-		if i < len(sslInfo.PeerCerts.Certificates)-1 {
-			fmt.Println("\n" + strings.Repeat("-", 50))
+		if i > 0 {
+			fmt.Println(display.ThinSeparator())
 		}
+		fmt.Println(display.Subtitle(fmt.Sprintf("Certificate %d", i+1)))
+		displayCertInfo(&cert, "text")
 	}
 }
 
@@ -882,17 +937,16 @@ func displayFingerprints(fingerprints map[string]string, format string) {
 	if format == "json" {
 		data, err := json.MarshalIndent(fingerprints, "", "  ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+			fmt.Fprintf(os.Stderr, "%s\n", display.Error(fmt.Sprintf("marshaling JSON: %v", err)))
 			return
 		}
 		fmt.Println(string(data))
 		return
 	}
 
-	fmt.Printf("Certificate Fingerprints:\n")
-	fmt.Printf("========================\n")
+	fmt.Println(display.SectionHeader("Certificate Fingerprints"))
 	for hashType, fingerprint := range fingerprints {
-		fmt.Printf("%-20s: %s\n", strings.ToUpper(hashType), fingerprint)
+		fmt.Println(display.BulletKeyValue(strings.ToUpper(hashType), fingerprint))
 	}
 }
 
@@ -930,7 +984,7 @@ func displayBatchResults(results []pkg.BatchResult, format string) {
 				if len(result.SSLInfo.PeerCerts.Certificates) > 0 {
 					cert := result.SSLInfo.PeerCerts.Certificates[0]
 					fmt.Printf("Subject: %s\n", cert.Subject)
-					fmt.Printf("Issuer: %s\n", cert.Issuer)
+					fmt.Println(display.BulletKeyValue("Issuer", cert.Issuer))
 					fmt.Printf("Valid Until: %s\n", cert.NotAfter.Format("2006-01-02 15:04:05 UTC"))
 					if cert.KeySize > 0 {
 						fmt.Printf("Key Size: %d bits\n", cert.KeySize)
@@ -962,155 +1016,111 @@ func displaySecurityAnalysis(analysis *pkg.SecurityAnalysis, format string) {
 	if format == "json" {
 		data, err := json.MarshalIndent(analysis, "", "  ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+			fmt.Fprintf(os.Stderr, "%s\n", display.Error(fmt.Sprintf("marshaling JSON: %v", err)))
 			return
 		}
 		fmt.Println(string(data))
 		return
 	}
 
-	fmt.Printf("\nSecurity Analysis Report\n")
-	fmt.Printf("========================\n")
-	fmt.Printf("Target: %s\n", analysis.Target)
-	fmt.Printf("Overall Security Score: %d/100\n", analysis.OverallScore)
+	fmt.Println(display.SectionHeader("Security Analysis Report"))
+	fmt.Println(display.BulletKeyValue("Target", analysis.Target))
+	fmt.Println(display.BulletKeyValue("Score", display.ScoreStyle(analysis.OverallScore)))
+	fmt.Println(display.BulletKeyValue("Security Level", display.SeverityStyle(analysis.SecurityLevel)))
 
-	var levelIcon string
-	switch analysis.SecurityLevel {
-	case "Good":
-		levelIcon = "✅"
-	case "Medium":
-		levelIcon = "⚠️"
-	case "High":
-		levelIcon = "🚨"
-	case "Critical":
-		levelIcon = "💀"
-	default:
-		levelIcon = "❓"
-	}
-	fmt.Printf("Security Level: %s %s\n", levelIcon, analysis.SecurityLevel)
-
-	// 证书检查结果
-	fmt.Printf("\nCertificate Analysis:\n")
-	fmt.Printf("=====================\n")
+	// Certificate Analysis
+	fmt.Println(display.SectionHeader("Certificate Analysis"))
 	cert := analysis.CertificateCheck
 
 	if cert.IsExpired {
-		fmt.Printf("❌ Certificate Status: EXPIRED\n")
+		fmt.Printf("  %s\n", display.Error("EXPIRED"))
 	} else if cert.IsExpiringSoon {
-		fmt.Printf("⚠️  Certificate Status: Expiring Soon (%d days)\n", cert.DaysUntilExpiry)
+		fmt.Printf("  %s\n", display.Warning(fmt.Sprintf("Expiring Soon (%d days)", cert.DaysUntilExpiry)))
 	} else {
-		fmt.Printf("✅ Certificate Status: Valid (%d days remaining)\n", cert.DaysUntilExpiry)
+		fmt.Printf("  %s\n", display.Success(fmt.Sprintf("Valid (%d days remaining)", cert.DaysUntilExpiry)))
 	}
 
-	fmt.Printf("Signature Algorithm: %s", cert.SignatureAlg)
+	sigDetail := cert.SignatureAlg
 	if cert.WeakSignature {
-		fmt.Printf(" ⚠️  (Weak)")
+		sigDetail += " " + display.Warning("(Weak)")
 	}
-	fmt.Printf("\n")
+	fmt.Println(display.BulletKeyValue("Signature", sigDetail))
 
 	if cert.KeySize > 0 {
-		fmt.Printf("Key Size: %d bits\n", cert.KeySize)
+		fmt.Println(display.BulletKeyValue("Key Size", fmt.Sprintf("%d bits", cert.KeySize)))
 	}
 
 	if cert.IsSelfSigned {
-		fmt.Printf("⚠️  Self-signed certificate detected\n")
+		fmt.Printf("  %s\n", display.Warning("Self-signed certificate detected"))
 	}
 
 	if cert.WildcardCert {
-		fmt.Printf("🔸 Wildcard certificate\n")
+		fmt.Printf("  %s\n", display.Info("Wildcard certificate"))
 	}
 
 	if cert.HasSAN {
-		fmt.Printf("✅ Subject Alternative Names: %d domains\n", cert.SANCount)
+		fmt.Println(display.BulletKeyValue("SANs", fmt.Sprintf("%d domains", cert.SANCount)))
 	} else {
-		fmt.Printf("⚠️  No Subject Alternative Names\n")
+		fmt.Printf("  %s\n", display.Warning("No Subject Alternative Names"))
 	}
 
-	// TLS检查结果
-	fmt.Printf("\nTLS Connection Analysis:\n")
-	fmt.Printf("========================\n")
+	// TLS Connection Analysis
+	fmt.Println(display.SectionHeader("TLS Connection Analysis"))
 	tls := analysis.TLSCheck
 
-	fmt.Printf("TLS Version: %s", tls.Version)
+	tlsDetail := tls.Version
 	if tls.IsSecureVersion {
-		fmt.Printf(" ✅")
+		tlsDetail += " " + display.Success("✓")
 	} else {
-		fmt.Printf(" ❌ (Insecure)")
+		tlsDetail += " " + display.Error("(Insecure)")
 	}
-	fmt.Printf("\n")
+	fmt.Println(display.BulletKeyValue("TLS Version", tlsDetail))
 
-	fmt.Printf("Cipher Suite: %s", tls.CipherSuite)
+	cipherDetail := tls.CipherSuite
 	if tls.IsSecureCipherSuite {
-		fmt.Printf(" ✅")
+		cipherDetail += " " + display.Success("✓")
 	} else {
-		fmt.Printf(" ❌ (Weak)")
+		cipherDetail += " " + display.Error("(Weak)")
 	}
-	fmt.Printf("\n")
-
-	fmt.Printf("HTTP/2 Support: %s\n", boolIcon(tls.SupportsHTTP2))
-	fmt.Printf("OCSP Stapling: %s\n", boolIcon(tls.HasOCSPStaple))
+	fmt.Println(display.BulletKeyValue("Cipher Suite", cipherDetail))
+	fmt.Println(display.BulletKeyValue("HTTP/2", display.BoolIcon(tls.SupportsHTTP2)))
+	fmt.Println(display.BulletKeyValue("OCSP Stapling", display.BoolIcon(tls.HasOCSPStaple)))
 
 	if tls.HSTS != nil {
-		fmt.Printf("HSTS: %s\n", boolIcon(tls.HSTS.Enabled))
+		fmt.Println(display.BulletKeyValue("HSTS", display.BoolIcon(tls.HSTS.Enabled)))
 		if tls.HSTS.Enabled {
-			fmt.Printf("HSTS Max-Age: %d seconds (%.1f days)\n", tls.HSTS.MaxAge, float64(tls.HSTS.MaxAge)/86400.0)
-			fmt.Printf("HSTS IncludeSubDomains: %s\n", boolIcon(tls.HSTS.IncludeSubDomains))
-			fmt.Printf("HSTS Preload: %s\n", boolIcon(tls.HSTS.Preload))
+			fmt.Println(display.BulletKeyValue("HSTS Max-Age", fmt.Sprintf("%d seconds (%.1f days)", tls.HSTS.MaxAge, float64(tls.HSTS.MaxAge)/86400.0)))
+			fmt.Println(display.BulletKeyValue("IncludeSubDomains", display.BoolIcon(tls.HSTS.IncludeSubDomains)))
+			fmt.Println(display.BulletKeyValue("Preload", display.BoolIcon(tls.HSTS.Preload)))
 		}
 	}
 
-	// 过期检查
-	fmt.Printf("\nExpiration Check:\n")
-	fmt.Printf("=================\n")
+	// Expiration
+	fmt.Println(display.SectionHeader("Expiration Check"))
 	exp := analysis.ExpirationCheck
+	fmt.Printf("  %s %s\n", display.StatusIcon(exp.Status), display.Value(exp.Message))
+	fmt.Println(display.BulletKeyValue("Expiration Date", exp.ExpirationDate))
 
-	var statusIcon string
-	switch exp.Status {
-	case "Good":
-		statusIcon = "✅"
-	case "Warning":
-		statusIcon = "⚠️"
-	case "Critical":
-		statusIcon = "🚨"
-	case "Expired":
-		statusIcon = "❌"
-	}
-	fmt.Printf("%s %s\n", statusIcon, exp.Message)
-	fmt.Printf("Expiration Date: %s\n", exp.ExpirationDate)
-
-	// 安全问题
+	// Security Issues
 	if len(analysis.Issues) > 0 {
-		fmt.Printf("\nSecurity Issues Found:\n")
-		fmt.Printf("======================\n")
+		fmt.Println(display.SectionHeader("Security Issues"))
 		for i, issue := range analysis.Issues {
-			var severityIcon string
-			switch issue.Severity {
-			case "Critical":
-				severityIcon = "💀"
-			case "High":
-				severityIcon = "🚨"
-			case "Medium":
-				severityIcon = "⚠️"
-			case "Low":
-				severityIcon = "🔸"
-			}
-
-			fmt.Printf("%d. %s [%s] %s\n", i+1, severityIcon, issue.Severity, issue.Type)
-			fmt.Printf("   Description: %s\n", issue.Description)
-			fmt.Printf("   Impact: %s\n", issue.Impact)
-			if i < len(analysis.Issues)-1 {
-				fmt.Println()
-			}
+			fmt.Printf("  %s ", display.Dim(fmt.Sprintf("%d.", i+1)))
+			fmt.Printf("%s ", display.SeverityStyle(issue.Severity))
+			fmt.Printf("%s\n", display.Value(issue.Type))
+			fmt.Printf("     %s\n", display.Dim(issue.Description))
+			fmt.Printf("     %s\n", display.Label("Impact: "+issue.Impact))
 		}
 	} else {
-		fmt.Printf("\n✅ No major security issues detected!\n")
+		fmt.Printf("\n  %s\n", display.Success("No major security issues detected!"))
 	}
 
-	// 安全建议
-	fmt.Printf("\nSecurity Recommendations:\n")
-	fmt.Printf("==========================\n")
-	for i, rec := range analysis.Recommendations {
-		fmt.Printf("%d. %s\n", i+1, rec)
+	// Recommendations
+	if len(analysis.Recommendations) > 0 {
+		fmt.Println(display.SectionHeader("Recommendations"))
+		for i, rec := range analysis.Recommendations {
+			fmt.Printf("  %s %s\n", display.Dim(fmt.Sprintf("%d.", i+1)), display.Value(rec))
+		}
 	}
 }
 
@@ -1118,53 +1128,1142 @@ func displayGenerationResult(result *pkg.GenerationResult, format string) {
 	if format == "json" {
 		data, err := json.MarshalIndent(result, "", "  ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+			fmt.Fprintf(os.Stderr, "%s\n", display.Error(fmt.Sprintf("marshaling JSON: %v", err)))
 			return
 		}
 		fmt.Println(string(data))
 		return
 	}
 
-	fmt.Printf("\nCertificate Generation Complete!\n")
-	fmt.Printf("=================================\n")
-	fmt.Printf("✅ %s\n", result.Message)
-	fmt.Printf("\nGenerated Files:\n")
-	fmt.Printf("Certificate: %s\n", result.CertificatePath)
-	fmt.Printf("Private Key: %s\n", result.PrivateKeyPath)
+	fmt.Println(display.SectionHeader("Certificate Generation Complete"))
+	fmt.Printf("  %s\n", display.Success(result.Message))
+	fmt.Println(display.SectionHeader("Generated Files"))
+	fmt.Println(display.BulletKeyValue("Certificate", result.CertificatePath))
+	fmt.Println(display.BulletKeyValue("Private Key", result.PrivateKeyPath))
 
-	fmt.Printf("\nCertificate Fingerprints:\n")
-	fmt.Printf("=========================\n")
+	fmt.Println(display.SectionHeader("Fingerprints"))
 	for hashType, fingerprint := range result.Fingerprints {
-		fmt.Printf("%-20s: %s\n", strings.ToUpper(hashType), fingerprint)
+		fmt.Println(display.BulletKeyValue(strings.ToUpper(hashType), fingerprint))
 	}
 
-	fmt.Printf("\nNext Steps:\n")
-	fmt.Printf("===========\n")
-	fmt.Printf("1. Verify the certificate: cert-hacker parse %s\n", result.CertificatePath)
-	fmt.Printf("2. Check fingerprints: cert-hacker fingerprint %s\n", result.CertificatePath)
-	fmt.Printf("3. Use in your application or server configuration\n")
-	fmt.Printf("\n⚠️  Note: This is a self-signed certificate for testing purposes only.\n")
+	fmt.Println(display.SectionHeader("Next Steps"))
+	fmt.Printf("  %s %s\n", display.Dim("1."), display.Value(fmt.Sprintf("cert-hacker parse %s", result.CertificatePath)))
+	fmt.Printf("  %s %s\n", display.Dim("2."), display.Value(fmt.Sprintf("cert-hacker fingerprint %s", result.CertificatePath)))
+	fmt.Printf("  %s %s\n", display.Dim("3."), display.Value("Use in your application or server configuration"))
+	fmt.Printf("\n  %s\n", display.Warning("Note: This is a self-signed certificate for testing purposes only."))
+}
+
+// --- New Command Definitions ---
+
+var jarmCmd = &cobra.Command{
+	Use:   "jarm [domain:port]",
+	Short: "Generate JARM TLS fingerprint",
+	Long: `Generate a JARM fingerprint by sending multiple TLS Client Hello probes
+to the target server and analyzing the responses. JARM is used for:
+- Service and server identification
+- C2 infrastructure detection
+- Cyberspace mapping and reconnaissance
+
+Examples:
+  cert-hacker jarm google.com
+  cert-hacker jarm example.com:8443 --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Generating JARM fingerprint for: %s\n", target)
+
+		result, err := pkg.JARMScan(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error generating JARM fingerprint: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(data))
+			return
+		}
+
+		if result.Error != "" {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\nJARM Fingerprint\n")
+		fmt.Println(display.Separator())
+		fmt.Printf("Target:        %s\n", result.Target)
+		fmt.Printf("JARM Hash:     %s\n", result.JARMHash)
+		if result.TLSVersion != "" {
+			fmt.Printf("TLS Version:   %s\n", result.TLSVersion)
+		}
+		if result.CipherSuite != "" {
+			fmt.Printf("Cipher Suite:  %s\n", result.CipherSuite)
+		}
+	},
+}
+
+var ja3Cmd = &cobra.Command{
+	Use:   "ja3 [domain:port]",
+	Short: "Generate JA3/JA3S TLS fingerprints",
+	Long: `Generate JA3 (client) and JA3S (server) TLS fingerprints by connecting
+to the target server. JA3 fingerprints are MD5 hashes of TLS handshake
+parameters used for service identification and cyberspace mapping.
+
+Examples:
+  cert-hacker ja3 google.com
+  cert-hacker ja3 example.com:8443 --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Generating JA3/JA3S fingerprints for: %s\n", target)
+
+		result, err := pkg.JA3Scan(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error generating JA3 fingerprints: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(data))
+			return
+		}
+
+		if result.Error != "" {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\nJA3/JA3S Fingerprints\n")
+		fmt.Println(display.Separator())
+		fmt.Printf("Target:        %s\n", result.Target)
+		fmt.Printf("JA3 (Client):  %s\n", result.JA3Hash)
+		fmt.Printf("JA3S (Server): %s\n", result.JA3SHash)
+		fmt.Printf("TLS Version:   %s\n", result.TLSVersion)
+		fmt.Printf("Cipher Suite:  %s\n", result.CipherSuite)
+		if result.ALPN != "" {
+			fmt.Printf("ALPN:          %s\n", result.ALPN)
+		}
+		fmt.Printf("\nRaw Strings:\n")
+		fmt.Printf("  JA3:  %s\n", result.JA3Raw)
+		fmt.Printf("  JA3S: %s\n", result.JA3SRaw)
+	},
+}
+
+var scanVulnsCmd = &cobra.Command{
+	Use:   "scan-vulns [domain:port]",
+	Short: "Scan for known TLS vulnerabilities",
+	Long: `Scan a target server for known TLS vulnerabilities including:
+Heartbleed, POODLE, ROBOT, CCS Injection, FREAK, Logjam,
+Sweet32, BEAST, CRIME, DROWN, and insecure renegotiation.
+
+Examples:
+  cert-hacker scan-vulns google.com
+  cert-hacker scan-vulns example.com:8443 --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Scanning TLS vulnerabilities for: %s\n", target)
+
+		result, err := pkg.VulnerabilityScan(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error scanning vulnerabilities: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Printf("\nTLS Vulnerability Scan Results\n")
+		fmt.Println(display.Separator())
+		fmt.Printf("Target: %s\n\n", result.Target)
+
+		for _, v := range result.Vulnerabilities {
+			var icon string
+			if v.Vulnerable {
+				switch v.Severity {
+				case "Critical":
+					icon = "💀"
+				case "High":
+					icon = "🚨"
+				case "Medium":
+					icon = "⚠️"
+				case "Low":
+					icon = "🔸"
+				}
+			} else {
+				icon = "✅"
+			}
+
+			status := "NOT VULNERABLE"
+			if v.Vulnerable {
+				status = "VULNERABLE"
+			}
+
+			fmt.Printf("%s %s [%s] - %s (%s)\n", icon, v.Name, v.Code, status, v.Severity)
+			if v.Detail != "" {
+				fmt.Printf("   %s\n", v.Detail)
+			}
+		}
+
+		fmt.Printf("\nSummary:\n")
+		fmt.Printf("  Total Checked:  %d\n", result.Summary.TotalChecked)
+		fmt.Printf("  Vulnerable:     %d\n", result.Summary.Vulnerable)
+		fmt.Printf("  Secure:         %d\n", result.Summary.Secure)
+		if result.Summary.CriticalCount > 0 {
+			fmt.Printf("  Critical:       %d 💀\n", result.Summary.CriticalCount)
+		}
+		if result.Summary.LowCount > 0 {
+			fmt.Printf("  High:           %d 🚨\n", result.Summary.LowCount)
+		}
+		if result.Summary.MediumCount > 0 {
+			fmt.Printf("  Medium:         %d ⚠️\n", result.Summary.MediumCount)
+		}
+
+		if result.Summary.IsSecure {
+			fmt.Printf("\n✅ No TLS vulnerabilities detected\n")
+		} else {
+			fmt.Printf("\n❌ Vulnerabilities detected: %s\n", strings.Join(result.Summary.VulnerableList, ", "))
+		}
+	},
+}
+
+var searchCTCmd = &cobra.Command{
+	Use:   "search-ct [domain]",
+	Short: "Search Certificate Transparency logs",
+	Long: `Search Certificate Transparency (CT) logs for certificates associated
+with a domain. Discovers subdomains, certificate issuance history, and
+unauthorized certificates. Essential for cyberspace mapping.
+
+Examples:
+  cert-hacker search-ct example.com
+  cert-hacker search-ct example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		domain := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Searching CT logs for: %s\n", domain)
+
+		result, err := pkg.CTSearch(domain)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error searching CT logs: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(data))
+			return
+		}
+
+		if result.Error != "" {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\nCertificate Transparency Search Results\n")
+		fmt.Printf("========================================\n")
+		fmt.Printf("Domain:        %s\n", result.Target)
+		fmt.Printf("Total Found:   %d certificates\n\n", result.TotalCount)
+
+		// Display unique subdomains found
+		subdomainSet := make(map[string]bool)
+		for _, cert := range result.Certificates {
+			names := strings.Split(cert.NameValue, "\n")
+			for _, name := range names {
+				name = strings.TrimSpace(name)
+				if name != "" {
+					subdomainSet[name] = true
+				}
+			}
+		}
+
+		var subdomains []string
+		for sd := range subdomainSet {
+			subdomains = append(subdomains, sd)
+		}
+		sort.Strings(subdomains)
+
+		fmt.Printf("Discovered Subdomains (%d):\n", len(subdomains))
+		for _, sd := range subdomains {
+			fmt.Printf("  - %s\n", sd)
+		}
+
+		// Show certificate details (first 10)
+		if len(result.Certificates) > 0 {
+			displayCount := len(result.Certificates)
+			if displayCount > 10 {
+				displayCount = 10
+			}
+
+			fmt.Printf("\nCertificates (showing %d of %d):\n", displayCount, len(result.Certificates))
+			for i := 0; i < displayCount; i++ {
+				cert := result.Certificates[i]
+				fmt.Printf("\n  [%d] %s\n", i+1, cert.CommonName)
+				if cert.IssuerName != "" {
+					fmt.Printf("      Issuer: %s\n", cert.IssuerName)
+				}
+				if cert.NotBefore != "" {
+					fmt.Printf("      Valid: %s → %s\n", cert.NotBefore, cert.NotAfter)
+				}
+			}
+
+			if len(result.Certificates) > 10 {
+				fmt.Printf("\n  ... and %d more certificates\n", len(result.Certificates)-10)
+			}
+		}
+	},
+}
+
+var checkRevocationCmd = &cobra.Command{
+	Use:   "check-revocation [domain:port or certificate-file]",
+	Short: "Check certificate revocation status",
+	Long: `Check the revocation status of a certificate using both OCSP
+(Online Certificate Status Protocol) and CRL (Certificate Revocation List).
+
+For domain targets, connects to the server and checks the leaf certificate.
+For file targets, reads the certificate from the file (CRL only, OCSP requires issuer).
+
+Examples:
+  cert-hacker check-revocation google.com
+  cert-hacker check-revocation /path/to/cert.pem
+  cert-hacker check-revocation example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Checking revocation status for: %s\n", target)
+
+		result, err := pkg.CheckRevocation(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error checking revocation: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(data))
+			return
+		}
+
+		if result.Error != "" {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+
+		fmt.Println(display.SectionHeader("Certificate Revocation Check"))
+		fmt.Println(display.Separator())
+		fmt.Printf("Target:         %s\n", result.Target)
+		fmt.Printf("Overall Status: %s\n", result.OverallStatus)
+
+		// OCSP results
+		fmt.Printf("\nOCSP Status:\n")
+		if result.OCSPStatus.Checked {
+			var statusIcon string
+			switch result.OCSPStatus.Status {
+			case "Good":
+				statusIcon = "✅"
+			case "Revoked":
+				statusIcon = "❌"
+			default:
+				statusIcon = "❓"
+			}
+			fmt.Printf("  Status:     %s %s\n", statusIcon, result.OCSPStatus.Status)
+			if result.OCSPStatus.OCSPURL != "" {
+				fmt.Printf("  OCSP URL:   %s\n", result.OCSPStatus.OCSPURL)
+			}
+			if result.OCSPStatus.RevokedAt != "" {
+				fmt.Printf("  Revoked At: %s\n", result.OCSPStatus.RevokedAt)
+			}
+			if result.OCSPStatus.RevocationReason != "" {
+				fmt.Printf("  Reason:     %s\n", result.OCSPStatus.RevocationReason)
+			}
+			if result.OCSPStatus.ThisUpdate != "" {
+				fmt.Printf("  This Update: %s\n", result.OCSPStatus.ThisUpdate)
+			}
+			if result.OCSPStatus.NextUpdate != "" {
+				fmt.Printf("  Next Update: %s\n", result.OCSPStatus.NextUpdate)
+			}
+			if result.OCSPStatus.Error != "" {
+				fmt.Printf("  Error:      %s\n", result.OCSPStatus.Error)
+			}
+		} else {
+			fmt.Printf("  Not checked: %s\n", result.OCSPStatus.Error)
+		}
+
+		// CRL results
+		fmt.Printf("\nCRL Status:\n")
+		if result.CRLStatus.Checked {
+			var statusIcon string
+			switch result.CRLStatus.Status {
+			case "Good":
+				statusIcon = "✅"
+			case "Revoked":
+				statusIcon = "❌"
+			default:
+				statusIcon = "❓"
+			}
+			fmt.Printf("  Status:     %s %s\n", statusIcon, result.CRLStatus.Status)
+			if result.CRLStatus.CRLURL != "" {
+				fmt.Printf("  CRL URL:    %s\n", result.CRLStatus.CRLURL)
+			}
+			if result.CRLStatus.ThisUpdate != "" {
+				fmt.Printf("  This Update: %s\n", result.CRLStatus.ThisUpdate)
+			}
+			if result.CRLStatus.NextUpdate != "" {
+				fmt.Printf("  Next Update: %s\n", result.CRLStatus.NextUpdate)
+			}
+			if result.CRLStatus.Error != "" {
+				fmt.Printf("  Error:      %v\n", result.CRLStatus.Error)
+			}
+		} else {
+			fmt.Printf("  Not checked: %s\n", result.CRLStatus.Error)
+		}
+	},
+}
+
+var checkPFSCmd = &cobra.Command{
+	Use:   "check-pfs [domain:port]",
+	Short: "Check Perfect Forward Secrecy support",
+	Long: `Check whether a server supports Perfect Forward Secrecy (PFS).
+PFS ensures that past sessions cannot be decrypted even if the server's
+private key is compromised. Checks ECDHE/DHE key exchange.
+
+Examples:
+  cert-hacker check-pfs google.com
+  cert-hacker check-pfs example.com:8443 --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Checking PFS support for: %s\n", target)
+
+		result, err := pkg.CheckPFS(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Printf("\nPFS Check Results\n")
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		if result.Error != "" {
+			fmt.Printf("Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+		if result.SupportsPFS {
+			fmt.Printf("PFS Supported: ✅ Yes\n")
+			fmt.Printf("Negotiated Cipher: %s\n", result.PFSCipher)
+			fmt.Printf("Key Exchange: %s\n", result.KeyExchange)
+			if result.ECDHECurve != "" {
+				fmt.Printf("ECDHE Curve: %s\n", result.ECDHECurve)
+			}
+		} else {
+			fmt.Printf("PFS Supported: ❌ No\n")
+			fmt.Printf("Negotiated Cipher: %s\n", result.PFSCipher)
+		}
+		if len(result.PFSCiphers) > 0 {
+			fmt.Printf("\nPFS Cipher Suites (%d):\n", len(result.PFSCiphers))
+			for _, c := range result.PFSCiphers {
+				fmt.Printf("  ✅ %s\n", c)
+			}
+		}
+		if len(result.NonPFSCiphers) > 0 {
+			fmt.Printf("\nNon-PFS Cipher Suites (%d):\n", len(result.NonPFSCiphers))
+			for _, c := range result.NonPFSCiphers {
+				fmt.Printf("  ⚠️  %s\n", c)
+			}
+		}
+	},
+}
+
+var detectEVCmd = &cobra.Command{
+	Use:   "detect-ev [domain:port]",
+	Short: "Detect Extended Validation certificate",
+	Long: `Detect whether a domain's certificate is an Extended Validation (EV) certificate.
+EV certificates provide the highest level of identity assurance and display
+the organization name in the browser address bar.
+
+Examples:
+  cert-hacker detect-ev google.com
+  cert-hacker detect-ev example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Detecting EV certificate for: %s\n", target)
+
+		result, err := pkg.DetectEV(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Printf("\nEV Certificate Detection\n")
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		if result.IsEV {
+			fmt.Printf("EV Certificate: ✅ Yes\n")
+			fmt.Printf("EV Issuer: %s\n", result.EVIssuer)
+			if result.Organization != "" {
+				fmt.Println(display.BulletKeyValue("Organization", result.Organization))
+			}
+			if result.BusinessCategory != "" {
+				fmt.Printf("Business Category: %s\n", result.BusinessCategory)
+			}
+			if result.Jurisdiction != "" {
+				fmt.Printf("Jurisdiction: %s\n", result.Jurisdiction)
+			}
+		} else {
+			fmt.Printf("EV Certificate: ❌ No\n")
+			if result.Reason != "" {
+				fmt.Printf("Reason: %s\n", result.Reason)
+			}
+		}
+	},
+}
+
+var verifyChainCmd = &cobra.Command{
+	Use:   "verify-chain [domain:port]",
+	Short: "Verify certificate chain",
+	Long: `Verify a server's certificate chain against the system trust store.
+Returns detailed information about each verified chain path, trust anchor,
+and any errors or warnings.
+
+Examples:
+  cert-hacker verify-chain google.com
+  cert-hacker verify-chain example.com:8443 --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Verifying certificate chain for: %s\n", target)
+
+		result, err := pkg.VerifyCertChain(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Certificate Chain Verification"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		if result.IsValid {
+			fmt.Printf("Chain Valid: ✅ Yes\n")
+		} else {
+			fmt.Printf("Chain Valid: ❌ No\n")
+		}
+		fmt.Printf("Chain Length: %d\n", result.ChainLength)
+		if result.TrustAnchor != "" {
+			fmt.Printf("Trust Anchor: %s\n", result.TrustAnchor)
+		}
+
+		if len(result.VerifiedChains) > 0 {
+			for i, chain := range result.VerifiedChains {
+				fmt.Printf("\nVerified Chain %d:\n", i+1)
+				for j, entry := range chain {
+					fmt.Printf("  %d. %s\n", j+1, entry.Subject)
+					if entry.IsCA {
+						fmt.Printf("     [CA Certificate]\n")
+					}
+				}
+			}
+		}
+
+		if len(result.Errors) > 0 {
+			fmt.Printf("\n❌ Errors:\n")
+			for _, e := range result.Errors {
+				fmt.Printf("  - %s\n", e)
+			}
+		}
+
+		if len(result.Warnings) > 0 {
+			fmt.Printf("\n⚠️  Warnings:\n")
+			for _, w := range result.Warnings {
+				fmt.Printf("  - %s\n", w)
+			}
+		}
+	},
+}
+
+var checkSessionResumptionCmd = &cobra.Command{
+	Use:   "check-session-resumption [domain:port]",
+	Short: "Check TLS session resumption support",
+	Long: `Check whether a server supports TLS session resumption via
+session IDs or session tickets (RFC 5077).
+
+Examples:
+  cert-hacker check-session-resumption google.com
+  cert-hacker check-session-resumption example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Checking session resumption for: %s\n", target)
+
+		result, err := pkg.CheckSessionResumption(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Session Resumption Check"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		if result.Error != "" {
+			fmt.Printf("Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+		fmt.Printf("Session ID Resumption: %s\n", boolIcon(result.SupportsSessionID))
+		fmt.Printf("Session Ticket Resumption: %s\n", boolIcon(result.SupportsSessionTicket))
+		fmt.Printf("TLS Version: %s\n", result.TLSVersion)
+	},
+}
+
+var expiryMonitorCmd = &cobra.Command{
+	Use:   "expiry-monitor --targets domain1,domain2",
+	Short: "Monitor certificate expiration for multiple targets",
+	Long: `Monitor certificate expiration for multiple domains or files.
+Returns expiry status for each target categorized as Expired, Critical
+(<=7 days), Warning (<=30 days), or Healthy (>30 days).
+
+Examples:
+  cert-hacker expiry-monitor --targets google.com,github.com,cloudflare.com
+  cert-hacker expiry-monitor --targets google.com,github.com --output json`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetsStr, _ := cmd.Flags().GetString("targets")
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		if targetsStr == "" {
+			fmt.Fprintf(os.Stderr, "Error: --targets is required\n")
+			os.Exit(1)
+		}
+
+		targets := strings.Split(targetsStr, ",")
+		for i, t := range targets {
+			targets[i] = strings.TrimSpace(t)
+		}
+
+		if len(targets) > 50 {
+			fmt.Fprintf(os.Stderr, "Error: maximum 50 targets allowed\n")
+			os.Exit(1)
+		}
+
+		fmt.Printf("Monitoring certificate expiry for %d targets...\n", len(targets))
+
+		result := pkg.CertExpiryMonitor(targets)
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Certificate Expiry Monitor"))
+		fmt.Printf("==========================\n")
+		fmt.Printf("Total: %d | Expired: %d | Critical: %d | Warning: %d | Healthy: %d | Error: %d\n",
+			result.TotalCount, result.ExpiredCount, result.CriticalCount,
+			result.WarningCount, result.HealthyCount, result.ErrorCount)
+
+		for _, entry := range result.Targets {
+			var icon string
+			switch entry.Status {
+			case "Expired":
+				icon = "💀"
+			case "Critical":
+				icon = "🚨"
+			case "Warning":
+				icon = "⚠️"
+			case "Healthy":
+				icon = "✅"
+			default:
+				icon = "❌"
+			}
+			fmt.Printf("%s %s — %s", icon, entry.Target, entry.Status)
+			if entry.Error == "" {
+				fmt.Printf(" (%d days, expires %s)", entry.DaysUntilExpiry, entry.ExpirationDate)
+			} else {
+				fmt.Printf(" (%s)", entry.Error)
+			}
+			fmt.Println()
+		}
+	},
+}
+
+var checkWildcardCmd = &cobra.Command{
+	Use:   "check-wildcard [domain:port]",
+	Short: "Analyze wildcard certificate patterns",
+	Long: `Detect and analyze wildcard certificate patterns in a domain's certificate.
+Identifies wildcard SANs, classifies wildcard levels, assesses security risk,
+and lists covered domains. Essential for cyberspace mapping.
+
+Examples:
+  cert-hacker check-wildcard example.com
+  cert-hacker check-wildcard /path/to/cert.pem --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckWildcard(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Wildcard Certificate Analysis"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		if result.Error != "" {
+			fmt.Printf("Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+		if result.IsWildcard {
+			fmt.Printf("Wildcard: ✅ Yes\n")
+			fmt.Printf("Risk Level: %s\n", result.RiskLevel)
+			fmt.Printf("Risk Reason: %s\n", result.RiskReason)
+		} else {
+			fmt.Printf("Wildcard: ❌ No\n")
+		}
+		if len(result.WildcardNames) > 0 {
+			fmt.Printf("\nWildcard Names:\n")
+			for _, w := range result.WildcardNames {
+				fmt.Printf("  * %s\n", w)
+			}
+		}
+		if len(result.ExactNames) > 0 {
+			fmt.Printf("\nExact Names (%d):\n", len(result.ExactNames))
+			for _, n := range result.ExactNames {
+				fmt.Printf("  - %s\n", n)
+			}
+		}
+	},
+}
+
+var getTrustedDomainsCmd = &cobra.Command{
+	Use:   "get-trusted-domains [domain:port]",
+	Short: "Extract trusted domains from certificate",
+	Long: `Extract all domain names trusted by a certificate, including wildcard
+expansions. Returns exact domains, wildcard domains, and base domains.
+Key for cyberspace mapping.
+
+Examples:
+  cert-hacker get-trusted-domains google.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.GetTrustedDomains(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Trusted Domains"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Common Name", result.CommonName))
+		if result.Organization != "" {
+			fmt.Println(display.BulletKeyValue("Organization", result.Organization))
+		}
+		fmt.Printf("\nExact Domains (%d):\n", len(result.ExactDomains))
+		for _, d := range result.ExactDomains {
+			fmt.Printf("  - %s\n", d)
+		}
+		if len(result.WildcardDomains) > 0 {
+			fmt.Printf("\nWildcard Domains (%d):\n", len(result.WildcardDomains))
+			for _, d := range result.WildcardDomains {
+				fmt.Printf("  - %s\n", d)
+			}
+		}
+		fmt.Printf("\nBase Domains (%d):\n", len(result.BaseDomains))
+		for _, d := range result.BaseDomains {
+			fmt.Printf("  - %s\n", d)
+		}
+	},
+}
+
+var checkCAACmd = &cobra.Command{
+	Use:   "check-caa [domain]",
+	Short: "Check DNS CAA records",
+	Long: `Check DNS CAA (Certification Authority Authorization) records for a domain.
+Verifies if the issuing CA is authorized by CAA policy.
+
+Examples:
+  cert-hacker check-caa google.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckCAA(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("CAA Record Check"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		fmt.Printf("Has CAA: %s\n", display.BoolIcon(result.HasCAA))
+		if result.HasCAA {
+			fmt.Printf("Compliant: %s\n", display.BoolIcon(result.IsCompliant))
+			for _, rec := range result.Records {
+				fmt.Printf("  %s %s %s\n", rec.Tag, rec.Value, fmt.Sprintf("(flag=%d)", rec.Flag))
+			}
+			if len(result.Violations) > 0 {
+				fmt.Printf("\nViolations:\n")
+				for _, v := range result.Violations {
+					fmt.Printf("  ❌ %s\n", v)
+				}
+			}
+		}
+	},
+}
+
+var checkSCTCmd = &cobra.Command{
+	Use:   "check-sct [domain:port]",
+	Short: "Check Signed Certificate Timestamps",
+	Long: `Verify Signed Certificate Timestamps (SCTs) in a certificate.
+Checks CA/Browser Forum CT requirements.
+
+Examples:
+  cert-hacker check-sct google.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckSCT(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("SCT Check Results"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		if result.Error != "" {
+			fmt.Printf("Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+		fmt.Printf("Has SCTs: %s\n", display.BoolIcon(result.HasSCTs))
+		fmt.Printf("SCT Count: %d\n", result.SCTCount)
+		fmt.Printf("Required: %d\n", result.RequiredSCTs)
+		fmt.Printf("Meets Requirement: %s\n", display.BoolIcon(result.MeetsRequirement))
+		for i, sct := range result.SCTs {
+			fmt.Printf("\n  SCT %d:\n", i+1)
+			fmt.Printf("    Version: %d\n", sct.Version)
+			fmt.Printf("    Log ID: %s\n", sct.LogID)
+			fmt.Printf("    Timestamp: %s\n", sct.TimestampStr)
+			fmt.Printf("    Source: %s\n", sct.Source)
+		}
+	},
+}
+
+var verifyHostnameCmd = &cobra.Command{
+	Use:   "verify-hostname [domain:port]",
+	Short: "Verify certificate hostname matching",
+	Long: `Verify that a server's certificate matches the requested hostname.
+Detects hostname mismatches, wildcard matches, and RFC 6125 compliance.
+
+Examples:
+  cert-hacker verify-hostname google.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.VerifyHostname(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Hostname Verification"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", result.Target))
+		fmt.Println(display.BulletKeyValue("Hostname", result.Hostname))
+		if result.Error != "" {
+			fmt.Printf("Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+		if result.IsValid {
+			fmt.Printf("Valid: ✅ Yes (match type: %s)\n", result.MatchType)
+			if result.MatchedSAN != "" {
+				fmt.Printf("Matched SAN: %s\n", result.MatchedSAN)
+			}
+		} else {
+			fmt.Printf("Valid: ❌ No\n")
+			fmt.Printf("Mismatch: %s\n", result.MismatchInfo)
+		}
+		if len(result.Warnings) > 0 {
+			fmt.Printf("\nWarnings:\n")
+			for _, w := range result.Warnings {
+				fmt.Printf("  ⚠️  %s\n", w)
+			}
+		}
+	},
+}
+
+var scanCertSecurityCmd = &cobra.Command{
+	Use:   "scan-cert-security [domain:port]",
+	Short: "Scan certificate-specific security issues",
+	Long: `Perform certificate-specific security checks (not TLS protocol).
+Checks for weak signatures, short keys, missing SANs, hostname mismatches,
+excessive validity, self-signed, expired, wildcard risks, and more.
+
+Examples:
+  cert-hacker scan-cert-security google.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.ScanCertSecurity(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Certificate Security Scan"))
+		fmt.Println(display.Separator())
+		fmt.Printf("Target: %s\n\n", result.Target)
+
+		for _, c := range result.Checks {
+			var icon string
+			if c.Passed {
+				icon = "✅"
+			} else {
+				switch c.Severity {
+				case "Critical":
+					icon = "💀"
+				case "High":
+					icon = "🚨"
+				case "Medium":
+					icon = "⚠️"
+				default:
+					icon = "🔸"
+				}
+			}
+			status := "PASS"
+			if !c.Passed {
+				status = "FAIL"
+			}
+			fmt.Printf("%s [%s] %s (%s) - %s\n", icon, c.Code, c.Name, status, c.Detail)
+		}
+
+		fmt.Printf("\nSummary: %d/%d passed, %d failed, IsSecure: %v\n",
+			result.Summary.Passed, result.Summary.TotalChecked, result.Summary.Failed, result.Summary.IsSecure)
+	},
+}
+
+var ctEnumerateCmd = &cobra.Command{
+	Use:   "ct-enumerate [domain]",
+	Short: "Enumerate subdomains via CT logs",
+	Long: `Enumerate subdomains through Certificate Transparency logs.
+Enhanced CT search focused on cyberspace mapping - discovers all subdomains,
+groups by issuer, identifies wildcard domains, tracks active vs expired.
+
+Examples:
+  cert-hacker ct-enumerate example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		domain := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CTEnumerateSubdomains(domain)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		if result.Error != "" {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+
+		fmt.Println(display.SectionHeader("CT Subdomain Enumeration"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Domain", result.Target))
+		fmt.Printf("Total Certs: %d\n", result.TotalCerts)
+		fmt.Printf("Active: %d | Expired: %d\n", result.ActiveCerts, result.ExpiredCerts)
+		fmt.Printf("\nUnique Subdomains (%d):\n", result.SubdomainCount)
+		for _, sd := range result.UniqueSubdomains {
+			fmt.Printf("  - %s\n", sd)
+		}
+		if len(result.WildcardDomains) > 0 {
+			fmt.Printf("\nWildcard Domains (%d):\n", len(result.WildcardDomains))
+			for _, wd := range result.WildcardDomains {
+				fmt.Printf("  - %s\n", wd)
+			}
+		}
+	},
+}
+
+var checkHSTSCmd = &cobra.Command{
+	Use:   "check-hsts [domain]",
+	Short: "Check HSTS (HTTP Strict Transport Security) status",
+	Long: `Check if a domain has HSTS (HTTP Strict Transport Security) enabled
+by making an HTTPS request and inspecting the response headers.
+Returns HSTS status, max-age, includeSubDomains, and preload directives.
+
+Examples:
+  cert-hacker check-hsts google.com
+  cert-hacker check-hsts example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fmt.Printf("Checking HSTS status for: %s\n", target)
+
+		result := pkg.CheckHSTS(target)
+
+		if outputFormat == "json" {
+			data, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("HSTS Check Results"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Target", target))
+		if result.Error != "" {
+			fmt.Printf("Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+		if result.Enabled {
+			fmt.Printf("HSTS Enabled: ✅ Yes\n")
+			fmt.Printf("Max-Age: %d seconds (%.1f days)\n", result.MaxAge, float64(result.MaxAge)/86400.0)
+			fmt.Printf("IncludeSubDomains: %s\n", boolIcon(result.IncludeSubDomains))
+			fmt.Printf("Preload: %s\n", boolIcon(result.Preload))
+			if result.RawHeader != "" {
+				fmt.Printf("Raw Header: %s\n", result.RawHeader)
+			}
+		} else {
+			fmt.Printf("HSTS Enabled: ❌ No\n")
+			fmt.Printf("\n⚠️  HSTS is not enabled. This makes the site vulnerable to SSL stripping attacks.\n")
+			fmt.Printf("   Add: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\n")
+		}
+	},
 }
 
 // --- Helper Functions ---
 
 // isFileTarget checks if a target string looks like a file path
 func isFileTarget(target string) bool {
-	fileExts := []string{".pem", ".crt", ".cer", ".der", ".p7b", ".p7c"}
-	for _, ext := range fileExts {
-		if strings.HasSuffix(strings.ToLower(target), ext) {
-			return true
-		}
-	}
-	return false
+	return pkg.IsFileTarget(target)
 }
 
 // boolIcon returns a checkmark or X icon for boolean values
 func boolIcon(val bool) string {
-	if val {
-		return "✅ Yes"
-	}
-	return "❌ No"
+	return display.BoolIcon(val)
 }
 
 // minInt returns the smaller of two integers
@@ -1189,4 +2288,338 @@ func parseIPAddresses(ipStr string) []net.IP {
 		}
 	}
 	return ips
+}
+
+var searchCTByFingerprintCmd = &cobra.Command{
+	Use:   "search-ct-fingerprint [fingerprint]",
+	Short: "Search CT logs by certificate fingerprint",
+	Long: `Search Certificate Transparency logs for a specific certificate by its
+SHA-256 fingerprint. Useful for tracking a specific certificate across CT logs.
+
+Examples:
+  cert-hacker search-ct-fingerprint A1B2C3D4E5F6... --output json
+  cert-hacker search-ct-fingerprint a1b2c3d4e5f6:7890:abcd:ef01:2345:6789:abcd:ef01:2345:6789:abcd:ef01:2345:6789`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		fingerprint := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CTSearchByFingerprint(fingerprint)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		if result.Error != "" {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", result.Error)
+			os.Exit(1)
+		}
+
+		fmt.Println(display.SectionHeader("CT Fingerprint Search Results"))
+		fmt.Println(display.Separator())
+		fmt.Println(display.BulletKeyValue("Fingerprint", fingerprint))
+		fmt.Printf("Total Certificates: %d\n\n", result.TotalCount)
+
+		for i, cert := range result.Certificates {
+			fmt.Printf("Certificate #%d:\n", i+1)
+			fmt.Printf("  Common Name: %s\n", cert.CommonName)
+			fmt.Printf("  Issuer: %s\n", cert.Issuer)
+			fmt.Printf("  Not Before: %s\n", cert.NotBefore)
+			fmt.Printf("  Not After: %s\n", cert.NotAfter)
+			if cert.FingerprintSHA256 != "" {
+				fmt.Printf("  SHA-256: %s\n", cert.FingerprintSHA256)
+			}
+			fmt.Println()
+		}
+	},
+}
+
+var checkDistrustedCACmd = &cobra.Command{
+	Use:   "check-distrusted-ca [domain:port]",
+	Short: "Check for distrusted/compromised Certificate Authorities",
+	Long: `Check if a certificate chain contains any known distrusted or
+compromised Certificate Authorities (DigiNotar, WoSign, StartCom, Symantec legacy, etc.).
+
+Examples:
+  cert-hacker check-distrusted-ca example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckDistrustedCA(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Distrusted CA Check"))
+		fmt.Println(display.BulletKeyValue("Target", target))
+		if result.IsDistrusted {
+			fmt.Printf("  %s\n", display.Error("Chain contains distrusted CA(s)!"))
+			for _, ca := range result.DistrustedCAs {
+				fmt.Printf("  %s %s (position %d)\n", display.SeverityStyle(ca.Severity), ca.Name, ca.ChainPosition)
+				fmt.Printf("     %s\n", display.Dim(ca.Reason))
+				fmt.Printf("     %s\n", display.BulletKeyValue("Distrusted since", ca.DistrustDate))
+			}
+		} else {
+			fmt.Printf("  %s\n", display.Success("No distrusted CAs in chain"))
+		}
+	},
+}
+
+var checkOCSPMustStapleCmd = &cobra.Command{
+	Use:   "check-ocsp-must-staple [domain:port]",
+	Short: "Check OCSP Must-Staple compliance",
+	Long: `Check if a certificate has the OCSP Must-Staple extension (RFC 7633)
+and whether the server provides an OCSP staple. Must-Staple certificates
+that fail to staple cause hard-failures in compliant clients.
+
+Examples:
+  cert-hacker check-ocsp-must-staple example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckOCSPMustStaple(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("OCSP Must-Staple Check"))
+		fmt.Println(display.BulletKeyValue("Target", target))
+		fmt.Println(display.BulletKeyValue("Has Must-Staple", display.BoolIcon(result.HasMustStaple)))
+		fmt.Println(display.BulletKeyValue("Has OCSP Staple", display.BoolIcon(result.HasStaple)))
+		fmt.Println(display.BulletKeyValue("Compliant", display.BoolIcon(result.IsCompliant)))
+		if result.Violation != "" {
+			fmt.Printf("  %s\n", display.Error(result.Violation))
+		}
+		fmt.Println(display.BulletKeyValue("Detail", result.Detail))
+	},
+}
+
+var checkKeyUsageComplianceCmd = &cobra.Command{
+	Use:   "check-key-usage [domain:port]",
+	Short: "Check certificate key usage compliance",
+	Long: `Validate that a certificate's key usage extensions comply with
+RFC 5280 and CA/Browser Forum Baseline Requirements.
+
+Examples:
+  cert-hacker check-key-usage example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckKeyUsageCompliance(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Key Usage Compliance"))
+		fmt.Println(display.BulletKeyValue("Target", target))
+		fmt.Println(display.BulletKeyValue("Is CA", display.BoolIcon(result.IsCA)))
+		fmt.Println(display.BulletKeyValue("Compliant", display.BoolIcon(result.IsCompliant)))
+		fmt.Println(display.BulletKeyValue("Key Usage", strings.Join(result.KeyUsage, ", ")))
+		fmt.Println(display.BulletKeyValue("Ext Key Usage", strings.Join(result.ExtKeyUsage, ", ")))
+		for _, issue := range result.Issues {
+			fmt.Printf("  %s %s\n", display.SeverityStyle(issue.Severity), issue.Description)
+		}
+	},
+}
+
+var checkSerialEntropyCmd = &cobra.Command{
+	Use:   "check-serial-entropy [domain:port]",
+	Short: "Check certificate serial number entropy",
+	Long: `Analyze the entropy of a certificate's serial number.
+CA/Browser Forum Baseline Requirements mandate at least 64 bits of entropy.
+
+Examples:
+  cert-hacker check-serial-entropy example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckSerialEntropy(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Serial Number Entropy"))
+		fmt.Println(display.BulletKeyValue("Target", target))
+		fmt.Println(display.BulletKeyValue("Serial", result.SerialHex))
+		fmt.Println(display.BulletKeyValue("Bit Length", fmt.Sprintf("%d", result.BitLength)))
+		fmt.Println(display.BulletKeyValue("Compliant", display.BoolIcon(result.IsCompliant)))
+		fmt.Println(display.BulletKeyValue("Entropy", fmt.Sprintf("%.2f bits/byte", result.EntropyEstimate)))
+		fmt.Println(display.BulletKeyValue("Hamming Ratio", fmt.Sprintf("%.3f", result.HammingRatio)))
+		fmt.Println(display.BulletKeyValue("Sequential", display.BoolIcon(result.IsSequential)))
+		for _, issue := range result.Issues {
+			fmt.Printf("  %s\n", display.Warning(issue))
+		}
+	},
+}
+
+var checkPolicyAnalysisCmd = &cobra.Command{
+	Use:   "check-policy [domain:port]",
+	Short: "Analyze certificate policy OIDs",
+	Long: `Analyze a certificate's policy OIDs beyond simple EV detection.
+Identifies DV/OV/EV validation type, unknown policy OIDs, and missing
+Certificate Policies extension on public CA-issued certificates.
+
+Examples:
+  cert-hacker check-policy example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckPolicyAnalysis(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Certificate Policy Analysis"))
+		fmt.Println(display.BulletKeyValue("Target", target))
+		fmt.Println(display.BulletKeyValue("Validation Type", display.SeverityStyle(result.ValidationType)))
+		fmt.Println(display.BulletKeyValue("Has Policies", display.BoolIcon(result.HasPolicies)))
+		for _, policy := range result.PolicyOIDs {
+			fmt.Println(display.BulletKeyValue(policy.OID, fmt.Sprintf("%s (%s)", policy.Description, policy.Type)))
+		}
+		fmt.Println(display.BulletKeyValue("Compliant", display.BoolIcon(result.IsCompliant)))
+		for _, issue := range result.Issues {
+			fmt.Printf("  %s\n", display.Warning(issue))
+		}
+	},
+}
+
+var checkNameConstraintsCmd = &cobra.Command{
+	Use:   "check-name-constraints [domain:port]",
+	Short: "Check CA name constraint compliance",
+	Long: `Check CA certificate Name Constraints and verify leaf certificate
+names comply with parent CA constraints. Detects trust boundary violations.
+
+Examples:
+  cert-hacker check-name-constraints example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckNameConstraints(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Name Constraints Check"))
+		fmt.Println(display.BulletKeyValue("Target", target))
+		fmt.Println(display.BulletKeyValue("Has Constraints", display.BoolIcon(result.HasConstraints)))
+		fmt.Println(display.BulletKeyValue("Compliant", display.BoolIcon(result.IsCompliant)))
+
+		for _, ca := range result.ConstraintedCAs {
+			fmt.Printf("  %s (position %d)\n", ca.Subject, ca.ChainPosition)
+			if len(ca.PermittedDNS) > 0 {
+				fmt.Println(display.BulletKeyValue("Permitted DNS", strings.Join(ca.PermittedDNS, ", ")))
+			}
+			if len(ca.ExcludedDNS) > 0 {
+				fmt.Println(display.BulletKeyValue("Excluded DNS", strings.Join(ca.ExcludedDNS, ", ")))
+			}
+		}
+
+		for _, v := range result.Violations {
+			fmt.Printf("  %s %s (%s)\n", display.Error("Violation"), v.ViolatedName, v.ViolationType)
+		}
+	},
+}
+
+var checkBundleCompletenessCmd = &cobra.Command{
+	Use:   "check-bundle [domain:port]",
+	Short: "Check certificate bundle completeness",
+	Long: `Check if the server provides a complete certificate chain.
+If intermediates are missing, attempts to fetch them via AIA CA Issuers URLs.
+
+Examples:
+  cert-hacker check-bundle example.com --output json`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		result, err := pkg.CheckBundleCompleteness(target)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Certificate Bundle Check"))
+		fmt.Println(display.BulletKeyValue("Target", target))
+		fmt.Println(display.BulletKeyValue("Chain Complete", display.BoolIcon(result.ChainComplete)))
+		fmt.Println(display.BulletKeyValue("Chain Length", fmt.Sprintf("%d", result.ChainLength)))
+
+		if !result.ChainComplete {
+			fmt.Println(display.BulletKeyValue("AIA Can Fill", display.BoolIcon(result.CanAIAFill)))
+			fmt.Println(display.BulletKeyValue("AIA Resolved", display.BoolIcon(result.AIAFillResolved)))
+			for _, m := range result.MissingIntermediates {
+				fmt.Printf("  %s\n", display.Error(fmt.Sprintf("Missing: %s", m.Subject)))
+				if m.AIAIssuerURL != "" {
+					fmt.Println(display.BulletKeyValue("AIA URL", m.AIAIssuerURL))
+				}
+				fmt.Println(display.BulletKeyValue("Fetch Status", m.FetchStatus))
+			}
+		}
+	},
 }

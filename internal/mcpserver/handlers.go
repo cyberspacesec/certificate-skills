@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cyberspacesec/certificate-hacker/pkg"
+	"github.com/cyberspacesec/certificate-skills/pkg"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -386,5 +386,366 @@ func HandleCertCheckHSTS(ctx context.Context, req mcp.CallToolRequest) (*mcp.Cal
 	}
 
 	result := pkg.CheckHSTS(target)
+	return marshalResult(result)
+}
+
+// HandleJARMScan generates a JARM TLS fingerprint.
+func HandleJARMScan(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.JARMScan(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to generate JARM fingerprint: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleJA3Scan generates JA3/JA3S TLS fingerprints.
+func HandleJA3Scan(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.JA3Scan(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to generate JA3 fingerprints: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleVulnScan scans for TLS vulnerabilities.
+func HandleVulnScan(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.VulnerabilityScan(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to scan vulnerabilities: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCTSearch searches Certificate Transparency logs.
+func HandleCTSearch(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	domain, err := req.RequireString("domain")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CTSearch(domain)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to search CT logs: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCheckRevocation checks certificate revocation status.
+func HandleCheckRevocation(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CheckRevocation(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check revocation: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCheckPFS checks whether a server supports Perfect Forward Secrecy.
+func HandleCheckPFS(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CheckPFS(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check PFS: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleDetectEV detects whether a domain's certificate is an Extended Validation certificate.
+func HandleDetectEV(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.DetectEV(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to detect EV: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleVerifyCertChain verifies a server's certificate chain.
+func HandleVerifyCertChain(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.VerifyCertChain(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to verify chain: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCheckSessionResumption checks TLS session resumption support.
+func HandleCheckSessionResumption(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CheckSessionResumption(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check session resumption: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCertExpiryMonitor monitors certificate expiration for multiple targets.
+func HandleCertExpiryMonitor(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	targets := req.GetStringSlice("targets", []string{})
+	if len(targets) == 0 {
+		return mcp.NewToolResultError("targets array is required and must contain at least one domain"), nil
+	}
+
+	if len(targets) > 50 {
+		return mcp.NewToolResultError("maximum 50 targets allowed per batch"), nil
+	}
+
+	result := pkg.CertExpiryMonitor(targets)
+	return marshalResult(result)
+}
+
+// HandleCheckWildcard analyzes wildcard certificate patterns.
+func HandleCheckWildcard(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CheckWildcard(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check wildcard: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleGetTrustedDomains extracts all trusted domains from a certificate.
+func HandleGetTrustedDomains(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.GetTrustedDomains(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to get trusted domains: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCheckCAA checks CAA DNS records.
+func HandleCheckCAA(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CheckCAA(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check CAA: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCheckSCT verifies Signed Certificate Timestamps.
+func HandleCheckSCT(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CheckSCT(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check SCT: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleVerifyHostname verifies hostname matching.
+func HandleVerifyHostname(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.VerifyHostname(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to verify hostname: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleScanCertSecurity performs certificate-specific security checks.
+func HandleScanCertSecurity(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.ScanCertSecurity(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to scan cert security: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCTEnumerateSubdomains enumerates subdomains via CT logs.
+func HandleCTEnumerateSubdomains(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	domain, err := req.RequireString("domain")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CTEnumerateSubdomains(domain)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to enumerate subdomains: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleSearchCTByFingerprint searches CT logs by certificate fingerprint.
+func HandleSearchCTByFingerprint(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	fingerprint, err := req.RequireString("fingerprint")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CTSearchByFingerprint(fingerprint)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to search CT by fingerprint: %v", err)), nil
+	}
+
+	return marshalResult(result)
+}
+
+// HandleCheckDistrustedCA checks for distrusted CAs in the certificate chain.
+func HandleCheckDistrustedCA(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	result, err := pkg.CheckDistrustedCA(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check distrusted CA: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCheckOCSPMustStaple checks OCSP Must-Staple compliance.
+func HandleCheckOCSPMustStaple(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	result, err := pkg.CheckOCSPMustStaple(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check OCSP Must-Staple: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCheckKeyUsageCompliance validates key usage compliance.
+func HandleCheckKeyUsageCompliance(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	result, err := pkg.CheckKeyUsageCompliance(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check key usage: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCheckSerialEntropy analyzes serial number entropy.
+func HandleCheckSerialEntropy(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	result, err := pkg.CheckSerialEntropy(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check serial entropy: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCheckPolicyAnalysis analyzes certificate policy OIDs.
+func HandleCheckPolicyAnalysis(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	result, err := pkg.CheckPolicyAnalysis(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check policy: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCheckNameConstraints checks CA name constraints compliance.
+func HandleCheckNameConstraints(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	result, err := pkg.CheckNameConstraints(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check name constraints: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCheckBundleCompleteness checks certificate bundle completeness.
+func HandleCheckBundleCompleteness(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target, err := req.RequireString("target")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	result, err := pkg.CheckBundleCompleteness(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check bundle: %v", err)), nil
+	}
 	return marshalResult(result)
 }

@@ -1,75 +1,62 @@
 ---
 name: certificate-fingerprint
-description: This skill should be used when the user asks to "generate certificate fingerprint", "get SSL fingerprint", "show SHA-256 fingerprint", "get public key hash", "compare certificates", "verify certificate identity", "SSL pinning", "certificate pinning hash", or mentions SHA-1, SHA-256, MD5 hash of a certificate, or public key fingerprint. Provides certificate fingerprint generation and comparison via the cert-hacker CLI.
-version: 1.0.0
+description: Generate certificate fingerprints (SHA-256, SHA-1, MD5, SPKI) for pinning and verification
+tools:
+  - cert_fingerprint_domain
+  - cert_fingerprint_file
 ---
 
 # Certificate Fingerprint
 
-Generate certificate fingerprints for identity verification and SSL pinning using `cert-hacker`.
+> **TL;DR:** Generate certificate fingerprints (SHA-256, SHA-1, MD5, SPKI) for pinning and verification
 
-## Prerequisites
+## Capabilities
 
-The `cert-hacker` binary must be available. Auto-detect and build if missing:
+- SHA-256, SHA-1, MD5 certificate fingerprints
+- Public key SHA-256 for SSL pinning
+- Domain-based or file-based input
 
-```bash
-if [ ! -f "./bin/cert-hacker" ]; then
-  bash scripts/install.sh
-fi
-```
-
-## Operations
-
-### From Domain
-
-```bash
-./bin/cert-hacker fingerprint <domain> [--output json]
-```
-
-Connects to the domain and generates fingerprints for the leaf certificate.
-
-### From File
-
-```bash
-./bin/cert-hacker fingerprint <file-path> [--output json]
-```
-
-Parses the local certificate file.
-
-## Fingerprint Types
-
-| Type | Algorithm | Use Case |
-|------|-----------|----------|
-| `sha256` | SHA-256 of DER-encoded certificate | Primary identification, most secure |
-| `sha1` | SHA-1 of DER-encoded certificate | Legacy systems (deprecated) |
-| `md5` | MD5 of DER-encoded certificate | Legacy comparison only (insecure) |
-| `public_key_sha256` | SHA-256 of DER-encoded public key | **SSL Pinning** — survives cert renewal |
-
-## SSL Pinning Guidance
-
-When the user's use case involves SSL/TLS certificate pinning, always use `public_key_sha256`:
-
-- Tied to the **public key**, not the full certificate
-- Survives certificate renewal (same key pair = same fingerprint)
-- Compatible with:
-  - Android `Network Security Config`
-  - iOS `Info.plist` (`NSAppTransportSecurity`)
-  - HTTP `Public-Key-Pins` header
-  - Native app certificate pinning libraries
-
-## Presenting Results
-
-Format fingerprint output clearly:
+## Usage
 
 ```
-Certificate Fingerprints for google.com:
-========================================
-SHA-256              : 2d:8f:a1:b5:9a:60:f4:14:ad:1c:29:44:92:c7:8b:af:...
-SHA-1                : ab:cd:ef:12:34:56:...
-MD5                  : 12:34:56:78:...
-PUBLIC_KEY_SHA256    : f3:89:91:45:af:58:8f:aa:e1:99:98:ef:47:6c:76:43:...
+cert_fingerprint_domain target="example.com"
+cert_fingerprint_file target="example.com"
 ```
 
-- Highlight `public_key_sha256` when SSL pinning is mentioned
-- Warn that `md5` and `sha1` are deprecated for security purposes
-- Use `--output json` for programmatic consumption
+## Input
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `target (domain)` | string (required) | Domain name or IP with optional port |
+| `file_path (file)` | string (required) | Path to certificate file (PEM or DER) |
+
+## Output
+
+- SHA-256 fingerprint
+- SHA-1 fingerprint
+- MD5 fingerprint
+- Public key SHA-256 (for SSL pinning)
+
+## Workflow
+
+1. Run `cert_fingerprint_domain` or `cert_fingerprint_file`
+2. Record fingerprints for comparison
+3. Use `cert_validate_fingerprint` to verify format
+4. Use `cert_compare` to compare across domains
+
+## Cyberspace Mapping Applications
+
+- Build fingerprint databases for certificate tracking
+- Detect unauthorized certificate changes via fingerprint monitoring
+- Correlate certificates across domains via SPKI hash
+
+## Limitations
+
+- Fingerprints change on certificate renewal
+- SPKI hash remains stable across renewals for same key
+
+## Related Skills
+
+- [[cert_validate_fingerprint]] cert_validate_fingerprint
+- [[cert_compare]] cert_compare
+- [[cert_info]] cert_info

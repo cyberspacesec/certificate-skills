@@ -124,7 +124,7 @@ func CipherSuiteScan(target string, tlsVersion uint16) (*CipherScanResult, error
 	addr := net.JoinHostPort(host, port)
 
 	ciphers := getCipherSuitesForVersion(tlsVersion)
-	versionName := formatTLSVersionName(tlsVersion)
+	versionName := getTLSVersionName(tlsVersion)
 
 	result := &CipherScanResult{
 		Target:     target,

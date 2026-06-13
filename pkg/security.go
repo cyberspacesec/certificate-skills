@@ -28,18 +28,21 @@ type SecurityIssue struct {
 
 // CertificateCheck 证书检查结果
 type CertificateCheck struct {
-	IsValid          bool     `json:"is_valid"`
-	IsSelfSigned     bool     `json:"is_self_signed"`
-	IsExpired        bool     `json:"is_expired"`
-	IsExpiringSoon   bool     `json:"is_expiring_soon"`
-	DaysUntilExpiry  int      `json:"days_until_expiry"`
-	KeySize          int      `json:"key_size"`
-	SignatureAlg     string   `json:"signature_algorithm"`
-	WeakSignature    bool     `json:"weak_signature"`
-	HasSAN           bool     `json:"has_san"`
-	SANCount         int      `json:"san_count"`
-	WildcardCert     bool     `json:"wildcard_cert"`
-	Warnings         []string `json:"warnings"`
+	IsValid            bool     `json:"is_valid"`
+	IsSelfSigned       bool     `json:"is_self_signed"`
+	IsExpired          bool     `json:"is_expired"`
+	IsExpiringSoon     bool     `json:"is_expiring_soon"`
+	DaysUntilExpiry    int      `json:"days_until_expiry"`
+	KeySize            int      `json:"key_size"`
+	SignatureAlg       string   `json:"signature_algorithm"`
+	WeakSignature      bool     `json:"weak_signature"`
+	HasSAN             bool     `json:"has_san"`
+	SANCount           int      `json:"san_count"`
+	WildcardCert       bool     `json:"wildcard_cert"`
+	WeakKeySize        bool     `json:"weak_key_size"`
+	ShortValidity      bool     `json:"short_validity"`
+	ChainValid         bool     `json:"chain_valid"`
+	Warnings           []string `json:"warnings"`
 }
 
 // TLSCheck TLS连接检查结果
@@ -73,7 +76,7 @@ type BatchSecurityAnalysis struct {
 type BatchSummary struct {
 	GoodCount     int `json:"good_count"`
 	MediumCount   int `json:"medium_count"`
-	HighCount     int `json:"high_count"`
+	LowCount     int `json:"low_count"`
 	CriticalCount int `json:"critical_count"`
 	AverageScore  int `json:"average_score"`
 }
@@ -99,7 +102,7 @@ func AnalyzeSecurity(target string) (*SecurityAnalysis, error) {
 	cert := sslInfo.PeerCerts.Certificates[0]
 
 	// 执行各项检查
-	analysis.CertificateCheck = analyzeCertificate(&cert)
+	analysis.CertificateCheck = analyzeCertificate(&cert, sslInfo)
 	analysis.TLSCheck = analyzeTLS(sslInfo)
 	analysis.ExpirationCheck = analyzeExpiration(&cert)
 
@@ -120,7 +123,7 @@ func AnalyzeSecurity(target string) (*SecurityAnalysis, error) {
 }
 
 // analyzeCertificate 分析证书安全性
-func analyzeCertificate(cert *CertInfo) CertificateCheck {
+func analyzeCertificate(cert *CertInfo, sslInfo *SSLInfo) CertificateCheck {
 	check := CertificateCheck{
 		IsValid:      true,
 		SignatureAlg: cert.SignatureAlgorithm,
@@ -128,6 +131,7 @@ func analyzeCertificate(cert *CertInfo) CertificateCheck {
 		HasSAN:       len(cert.DNSNames) > 0,
 		SANCount:     len(cert.DNSNames),
 		Warnings:     []string{},
+		ChainValid:   sslInfo.PeerCerts.IsValid,
 	}
 
 	// 检查是否过期
@@ -158,6 +162,25 @@ func analyzeCertificate(cert *CertInfo) CertificateCheck {
 	if cert.Subject == cert.Issuer {
 		check.IsSelfSigned = true
 		check.Warnings = append(check.Warnings, "Self-signed certificate detected")
+	}
+
+	// 检查弱密钥长度 (RSA < 2048 bits)
+	if cert.KeySize > 0 && cert.KeySize < 2048 {
+		check.WeakKeySize = true
+		check.Warnings = append(check.Warnings, fmt.Sprintf("Weak key size: %d bits (minimum 2048 recommended)", cert.KeySize))
+	}
+
+	// 检查证书链验证结果
+	if !sslInfo.PeerCerts.IsValid {
+		check.ChainValid = false
+		check.Warnings = append(check.Warnings, "Certificate chain validation failed")
+	}
+
+	// 检查证书有效期是否过长 (> 398 days for public certs, per CA/Browser Forum)
+	validityDays := int(cert.NotAfter.Sub(cert.NotBefore).Hours() / 24)
+	if validityDays > 398 && !check.IsSelfSigned {
+		check.ShortValidity = false // It's actually long validity, but we flag it
+		check.Warnings = append(check.Warnings, fmt.Sprintf("Certificate validity period is %d days (CA/Browser Forum recommends ≤ 398 days)", validityDays))
 	}
 
 	return check
@@ -271,6 +294,24 @@ func (analysis *SecurityAnalysis) collectSecurityIssues() {
 		})
 	}
 
+	if analysis.CertificateCheck.WeakKeySize {
+		analysis.Issues = append(analysis.Issues, SecurityIssue{
+			Severity:    "High",
+			Type:        "Weak Key Size",
+			Description: fmt.Sprintf("Certificate uses a %d-bit key (minimum 2048 bits recommended)", analysis.CertificateCheck.KeySize),
+			Impact:      "Key may be vulnerable to brute-force attacks and factorization",
+		})
+	}
+
+	if !analysis.CertificateCheck.ChainValid {
+		analysis.Issues = append(analysis.Issues, SecurityIssue{
+			Severity:    "High",
+			Type:        "Certificate Chain Invalid",
+			Description: "Certificate chain validation failed - unable to verify chain to a trusted root",
+			Impact:      "Clients may reject the certificate or show security warnings",
+		})
+	}
+
 	// TLS相关问题
 	if !analysis.TLSCheck.IsSecureVersion {
 		analysis.Issues = append(analysis.Issues, SecurityIssue{
@@ -338,7 +379,7 @@ func (analysis *SecurityAnalysis) calculateOverallScore() {
 	} else if score >= 70 {
 		analysis.SecurityLevel = "Medium"
 	} else if score >= 50 {
-		analysis.SecurityLevel = "High"
+		analysis.SecurityLevel = "Low"
 	} else {
 		analysis.SecurityLevel = "Critical"
 	}
@@ -358,6 +399,14 @@ func (analysis *SecurityAnalysis) generateRecommendations() {
 
 	if analysis.CertificateCheck.IsSelfSigned {
 		recommendations = append(recommendations, "Replace self-signed certificate with one from a trusted CA")
+	}
+
+	if analysis.CertificateCheck.WeakKeySize {
+		recommendations = append(recommendations, "Regenerate certificate with at least 2048-bit RSA key or use ECDSA")
+	}
+
+	if !analysis.CertificateCheck.ChainValid {
+		recommendations = append(recommendations, "Ensure the full certificate chain is properly configured with intermediate certificates")
 	}
 
 	if !analysis.TLSCheck.IsSecureVersion {
@@ -418,8 +467,8 @@ func BatchAnalyzeSecurity(targets []string) *BatchSecurityAnalysis {
 			result.Summary.GoodCount++
 		case "Medium":
 			result.Summary.MediumCount++
-		case "High":
-			result.Summary.HighCount++
+		case "Low":
+			result.Summary.LowCount++
 		case "Critical":
 			result.Summary.CriticalCount++
 		}

@@ -1,144 +1,66 @@
 ---
 name: certificate-analysis
-description: This skill should be used when the user asks to "analyze SSL security", "check TLS security", "assess certificate security", "security score", "find SSL vulnerabilities", "check certificate expiry", "audit TLS configuration", "is this certificate secure", "rate my SSL", "batch security analysis", "analyze multiple domains", "certificate security comparison", or mentions certificate security analysis, TLS hardening, cipher suite security, TLS best practices. Provides comprehensive SSL/TLS security analysis with 0-100 scoring via the cert-hacker CLI and MCP tools.
-version: 1.0.0
+description: Perform comprehensive SSL/TLS security analysis with 0-100 scoring
+tools:
+  - cert_analyze_security
 ---
 
-# Certificate Security Analysis
+# Certificate Analysis
 
-Perform comprehensive security analysis of SSL/TLS connections with scoring and actionable recommendations using `cert-hacker`.
+> **TL;DR:** Perform comprehensive SSL/TLS security analysis with 0-100 scoring
 
-## Prerequisites
+## Capabilities
 
-The `cert-hacker` binary must be available. Auto-detect and build if missing:
+- Security scoring (0-100) with Critical/High/Medium/Good levels
+- Certificate validity and expiration checks
+- TLS version and cipher suite assessment
+- HSTS detection and OCSP stapling check
+- Actionable recommendations for remediation
 
-```bash
-if [ ! -f "./bin/cert-hacker" ]; then
-  bash scripts/install.sh
-fi
-```
-
-## Operation
-
-```bash
-./bin/cert-hacker analyze <domain> [--output json]
-```
-
-- Default port: 443. Custom port: `example.com:8443`
-- Use `--output json` for structured data
-
-## Scoring System
-
-Base score: 100. Deductions per issue found:
-
-| Severity | Deduction | Icon |
-|----------|-----------|------|
-| Critical | -30 | 💀 |
-| High | -20 | 🚨 |
-| Medium | -10 | ⚠️ |
-| Low | -5 | 🔸 |
-
-### Score to Level
-
-| Score | Level | Meaning |
-|-------|-------|---------|
-| 90-100 | Good | Follows best practices |
-| 70-89 | Medium | Minor issues to address |
-| 50-69 | High | Significant security concerns |
-| 0-49 | Critical | Immediate remediation required |
-
-## What Gets Checked
-
-### Certificate Check
-
-| Check | Severity | Trigger |
-|-------|----------|---------|
-| Certificate Expired | Critical | Past NotAfter date |
-| Certificate Expiring Soon | High | ≤ 30 days until expiry |
-| Weak Signature Algorithm | High | MD5 or SHA-1 |
-| Self-Signed Certificate | Medium | Subject == Issuer |
-
-### TLS Connection Check
-
-| Check | Severity | Trigger |
-|-------|----------|---------|
-| Insecure TLS Version | High | TLS 1.0 or TLS 1.1 |
-| Weak Cipher Suite | High | RC4, DES, 3DES, NULL, EXPORT |
-
-### Expiration Status
-
-| Status | Condition |
-|--------|-----------|
-| Expired | Past NotAfter |
-| Critical | ≤ 7 days |
-| Warning | ≤ 30 days |
-| Good | > 30 days |
-
-## Presenting Results
-
-Always structure analysis results as:
-
-1. **Overall score and level** — the big picture first
-2. **Issues by severity** — Critical → High → Medium → Low
-3. **Each issue**: what was found, why it matters, recommended fix
-4. **Recommendations** — prioritized by impact
-
-### Example Format
+## Usage
 
 ```
-🔒 Security Analysis: google.com
-Score: 85/100 — Good ✅
-
-Issues:
-  1. ⚠️ Self-Signed Certificate [Medium]
-     The certificate is not signed by a trusted CA.
-     Impact: Browsers show security warnings.
-     Fix: Use a certificate from Let's Encrypt or a commercial CA.
-
-Recommendations:
-  1. Replace with a trusted CA certificate
-  2. Continue monitoring expiration dates
+cert_analyze_security target="example.com"
 ```
 
-## Common Recommendations
+## Input
 
-| Issue | Recommendation |
-|-------|---------------|
-| Expired/Expiring | Renew certificate immediately |
-| Weak Signature | Upgrade to SHA-256 or higher |
-| Self-Signed | Use trusted CA (Let's Encrypt, DigiCert) |
-| Old TLS | Upgrade to TLS 1.2/1.3, disable older versions |
-| Weak Cipher | Configure AES-GCM or ChaCha20-Poly1305 |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `target` | string (required) | Domain or IP with optional port (e.g., 'example.com:8443') |
 
-## Additional Resources
+## Output
 
-- **`references/scoring-system.md`** — Complete scoring methodology, all check criteria, and detailed TLS assessment tables
+- Overall security score (0-100)
+- Security level classification
+- Certificate analysis details
+- TLS connection analysis
+- Expiration status
+- Issues list with severity
+- Recommendations
 
-## Batch Analysis
+## Workflow
 
-Use `cert_batch_analyze` MCP tool to analyze multiple domains at once. Provide a `targets` array with up to 50 domain names. Returns individual scores plus a summary with counts per security level and average score.
+1. Run `cert_analyze_security` on target domain
+2. Check overall score and security level
+3. Review individual issues by severity
+4. Follow recommendations for remediation
 
-Example MCP usage:
-```json
-{
-  "tool": "cert_batch_analyze",
-  "arguments": {
-    "targets": ["google.com", "github.com", "cloudflare.com"]
-  }
-}
-```
+## Cyberspace Mapping Applications
 
-## Certificate Comparison
+- Bulk security assessment of discovered infrastructure
+- Track certificate security posture across organizations
+- Identify high-risk domains in large-scale scans
+- Compare security scores across service providers
 
-Use `cert_compare` MCP tool to compare two certificates. Supports domain-to-domain, file-to-file, or domain-to-file comparisons. Returns match status, detailed fingerprint comparison, and a list of differences.
+## Limitations
 
-Example MCP usage:
-```json
-{
-  "tool": "cert_compare",
-  "arguments": {
-    "target1": "google.com",
-    "target2": "/path/to/local-cert.pem"
-  }
-}
-```
+- Requires network connectivity to target
+- Score is advisory, not a formal audit
+- Some checks depend on server TLS configuration
+
+## Related Skills
+
+- [[cert_scan_cert_security]] cert_scan_cert_security
+- [[cert_scan_vulnerabilities]] cert_scan_vulnerabilities
+- [[cert_batch_analyze]] cert_batch_analyze

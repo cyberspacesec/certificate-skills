@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net"
 	"time"
 )
@@ -37,6 +36,7 @@ var tlsProtocolVersions = []struct {
 	Name    string
 	Secure  bool
 }{
+	{tls.VersionSSL30, "SSL 3.0", false},
 	{tls.VersionTLS10, "TLS 1.0", false},
 	{tls.VersionTLS11, "TLS 1.1", false},
 	{tls.VersionTLS12, "TLS 1.2", true},
@@ -152,18 +152,3 @@ func firstNonEmpty(ss ...string) string {
 	return ""
 }
 
-// formatTLSVersionName returns a human-readable TLS version name.
-func formatTLSVersionName(version uint16) string {
-	switch version {
-	case tls.VersionTLS10:
-		return "TLS 1.0"
-	case tls.VersionTLS11:
-		return "TLS 1.1"
-	case tls.VersionTLS12:
-		return "TLS 1.2"
-	case tls.VersionTLS13:
-		return "TLS 1.3"
-	default:
-		return fmt.Sprintf("Unknown (0x%x)", version)
-	}
-}

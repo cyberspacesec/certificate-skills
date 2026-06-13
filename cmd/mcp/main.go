@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cyberspacesec/certificate-hacker/internal/mcpserver"
+	"github.com/cyberspacesec/certificate-skills/internal/mcpserver"
 	"github.com/spf13/cobra"
 )
 
