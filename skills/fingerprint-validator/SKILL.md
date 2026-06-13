@@ -82,6 +82,28 @@ cert-skills --version
 go get github.com/cyberspacesec/certificate-skills/pkg
 ```
 
+
+## AI Integration
+
+### CLI (For AI Agents)
+
+```bash
+# Install first: see Installation section above
+cert-skills validate-fingerprint example.com                    # Text output
+cert-skills validate-fingerprint example.com -o json           # JSON output for AI parsing
+```
+
+### Go SDK (For programmatic use)
+
+```go
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
+result, err := pkg.ValidateFingerprint(fp, hashType)
+```
+
+### MCP Tool (For Claude Code)
+
+This skill is available as the MCP tools listed in the frontmatter above.
+
 ## Cyberspace Mapping Applications
 
 - Validate fingerprint data before database storage

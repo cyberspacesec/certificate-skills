@@ -83,6 +83,28 @@ cert-skills --version
 go get github.com/cyberspacesec/certificate-skills/pkg
 ```
 
+
+## AI Integration
+
+### CLI (For AI Agents)
+
+```bash
+# Install first: see Installation section above
+cert-skills ja3 example.com                    # Text output
+cert-skills ja3 example.com -o json           # JSON output for AI parsing
+```
+
+### Go SDK (For programmatic use)
+
+```go
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
+result, err := pkg.JA3Scan("example.com")
+```
+
+### MCP Tool (For Claude Code)
+
+This skill is available as the MCP tools listed in the frontmatter above.
+
 ## Cyberspace Mapping Applications
 
 - Identify C2 infrastructure through JA3 fingerprinting

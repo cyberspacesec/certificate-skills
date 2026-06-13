@@ -9,7 +9,7 @@ A comprehensive SSL/TLS certificate security toolkit and Go SDK — designed for
 [![MCP](https://img.shields.io/badge/MCP-Server-green.svg)](https://modelcontextprotocol.io)
 [![Release](https://img.shields.io/github/v/release/cyberspacesec/certificate-skills?include_prereleases)](https://github.com/cyberspacesec/certificate-skills/releases/latest)
 
-> 🤖 **AI-Native**: This project is designed as an AI-first toolkit. It ships as an MCP server with 40 tools that AI agents can directly invoke, plus a Go SDK for programmatic use and a CLI for humans.
+> 🤖 **AI-Native**: This project provides **38 Skills** (progressive-disclosure documents) that AI agents can discover and use, a CLI with 39 commands, an MCP server with 40 tools, and a Go SDK with 50+ functions.
 
 ---
 
@@ -363,9 +363,40 @@ if err != nil {
 
 ---
 
-## 🤖 AI Integration (MCP)
+## 🤖 AI Integration
 
-### One-Click Setup for Claude Code
+### Option 1: Skills-based Integration (Recommended)
+
+AI agents can use cert-skills by reading the [skills/](skills/) directory and invoking CLI commands. Each Skill provides:
+- **TL;DR** — what it does
+- **Capabilities** — what's available
+- **Input/Output** — parameter schemas
+- **Workflow** — step-by-step usage
+- **CLI commands** — exact invocations
+
+**Setup (one line):**
+```bash
+# Install binary — AI agents can auto-detect platform
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.1_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/').tar.gz | tar xz && sudo mv cert-skills /usr/local/bin/
+```
+
+**Or build from source:**
+```bash
+git clone https://github.com/cyberspacesec/certificate-skills.git && cd certificate-skills && go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/ && sudo mv cert-skills /usr/local/bin/
+```
+
+**Then call any Skill via CLI:**
+```bash
+cert-skills analyze example.com              # certificate-analysis Skill
+cert-skills scan-cert-security example.com   # cert-security-scanner Skill
+cert-skills search-ct example.com            # certificate-transparency Skill
+cert-skills jarm suspicious.com              # jarm-fingerprint Skill
+cert-skills -o json analyze example.com      # JSON output for AI parsing
+```
+
+See [CLAUDE.md](CLAUDE.md) for the full Skills index and AI integration guide.
+
+### Option 2: MCP Server (For Claude Code)
 
 Add this to your `.claude/settings.json`:
 
@@ -380,17 +411,14 @@ Add this to your `.claude/settings.json`:
 }
 ```
 
-Or if you don't have the binary installed, use npx:
+### Option 3: Go SDK (For programmatic use)
 
-```json
-{
-  "mcpServers": {
-    "certificate-skills": {
-      "command": "npx",
-      "args": ["-y", "certificate-skills-mcp"]
-    }
-  }
-}
+```go
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
+
+result, err := pkg.AnalyzeSecurity("example.com")         // Online
+keyUsage := pkg.CheckKeyUsageFromCert(cert)                // Offline
+distrusted := pkg.CheckDistrustedCAFromCert(chain)         // Offline
 ```
 
 ### MCP Transport Modes
@@ -613,7 +641,26 @@ keyUsage := pkg.CheckKeyUsageFromCert(cert)             // 离线分析
 distrusted := pkg.CheckDistrustedCAFromCert(chain)      // 离线检查
 ```
 
-### AI 接入 (MCP)
+### AI 接入
+
+**方式1：Skills 接入（推荐）**
+
+AI Agent 通过读取 [skills/](skills/) 目录下的 38 个 SKILL.md 文件，了解能力、参数和工作流，然后直接调用 CLI 命令：
+
+```bash
+# 一键安装
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.1_linux_x86_64.tar.gz | tar xz && sudo mv cert-skills /usr/local/bin/
+
+# 调用任意 Skill
+cert-skills analyze example.com              # 安全评分
+cert-skills scan-cert-security example.com   # 18项安全检查
+cert-skills search-ct example.com            # CT日志搜索
+cert-skills -o json analyze example.com      # JSON输出，方便AI解析
+```
+
+每个 Skill 文档包含：TL;DR、能力列表、输入/输出参数、工作流步骤、CLI调用方式。
+
+**方式2：MCP 接入**
 
 复制以下配置到 `.claude/settings.json` 即可一键接入：
 
@@ -628,7 +675,14 @@ distrusted := pkg.CheckDistrustedCAFromCert(chain)      // 离线检查
 }
 ```
 
-接入后，AI Agent 可直接调用 40 个证书安全工具，包括安全评分、漏洞扫描、CT日志搜索、JARM指纹、吊销检查等全部能力。
+**方式3：Go SDK**
+
+```go
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
+result, err := pkg.AnalyzeSecurity("example.com")
+```
+
+详见 [CLAUDE.md](CLAUDE.md) 获取完整的 Skills 索引和接入指南。
 
 ### 核心能力
 

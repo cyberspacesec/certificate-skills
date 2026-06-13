@@ -83,6 +83,28 @@ cert-skills --version
 go get github.com/cyberspacesec/certificate-skills/pkg
 ```
 
+
+## AI Integration
+
+### CLI (For AI Agents)
+
+```bash
+# Install first: see Installation section above
+cert-skills search-ct-by-fingerprint example.com                    # Text output
+cert-skills search-ct-by-fingerprint example.com -o json           # JSON output for AI parsing
+```
+
+### Go SDK (For programmatic use)
+
+```go
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
+result, err := pkg.CTSearchByFingerprint(fp)
+```
+
+### MCP Tool (For Claude Code)
+
+This skill is available as the MCP tools listed in the frontmatter above.
+
 ## Cyberspace Mapping Applications
 
 - Track a known certificate across CT logs

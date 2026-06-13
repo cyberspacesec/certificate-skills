@@ -87,6 +87,28 @@ cert-skills --version
 go get github.com/cyberspacesec/certificate-skills/pkg
 ```
 
+
+## AI Integration
+
+### CLI (For AI Agents)
+
+```bash
+# Install first: see Installation section above
+cert-skills check-serial-entropy example.com                    # Text output
+cert-skills check-serial-entropy example.com -o json           # JSON output for AI parsing
+```
+
+### Go SDK (For programmatic use)
+
+```go
+import pkg "github.com/cyberspacesec/certificate-skills/pkg"
+result, err := pkg.CheckSerialEntropy("example.com")
+```
+
+### MCP Tool (For Claude Code)
+
+This skill is available as the MCP tools listed in the frontmatter above.
+
 ## Cyberspace Mapping Applications
 
 - Identify certificates from non-compliant CAs
