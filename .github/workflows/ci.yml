@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version-file: "go.mod"
           cache: true
 
       - name: Vet
@@ -37,7 +37,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version-file: "go.mod"
           cache: true
 
       - name: Run tests
@@ -58,7 +58,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version-file: "go.mod"
           cache: true
 
       - name: Build CLI
