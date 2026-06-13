@@ -155,18 +155,3 @@ release:
   draft: false
   prerelease: auto
   mode: replace
-
-brews:
-  - name: cert-skills
-    ids:
-      - cert-skills-archive
-    repository:
-      owner: cyberspacesec
-      name: homebrew-tap
-    directory: Formula
-    homepage: "https://github.com/cyberspacesec/certificate-skills"
-    description: "Certificate security toolkit for cyberspace mapping"
-    install: |
-      bin.install "cert-skills"
-    test: |
-      system "#{bin}/cert-skills", "--version"
