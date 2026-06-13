@@ -27,9 +27,9 @@ func main() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "cert-hacker",
+	Use:   "cert-skills",
 	Short: "Certificate security toolkit for cyberspace mapping",
-	Long: `cert-hacker is a comprehensive certificate security toolkit for
+	Long: `cert-skills is a comprehensive certificate security toolkit for
 cyberspace mapping and security assessment. It provides certificate
 downloading, parsing, analysis, generation, vulnerability scanning,
 and cyberspace mapping capabilities.
@@ -151,10 +151,10 @@ var infoCmd = &cobra.Command{
 Supports batch processing of multiple targets.
 
 Examples:
-  cert-hacker info google.com
-  cert-hacker info google.com:443 baidu.com github.com
-  cert-hacker info certificate.pem
-  cert-hacker info google.com --output json`,
+  cert-skills info google.com
+  cert-skills info google.com:443 baidu.com github.com
+  cert-skills info certificate.pem
+  cert-skills info google.com --output json`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		targets := args
@@ -259,12 +259,12 @@ var generateCmd = &cobra.Command{
 	Long: `Generate self-signed certificates for testing and development purposes.
 
 Examples:
-  cert-hacker generate --common-name localhost
-  cert-hacker generate --common-name example.com --dns-names www.example.com,api.example.com
-  cert-hacker generate --common-name myserver --validity-days 730 --key-size 4096
-  cert-hacker generate --common-name ca-root --is-ca --validity-days 3650
-  cert-hacker generate --common-name example.com --key-type ecdsa
-  cert-hacker generate --common-name example.com --key-type ed25519`,
+  cert-skills generate --common-name localhost
+  cert-skills generate --common-name example.com --dns-names www.example.com,api.example.com
+  cert-skills generate --common-name myserver --validity-days 730 --key-size 4096
+  cert-skills generate --common-name ca-root --is-ca --validity-days 3650
+  cert-skills generate --common-name example.com --key-type ecdsa
+  cert-skills generate --common-name example.com --key-type ed25519`,
 	Run: func(cmd *cobra.Command, args []string) {
 		commonName, _ := cmd.Flags().GetString("common-name")
 		organization, _ := cmd.Flags().GetString("organization")
@@ -331,9 +331,9 @@ var generateCSRCmd = &cobra.Command{
 The private key is generated but NOT saved to disk — only the CSR is output.
 
 Examples:
-  cert-hacker generate-csr --common-name example.com
-  cert-hacker generate-csr --common-name example.com --key-type ecdsa
-  cert-hacker generate-csr --common-name example.com --organization "My Org" --country US`,
+  cert-skills generate-csr --common-name example.com
+  cert-skills generate-csr --common-name example.com --key-type ecdsa
+  cert-skills generate-csr --common-name example.com --organization "My Org" --country US`,
 	Run: func(cmd *cobra.Command, args []string) {
 		commonName, _ := cmd.Flags().GetString("common-name")
 		organization, _ := cmd.Flags().GetString("organization")
@@ -388,9 +388,9 @@ var analyzeCmd = &cobra.Command{
 - Detailed security recommendations
 
 Examples:
-  cert-hacker analyze google.com
-  cert-hacker analyze example.com:8443
-  cert-hacker analyze google.com --output json`,
+  cert-skills analyze google.com
+  cert-skills analyze example.com:8443
+  cert-skills analyze google.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -415,8 +415,8 @@ var batchAnalyzeCmd = &cobra.Command{
 Returns individual scores plus a summary with counts per security level.
 
 Examples:
-  cert-hacker batch-analyze --targets google.com,github.com,cloudflare.com
-  cert-hacker batch-analyze --targets google.com,github.com --output json`,
+  cert-skills batch-analyze --targets google.com,github.com,cloudflare.com
+  cert-skills batch-analyze --targets google.com,github.com --output json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetsStr, _ := cmd.Flags().GetString("targets")
 		outputFormat, _ := cmd.Flags().GetString("output")
@@ -522,9 +522,9 @@ var compareCmd = &cobra.Command{
 Supports domain-to-domain, file-to-file, or domain-to-file comparisons.
 
 Examples:
-  cert-hacker compare --target1 google.com --target2 github.com
-  cert-hacker compare --target1 cert1.pem --target2 cert2.pem
-  cert-hacker compare --target1 google.com --target2 /path/to/local.pem`,
+  cert-skills compare --target1 google.com --target2 github.com
+  cert-skills compare --target1 cert1.pem --target2 cert2.pem
+  cert-skills compare --target1 google.com --target2 /path/to/local.pem`,
 	Run: func(cmd *cobra.Command, args []string) {
 		target1, _ := cmd.Flags().GetString("target1")
 		target2, _ := cmd.Flags().GetString("target2")
@@ -641,7 +641,7 @@ PEM files and that the public key in the certificate matches the private key.
 Supports RSA, ECDSA, and Ed25519 key types.
 
 Examples:
-  cert-hacker validate --cert server.pem --key server-key.pem`,
+  cert-skills validate --cert server.pem --key server-key.pem`,
 	Run: func(cmd *cobra.Command, args []string) {
 		certPath, _ := cmd.Flags().GetString("cert")
 		keyPath, _ := cmd.Flags().GetString("key")
@@ -669,8 +669,8 @@ var validateFingerprintCmd = &cobra.Command{
 Checks that the hex characters are valid and the length matches the expected hash output size.
 
 Examples:
-  cert-hacker validate-fingerprint --fingerprint "ab:cd:ef:00:..." --hash-type sha256
-  cert-hacker validate-fingerprint --fingerprint "abcdef0011223344..." --hash-type sha1`,
+  cert-skills validate-fingerprint --fingerprint "ab:cd:ef:00:..." --hash-type sha256
+  cert-skills validate-fingerprint --fingerprint "abcdef0011223344..." --hash-type sha1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fingerprint, _ := cmd.Flags().GetString("fingerprint")
 		hashType, _ := cmd.Flags().GetString("hash-type")
@@ -721,8 +721,8 @@ var scanProtocolsCmd = &cobra.Command{
 to connect with each version (TLS 1.0, 1.1, 1.2, 1.3) individually.
 
 Examples:
-  cert-hacker scan-protocols google.com
-  cert-hacker scan-protocols example.com:8443 --output json`,
+  cert-skills scan-protocols google.com
+  cert-skills scan-protocols example.com:8443 --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -783,9 +783,9 @@ var scanCiphersCmd = &cobra.Command{
 to connect with individual cipher suites.
 
 Examples:
-  cert-hacker scan-ciphers google.com
-  cert-hacker scan-ciphers example.com:8443 --tls-version 1.3
-  cert-hacker scan-ciphers google.com --output json`,
+  cert-skills scan-ciphers google.com
+  cert-skills scan-ciphers example.com:8443 --tls-version 1.3
+  cert-skills scan-ciphers google.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1147,8 +1147,8 @@ func displayGenerationResult(result *pkg.GenerationResult, format string) {
 	}
 
 	fmt.Println(display.SectionHeader("Next Steps"))
-	fmt.Printf("  %s %s\n", display.Dim("1."), display.Value(fmt.Sprintf("cert-hacker parse %s", result.CertificatePath)))
-	fmt.Printf("  %s %s\n", display.Dim("2."), display.Value(fmt.Sprintf("cert-hacker fingerprint %s", result.CertificatePath)))
+	fmt.Printf("  %s %s\n", display.Dim("1."), display.Value(fmt.Sprintf("cert-skills parse %s", result.CertificatePath)))
+	fmt.Printf("  %s %s\n", display.Dim("2."), display.Value(fmt.Sprintf("cert-skills fingerprint %s", result.CertificatePath)))
 	fmt.Printf("  %s %s\n", display.Dim("3."), display.Value("Use in your application or server configuration"))
 	fmt.Printf("\n  %s\n", display.Warning("Note: This is a self-signed certificate for testing purposes only."))
 }
@@ -1165,8 +1165,8 @@ to the target server and analyzing the responses. JARM is used for:
 - Cyberspace mapping and reconnaissance
 
 Examples:
-  cert-hacker jarm google.com
-  cert-hacker jarm example.com:8443 --output json`,
+  cert-skills jarm google.com
+  cert-skills jarm example.com:8443 --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1216,8 +1216,8 @@ to the target server. JA3 fingerprints are MD5 hashes of TLS handshake
 parameters used for service identification and cyberspace mapping.
 
 Examples:
-  cert-hacker ja3 google.com
-  cert-hacker ja3 example.com:8443 --output json`,
+  cert-skills ja3 google.com
+  cert-skills ja3 example.com:8443 --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1270,8 +1270,8 @@ Heartbleed, POODLE, ROBOT, CCS Injection, FREAK, Logjam,
 Sweet32, BEAST, CRIME, DROWN, and insecure renegotiation.
 
 Examples:
-  cert-hacker scan-vulns google.com
-  cert-hacker scan-vulns example.com:8443 --output json`,
+  cert-skills scan-vulns google.com
+  cert-skills scan-vulns example.com:8443 --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1357,8 +1357,8 @@ with a domain. Discovers subdomains, certificate issuance history, and
 unauthorized certificates. Essential for cyberspace mapping.
 
 Examples:
-  cert-hacker search-ct example.com
-  cert-hacker search-ct example.com --output json`,
+  cert-skills search-ct example.com
+  cert-skills search-ct example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		domain := args[0]
@@ -1451,9 +1451,9 @@ For domain targets, connects to the server and checks the leaf certificate.
 For file targets, reads the certificate from the file (CRL only, OCSP requires issuer).
 
 Examples:
-  cert-hacker check-revocation google.com
-  cert-hacker check-revocation /path/to/cert.pem
-  cert-hacker check-revocation example.com --output json`,
+  cert-skills check-revocation google.com
+  cert-skills check-revocation /path/to/cert.pem
+  cert-skills check-revocation example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1561,8 +1561,8 @@ PFS ensures that past sessions cannot be decrypted even if the server's
 private key is compromised. Checks ECDHE/DHE key exchange.
 
 Examples:
-  cert-hacker check-pfs google.com
-  cert-hacker check-pfs example.com:8443 --output json`,
+  cert-skills check-pfs google.com
+  cert-skills check-pfs example.com:8443 --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1623,8 +1623,8 @@ EV certificates provide the highest level of identity assurance and display
 the organization name in the browser address bar.
 
 Examples:
-  cert-hacker detect-ev google.com
-  cert-hacker detect-ev example.com --output json`,
+  cert-skills detect-ev google.com
+  cert-skills detect-ev example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1676,8 +1676,8 @@ Returns detailed information about each verified chain path, trust anchor,
 and any errors or warnings.
 
 Examples:
-  cert-hacker verify-chain google.com
-  cert-hacker verify-chain example.com:8443 --output json`,
+  cert-skills verify-chain google.com
+  cert-skills verify-chain example.com:8443 --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1745,8 +1745,8 @@ var checkSessionResumptionCmd = &cobra.Command{
 session IDs or session tickets (RFC 5077).
 
 Examples:
-  cert-hacker check-session-resumption google.com
-  cert-hacker check-session-resumption example.com --output json`,
+  cert-skills check-session-resumption google.com
+  cert-skills check-session-resumption example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1787,8 +1787,8 @@ Returns expiry status for each target categorized as Expired, Critical
 (<=7 days), Warning (<=30 days), or Healthy (>30 days).
 
 Examples:
-  cert-hacker expiry-monitor --targets google.com,github.com,cloudflare.com
-  cert-hacker expiry-monitor --targets google.com,github.com --output json`,
+  cert-skills expiry-monitor --targets google.com,github.com,cloudflare.com
+  cert-skills expiry-monitor --targets google.com,github.com --output json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetsStr, _ := cmd.Flags().GetString("targets")
 		outputFormat, _ := cmd.Flags().GetString("output")
@@ -1857,8 +1857,8 @@ Identifies wildcard SANs, classifies wildcard levels, assesses security risk,
 and lists covered domains. Essential for cyberspace mapping.
 
 Examples:
-  cert-hacker check-wildcard example.com
-  cert-hacker check-wildcard /path/to/cert.pem --output json`,
+  cert-skills check-wildcard example.com
+  cert-skills check-wildcard /path/to/cert.pem --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1913,7 +1913,7 @@ expansions. Returns exact domains, wildcard domains, and base domains.
 Key for cyberspace mapping.
 
 Examples:
-  cert-hacker get-trusted-domains google.com --output json`,
+  cert-skills get-trusted-domains google.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -1961,7 +1961,7 @@ var checkCAACmd = &cobra.Command{
 Verifies if the issuing CA is authorized by CAA policy.
 
 Examples:
-  cert-hacker check-caa google.com --output json`,
+  cert-skills check-caa google.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2005,7 +2005,7 @@ var checkSCTCmd = &cobra.Command{
 Checks CA/Browser Forum CT requirements.
 
 Examples:
-  cert-hacker check-sct google.com --output json`,
+  cert-skills check-sct google.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2051,7 +2051,7 @@ var verifyHostnameCmd = &cobra.Command{
 Detects hostname mismatches, wildcard matches, and RFC 6125 compliance.
 
 Examples:
-  cert-hacker verify-hostname google.com --output json`,
+  cert-skills verify-hostname google.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2103,7 +2103,7 @@ Checks for weak signatures, short keys, missing SANs, hostname mismatches,
 excessive validity, self-signed, expired, wildcard risks, and more.
 
 Examples:
-  cert-hacker scan-cert-security google.com --output json`,
+  cert-skills scan-cert-security google.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2161,7 +2161,7 @@ Enhanced CT search focused on cyberspace mapping - discovers all subdomains,
 groups by issuer, identifies wildcard domains, tracks active vs expired.
 
 Examples:
-  cert-hacker ct-enumerate example.com --output json`,
+  cert-skills ct-enumerate example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		domain := args[0]
@@ -2210,8 +2210,8 @@ by making an HTTPS request and inspecting the response headers.
 Returns HSTS status, max-age, includeSubDomains, and preload directives.
 
 Examples:
-  cert-hacker check-hsts google.com
-  cert-hacker check-hsts example.com --output json`,
+  cert-skills check-hsts google.com
+  cert-skills check-hsts example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2297,8 +2297,8 @@ var searchCTByFingerprintCmd = &cobra.Command{
 SHA-256 fingerprint. Useful for tracking a specific certificate across CT logs.
 
 Examples:
-  cert-hacker search-ct-fingerprint A1B2C3D4E5F6... --output json
-  cert-hacker search-ct-fingerprint a1b2c3d4e5f6:7890:abcd:ef01:2345:6789:abcd:ef01:2345:6789:abcd:ef01:2345:6789`,
+  cert-skills search-ct-fingerprint A1B2C3D4E5F6... --output json
+  cert-skills search-ct-fingerprint a1b2c3d4e5f6:7890:abcd:ef01:2345:6789:abcd:ef01:2345:6789:abcd:ef01:2345:6789`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fingerprint := args[0]
@@ -2347,7 +2347,7 @@ var checkDistrustedCACmd = &cobra.Command{
 compromised Certificate Authorities (DigiNotar, WoSign, StartCom, Symantec legacy, etc.).
 
 Examples:
-  cert-hacker check-distrusted-ca example.com --output json`,
+  cert-skills check-distrusted-ca example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2388,7 +2388,7 @@ and whether the server provides an OCSP staple. Must-Staple certificates
 that fail to staple cause hard-failures in compliant clients.
 
 Examples:
-  cert-hacker check-ocsp-must-staple example.com --output json`,
+  cert-skills check-ocsp-must-staple example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2425,7 +2425,7 @@ var checkKeyUsageComplianceCmd = &cobra.Command{
 RFC 5280 and CA/Browser Forum Baseline Requirements.
 
 Examples:
-  cert-hacker check-key-usage example.com --output json`,
+  cert-skills check-key-usage example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2462,7 +2462,7 @@ var checkSerialEntropyCmd = &cobra.Command{
 CA/Browser Forum Baseline Requirements mandate at least 64 bits of entropy.
 
 Examples:
-  cert-hacker check-serial-entropy example.com --output json`,
+  cert-skills check-serial-entropy example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2502,7 +2502,7 @@ Identifies DV/OV/EV validation type, unknown policy OIDs, and missing
 Certificate Policies extension on public CA-issued certificates.
 
 Examples:
-  cert-hacker check-policy example.com --output json`,
+  cert-skills check-policy example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2541,7 +2541,7 @@ var checkNameConstraintsCmd = &cobra.Command{
 names comply with parent CA constraints. Detects trust boundary violations.
 
 Examples:
-  cert-hacker check-name-constraints example.com --output json`,
+  cert-skills check-name-constraints example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
@@ -2587,7 +2587,7 @@ var checkBundleCompletenessCmd = &cobra.Command{
 If intermediates are missing, attempts to fetch them via AIA CA Issuers URLs.
 
 Examples:
-  cert-hacker check-bundle example.com --output json`,
+  cert-skills check-bundle example.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]

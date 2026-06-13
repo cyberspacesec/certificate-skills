@@ -12,18 +12,22 @@ var (
 	transport string
 	addr      string
 	baseURL   string
+	version   = "dev"
+	commit    = "none"
+	date      = "unknown"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "cert-hacker-mcp",
+	Use:   "cert-skills-mcp",
 	Short: "MCP server for certificate security analysis",
-	Long: `Certificate Hacker MCP Server — Model Context Protocol server
+	Long: `Certificate Skills MCP Server — Model Context Protocol server
 exposing SSL/TLS certificate analysis tools.
 
 Supports three transport modes:
   - stdio (default): JSON-RPC over stdin/stdout, for Claude Code subprocess mode
   - sse: HTTP server with Server-Sent Events (legacy MCP transport)
   - http: HTTP server with Streamable HTTP transport (modern MCP transport)`,
+	Version: version,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return mcpserver.Run(transport, addr, baseURL)
 	},

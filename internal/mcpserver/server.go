@@ -49,7 +49,7 @@ func Run(transport, addr, baseURL string) error {
 
 	// Use stderr for all log output to avoid corrupting the stdio JSON-RPC stream.
 	// The MCP stdio protocol uses stdout exclusively for protocol messages.
-	logger := log.New(os.Stderr, "[cert-hacker-mcp] ", log.LstdFlags|log.Lmsgprefix)
+	logger := log.New(os.Stderr, "[cert-skills-mcp] ", log.LstdFlags|log.Lmsgprefix)
 
 	switch transport {
 	case "stdio":
