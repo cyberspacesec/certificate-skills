@@ -9,6 +9,7 @@ import pathlib
 import re
 import subprocess
 import sys
+from datetime import datetime
 from urllib.parse import unquote
 
 
@@ -159,6 +160,17 @@ def parse_benchmark_delta(value: str) -> float | None:
         return None
     try:
         return float(stripped)
+    except ValueError:
+        return None
+
+
+def parse_iso_timestamp(value: str) -> datetime | None:
+    stripped = value.strip()
+    if not stripped:
+        return None
+    normalized = stripped[:-1] + "+00:00" if stripped.endswith("Z") else stripped
+    try:
+        return datetime.fromisoformat(normalized)
     except ValueError:
         return None
 
@@ -1560,9 +1572,17 @@ def validate_timing_output_schema(path: pathlib.Path) -> list[str]:
             errors.append(f"{path}: timing total_duration_seconds must match duration_ms / 1000")
 
     timestamp_fields = ("executor_start", "executor_end", "grader_start", "grader_end")
+    parsed_timestamps: dict[str, datetime] = {}
     for field in timestamp_fields:
-        if field in timing and not isinstance(timing.get(field), str):
+        value = timing.get(field)
+        if field in timing and not isinstance(value, str):
             errors.append(f"{path}: timing {field} must be a string when present")
+        elif field in timing:
+            parsed_timestamp = parse_iso_timestamp(value)
+            if parsed_timestamp is None:
+                errors.append(f"{path}: timing {field} must be a non-empty ISO timestamp when present")
+            else:
+                parsed_timestamps[field] = parsed_timestamp
 
     duration_fields = ("executor_duration_seconds", "grader_duration_seconds")
     for field in duration_fields:
@@ -1572,6 +1592,25 @@ def validate_timing_output_schema(path: pathlib.Path) -> list[str]:
             errors.append(f"{path}: timing {field} must be a number when present")
         elif field in timing and timing[field] < 0:
             errors.append(f"{path}: timing {field} must be non-negative when present")
+
+    for prefix in ("executor", "grader"):
+        start_field = f"{prefix}_start"
+        end_field = f"{prefix}_end"
+        duration_field = f"{prefix}_duration_seconds"
+        if start_field not in parsed_timestamps or end_field not in parsed_timestamps:
+            continue
+        try:
+            observed_duration = (parsed_timestamps[end_field] - parsed_timestamps[start_field]).total_seconds()
+        except TypeError:
+            errors.append(f"{path}: timing {prefix}_start and {prefix}_end must use compatible timezone formats")
+            continue
+        if observed_duration < -DURATION_SECONDS_TOLERANCE:
+            errors.append(f"{path}: timing {end_field} must not be before {start_field}")
+            continue
+        if duration_field in timing and is_json_number(timing.get(duration_field)):
+            expected_duration = timing[duration_field]
+            if abs(expected_duration - observed_duration) > DURATION_SECONDS_TOLERANCE:
+                errors.append(f"{path}: timing {duration_field} must match {end_field} - {start_field}")
     return errors
 
 
