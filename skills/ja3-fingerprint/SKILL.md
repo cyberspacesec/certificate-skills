@@ -50,7 +50,6 @@ cert_ja3 target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills ja3 example.com                    # Text output
 cert-skills ja3 example.com -o json           # JSON output for AI parsing
 ```

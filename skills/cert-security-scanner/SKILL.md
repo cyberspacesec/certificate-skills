@@ -47,7 +47,6 @@ cert_scan_cert_security target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills scan-cert-security example.com                    # Text output
 cert-skills scan-cert-security example.com -o json           # JSON output for AI parsing
 ```

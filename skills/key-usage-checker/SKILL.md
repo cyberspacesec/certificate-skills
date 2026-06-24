@@ -48,7 +48,6 @@ cert_check_key_usage target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills check-key-usage example.com                    # Text output
 cert-skills check-key-usage example.com -o json           # JSON output for AI parsing
 ```

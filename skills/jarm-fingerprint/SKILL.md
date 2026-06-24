@@ -49,7 +49,6 @@ cert_jarm target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills jarm example.com                    # Text output
 cert-skills jarm example.com -o json           # JSON output for AI parsing
 ```

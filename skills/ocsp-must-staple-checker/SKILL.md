@@ -47,7 +47,6 @@ cert_check_ocsp_must_staple target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills check-ocsp-must-staple example.com                    # Text output
 cert-skills check-ocsp-must-staple example.com -o json           # JSON output for AI parsing
 ```

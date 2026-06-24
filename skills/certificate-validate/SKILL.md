@@ -52,7 +52,6 @@ cert_validate_files target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills validate example.com                    # Text output
 cert-skills validate example.com -o json           # JSON output for AI parsing
 ```

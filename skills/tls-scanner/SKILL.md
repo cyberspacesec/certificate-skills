@@ -54,7 +54,6 @@ cert_scan_ciphers target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills scan-protocols example.com                    # Text output
 cert-skills scan-protocols example.com -o json           # JSON output for AI parsing
 ```

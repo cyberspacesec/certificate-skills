@@ -53,7 +53,6 @@ cert_search_ct target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills search-ct example.com                    # Text output
 cert-skills search-ct example.com -o json           # JSON output for AI parsing
 ```

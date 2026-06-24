@@ -49,7 +49,6 @@ cert_fingerprint_file target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills fingerprint example.com                    # Text output
 cert-skills fingerprint example.com -o json           # JSON output for AI parsing
 ```

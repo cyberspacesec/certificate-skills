@@ -54,7 +54,6 @@ cert_generate target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills generate example.com                    # Text output
 cert-skills generate example.com -o json           # JSON output for AI parsing
 ```

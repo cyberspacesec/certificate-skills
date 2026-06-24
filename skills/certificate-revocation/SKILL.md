@@ -52,7 +52,6 @@ cert_check_revocation target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills check-revocation example.com                    # Text output
 cert-skills check-revocation example.com -o json           # JSON output for AI parsing
 ```

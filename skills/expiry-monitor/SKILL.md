@@ -45,7 +45,6 @@ cert_expiry_monitor target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills expiry-monitor example.com                    # Text output
 cert-skills expiry-monitor example.com -o json           # JSON output for AI parsing
 ```

@@ -51,7 +51,6 @@ cert_compare target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills compare example.com                    # Text output
 cert-skills compare example.com -o json           # JSON output for AI parsing
 ```

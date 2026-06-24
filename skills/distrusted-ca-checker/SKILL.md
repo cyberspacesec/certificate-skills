@@ -48,7 +48,6 @@ cert_check_distrusted_ca target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills check-distrusted-ca example.com                    # Text output
 cert-skills check-distrusted-ca example.com -o json           # JSON output for AI parsing
 ```

@@ -47,7 +47,6 @@ cert_verify_hostname target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills verify-hostname example.com                    # Text output
 cert-skills verify-hostname example.com -o json           # JSON output for AI parsing
 ```

@@ -60,6 +60,7 @@ INSTALLATION_RE = re.compile(
     r"Verify Installation|Install as Go Module))$|see Installation section above",
     re.MULTILINE,
 )
+INSTALLATION_NOTE_RE = re.compile(r"\bInstall cert-skills first\b")
 
 
 class ValidationFailure(SystemExit):
@@ -731,7 +732,7 @@ def portable_prompt_errors(skill_dir: pathlib.Path, claude_root: pathlib.Path) -
                 f"{skill_file}: portable trigger guidance should stay in frontmatter description, "
                 f"not body section {heading}"
             )
-    if INSTALLATION_RE.search(text):
+    if INSTALLATION_RE.search(text) or INSTALLATION_NOTE_RE.search(text):
         errors.append(f"{skill_file}: portable SKILL.md should not duplicate repository installation instructions")
 
     claude_file = claude_root / skill_dir.name / "SKILL.md"

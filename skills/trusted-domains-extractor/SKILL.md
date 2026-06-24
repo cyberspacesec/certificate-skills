@@ -53,7 +53,6 @@ cert_check_wildcard target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills get-trusted-domains example.com                    # Text output
 cert-skills get-trusted-domains example.com -o json           # JSON output for AI parsing
 ```

@@ -53,7 +53,6 @@ cert_info target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills info example.com                    # Text output
 cert-skills info example.com -o json           # JSON output for AI parsing
 ```

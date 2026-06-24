@@ -48,7 +48,6 @@ cert_parse target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills parse example.com                    # Text output
 cert-skills parse example.com -o json           # JSON output for AI parsing
 ```

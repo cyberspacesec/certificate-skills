@@ -50,7 +50,6 @@ cert_check_serial_entropy target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills check-serial-entropy example.com                    # Text output
 cert-skills check-serial-entropy example.com -o json           # JSON output for AI parsing
 ```

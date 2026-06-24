@@ -47,7 +47,6 @@ cert_check_caa target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills check-caa example.com                    # Text output
 cert-skills check-caa example.com -o json           # JSON output for AI parsing
 ```

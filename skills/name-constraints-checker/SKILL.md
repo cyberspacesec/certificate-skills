@@ -47,7 +47,6 @@ cert_check_name_constraints target="example.com"
 ### CLI (For AI Agents)
 
 ```bash
-# Install cert-skills first; see the repository README for installation options
 cert-skills check-name-constraints example.com                    # Text output
 cert-skills check-name-constraints example.com -o json           # JSON output for AI parsing
 ```
