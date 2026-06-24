@@ -462,6 +462,11 @@ def validate_skill_creator_evals(
             ):
                 errors.append(f"{label} evals[{idx}] should reference at least one known skill")
 
+    if len(seen_ids) == len(eval_cases):
+        expected_ids = set(range(1, len(eval_cases) + 1))
+        if seen_ids != expected_ids:
+            errors.append(f"{label} eval ids should be consecutive integers starting at 1")
+
     return errors
 
 

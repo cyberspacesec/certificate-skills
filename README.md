@@ -311,7 +311,7 @@ Repository layout:
 - Reference files over 300 lines must include a `Contents` or `Table of Contents` heading.
 - Bundled `scripts/` and `assets/` files are linked from `SKILL.md`; bundled scripts must be executable.
 - Skill package content rejects high-risk shell patterns that could compromise the user's system.
-- Each portable skill includes `evals/evals.json` with 2-3 test prompts using only the skill-creator eval schema fields.
+- Each portable skill includes `evals/evals.json` with 2-3 test prompts using only the skill-creator eval schema fields and consecutive case ids.
 - Skill `evals/` directories contain only `evals.json` and optional `files/` fixtures.
 - Skill eval file fixtures, when used, live under `evals/files/`.
 - Every `evals/files/` fixture is referenced by at least one eval case.
@@ -384,7 +384,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - 超过 300 行的 reference 文件必须包含 `Contents` 或 `Table of Contents` 标题。
 - 打包的 `scripts/` 和 `assets/` 文件必须从 `SKILL.md` 链接；打包脚本必须可执行。
 - skill package 内容会拒绝可能破坏用户系统的高风险 shell 模式。
-- 每个可移植 skill 都包含 `evals/evals.json`，内含 2-3 个测试提示词，并且只使用 skill-creator eval schema 字段。
+- 每个可移植 skill 都包含 `evals/evals.json`，内含 2-3 个测试提示词，只使用 skill-creator eval schema 字段，并使用连续 case id。
 - skill `evals/` 目录只包含 `evals.json` 和可选的 `files/` fixture。
 - skill eval 文件测试 fixture 如有使用，放在 `evals/files/` 下。
 - 每个 `evals/files/` fixture 至少被一个 eval case 引用。
