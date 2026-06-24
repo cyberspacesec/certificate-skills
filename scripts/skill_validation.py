@@ -43,6 +43,7 @@ BENCHMARK_RUN_SUMMARY_CONFIGS = ("with_skill", "without_skill")
 BENCHMARK_RUN_SUMMARY_METRICS = ("pass_rate", "time_seconds", "tokens")
 BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev", "min", "max")
 PASS_RATE_TOLERANCE = 0.01
+SUMMARY_STAT_TOLERANCE = 0.01
 DURATION_SECONDS_TOLERANCE = 0.001
 COMPARISON_LABELS = ("A", "B")
 COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
@@ -1219,6 +1220,10 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                 errors.append(f"{path}: metadata.{optional_string_field} must be a string when present")
 
     runs = benchmark.get("runs")
+    summary_values: dict[str, dict[str, list[int | float]]] = {
+        configuration: {metric: [] for metric in BENCHMARK_RUN_SUMMARY_METRICS}
+        for configuration in BENCHMARK_RUN_SUMMARY_CONFIGS
+    }
     if not isinstance(runs, list):
         errors.append(f"{path}: benchmark.json runs must be a list")
     else:
@@ -1304,6 +1309,12 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                     expected_pass_rate = result["passed"] / result["total"] if result["total"] else 0.0
                     if abs(result["pass_rate"] - expected_pass_rate) > PASS_RATE_TOLERANCE:
                         errors.append(f"{path}: runs[{idx}].result.pass_rate must match passed / total")
+                configuration = run.get("configuration")
+                if configuration in BENCHMARK_RUN_SUMMARY_CONFIGS:
+                    for metric in BENCHMARK_RUN_SUMMARY_METRICS:
+                        value = result.get(metric)
+                        if is_json_number(value) and value >= 0:
+                            summary_values[configuration][metric].append(value)
 
             expectations = run.get("expectations", [])
             if expectations is not None:
@@ -1398,6 +1409,19 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                         errors.append(f"{path}: run_summary.{configuration}.{metric}.min must be <= max")
                     if stats["mean"] < stats["min"] or stats["mean"] > stats["max"]:
                         errors.append(f"{path}: run_summary.{configuration}.{metric}.mean must be between min and max")
+                    values = summary_values[configuration][metric]
+                    if values:
+                        expected_stats = {
+                            "mean": sum(values) / len(values),
+                            "min": min(values),
+                            "max": max(values),
+                        }
+                        for field, expected_value in expected_stats.items():
+                            if abs(stats[field] - expected_value) > SUMMARY_STAT_TOLERANCE:
+                                errors.append(
+                                    f"{path}: run_summary.{configuration}.{metric}.{field} "
+                                    f"must match runs[] {field}"
+                                )
 
         delta = run_summary.get("delta")
         if not isinstance(delta, dict):
