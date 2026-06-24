@@ -20,6 +20,7 @@ CLAUDE_REQUIRED_SECTIONS = (
     "## Anti-Patterns",
 )
 EVAL_WORKSPACE_SUFFIX = "-workspace"
+GENERATED_ARTIFACT_IGNORE_PATTERNS = ("*.skill", "*-workspace/", "/dist/")
 PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS = ("## When to Use", "## When NOT to Use")
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
@@ -597,6 +598,19 @@ def tracked_repository_artifact_errors(repo_root: pathlib.Path) -> list[str]:
     return errors
 
 
+def gitignore_policy_errors(repo_root: pathlib.Path) -> list[str]:
+    gitignore = repo_root / ".gitignore"
+    if not gitignore.is_file():
+        return [f"{gitignore}: missing .gitignore for generated skill artifacts"]
+
+    patterns = {line.strip() for line in gitignore.read_text(encoding="utf-8").splitlines()}
+    return [
+        f"{gitignore}: should ignore generated skill artifact pattern {pattern!r}"
+        for pattern in GENERATED_ARTIFACT_IGNORE_PATTERNS
+        if pattern not in patterns
+    ]
+
+
 def validate_repository(repo_root: pathlib.Path, run_package_check: bool = True) -> list[str]:
     repo_root = repo_root.resolve()
     errors = []
@@ -621,6 +635,7 @@ def validate_repository(repo_root: pathlib.Path, run_package_check: bool = True)
         errors.extend(tool_metadata_parity_errors(repo_root))
 
     errors.extend(legacy_reference_errors(repo_root))
+    errors.extend(gitignore_policy_errors(repo_root))
     errors.extend(tracked_repository_artifact_errors(repo_root))
     errors.extend(repository_eval_errors(repo_root))
     errors.extend(skill_link_errors(repo_root))
