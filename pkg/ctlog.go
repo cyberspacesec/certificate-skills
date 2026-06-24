@@ -70,7 +70,7 @@ func CTSearch(domain string) (*CTSearchResult, error) {
 		return result, nil
 	}
 
-	req.Header.Set("User-Agent", "cert-hacker/1.0 (certificate security toolkit)")
+	req.Header.Set("User-Agent", "cert-skills/1.0 (certificate security toolkit)")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -180,7 +180,7 @@ func CTSearchByFingerprint(fingerprint string) (*CTSearchResult, error) {
 		return result, nil
 	}
 
-	req.Header.Set("User-Agent", "cert-hacker/1.0 (certificate security toolkit)")
+	req.Header.Set("User-Agent", "cert-skills/1.0 (certificate security toolkit)")
 
 	resp, err := client.Do(req)
 	if err != nil {

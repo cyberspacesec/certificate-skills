@@ -2,9 +2,9 @@
 
 **AI-Native Certificate Security Toolkit — Skills · CLI · MCP · Go SDK**
 
-A comprehensive SSL/TLS certificate security toolkit designed for AI agents, security researchers, and cyberspace mapping. Four integration modes: **Skills** (38 progressive-disclosure documents), **CLI** (39 commands), **MCP Server** (40 tools), **Go SDK** (50+ functions).
+A comprehensive SSL/TLS certificate security toolkit designed for AI agents, security researchers, and cyberspace mapping. Four integration modes: **Skills** (45 executable prompts), **CLI** (48 commands), **MCP Server** (51 tools), **Go SDK** (50+ functions).
 
-[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Server-green.svg)](https://modelcontextprotocol.io)
 [![Release](https://img.shields.io/github/v/release/cyberspacesec/certificate-skills?include_prereleases)](https://github.com/cyberspacesec/certificate-skills/releases/latest)
@@ -15,24 +15,23 @@ A comprehensive SSL/TLS certificate security toolkit designed for AI agents, sec
 
 ## 🤖 AI Integration — One-Click Setup
 
-### Skills Integration (Recommended)
+### Skills Integration (Recommended for AI Agents)
 
-AI agents read the `skills/` directory to discover capabilities, parameters, and workflows, then invoke CLI commands directly.
-
-**Install & use in one step:**
+**45 executable prompt skills** — copy them into your project and your AI agent automatically knows when and how to use each tool.
 
 ```bash
-# Install binary
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.1_linux_x86_64.tar.gz | tar xz && sudo mv cert-skills /usr/local/bin/
-
-# Use any Skill via CLI
-cert-skills analyze example.com -o json
-cert-skills scan-cert-security example.com -o json
-cert-skills search-ct example.com -o json
-cert-skills jarm suspicious-server.com -o json
+# One-click install — copy all 45 skills into your project
+git clone https://github.com/cyberspacesec/certificate-skills.git
+cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 ```
 
-> 📋 **38 Skills** are documented in [skills/](skills/) — each includes TL;DR, capabilities, input/output, workflow, CLI commands, and cyberspace mapping applications. See [CLAUDE.md](CLAUDE.md) for the full index.
+Each skill is an **executable prompt** (not just documentation) that tells your AI agent:
+- **When to Use** — trigger phrases that activate the skill
+- **When NOT to Use** — boundaries to avoid wrong tool selection
+- **Instructions** — step-by-step workflow with CLI and MCP tool calls
+- **Anti-Patterns** — common mistakes to avoid
+
+> 📋 **45 Skills** in [.claude/skills/](.claude/skills/) — ready for Claude Code, Cursor, and other AI agents. See [CLAUDE.md](CLAUDE.md) for the full index.
 
 ### MCP Server (For Claude Code)
 
@@ -47,14 +46,20 @@ cert-skills jarm suspicious-server.com -o json
 }
 ```
 
+**Best experience: Skills + MCP together.** Skills provide the prompt intelligence; MCP provides the tool execution.
+
 ### CLI (For Humans & AI Agents)
 
 ```bash
+# Install binary first
+curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.1_linux_x86_64.tar.gz | tar xz && sudo mv cert-skills /usr/local/bin/
+
 cert-skills analyze google.com                         # Security score (0-100)
 cert-skills scan-cert-security google.com              # 18 cert checks
 cert-skills scan-vulns google.com                      # 11 TLS vulnerability scans
 cert-skills search-ct example.com                      # CT log search
 cert-skills jarm suspicious.com -o json                # JARM fingerprint (JSON)
+cert-skills detect-change google.com --save            # Certificate change detection
 ```
 
 ### Go SDK (For Programmatic Use)
@@ -174,6 +179,7 @@ cert-skills search-ct <domain>                  # Search CT logs
 cert-skills ct-enumerate <domain>               # Enumerate subdomains
 cert-skills jarm <domain>                       # JARM fingerprint
 cert-skills ja3 <domain>                        # JA3 fingerprint
+cert-skills detect-change <domain> --save        # Certificate change detection
 cert-skills detect-ev <domain>                  # EV detection
 cert-skills check-wildcard <domain>             # Wildcard analysis
 cert-skills get-trusted-domains <domain>        # Extract domains
@@ -204,6 +210,7 @@ entropy, err := pkg.CheckSerialEntropy("google.com")        // Serial entropy
 jarmResult, err := pkg.JARMScan("google.com")               // JARM
 ja3Result, err := pkg.JA3Scan("google.com")                 // JA3
 ctResult, err := pkg.CTSearch("example.com")                // CT search
+changeResult, err := pkg.DetectChange("example.com", prev)  // Change detection
 hstsResult, err := pkg.CheckHSTS("example.com")             // HSTS
 revResult, err := pkg.CheckRevocation("example.com")        // Revocation
 ```
@@ -277,19 +284,18 @@ if errors.Is(err, pkg.ErrCertParseFailed) { /* parse error */ }
 
 ---
 
-## 🎯 Skills (38 Documents)
+## 🎯 Skills (45 Executable Prompts)
 
-Each Skill provides progressive-disclosure documentation for AI agents:
+Each Skill is an **executable prompt** that tells your AI agent when to trigger, how to use the tool, and what to avoid:
 
 ```
-Frontmatter → TL;DR → Capabilities → Usage → Input/Output
-→ Workflow → Installation → AI Integration → Cyberspace Mapping
-→ Limitations → Related Skills
+Frontmatter (name + trigger description + allowed-tools)
+→ When to Use → When NOT to Use → Instructions → Anti-Patterns
 ```
 
-**Categories:** Security Analysis (6) · Certificate Operations (7) · PKI (2) · Cyberspace Mapping (8) · Protocol Analysis (4) · Compliance Checks (8) · Revocation & HSTS (2) · Chain Verification (1)
+**Categories:** Security Analysis (6) · Certificate Operations (7) · PKI (5) · CRL (2) · Cyberspace Mapping (10) · Protocol Analysis (4) · Compliance Checks (8) · Revocation & HSTS (2) · Chain Verification (1)
 
-See [skills/](skills/) for all documents and [CLAUDE.md](CLAUDE.md) for the full index.
+See [.claude/skills/](.claude/skills/) for all skills and [CLAUDE.md](CLAUDE.md) for the full index.
 
 ---
 
@@ -297,9 +303,9 @@ See [skills/](skills/) for all documents and [CLAUDE.md](CLAUDE.md) for the full
 
 | Metric | Count |
 |--------|-------|
-| Skills | 38 |
-| CLI Commands | 39 |
-| MCP Tools | 40 |
+| Skills | 45 |
+| CLI Commands | 48 |
+| MCP Tools | 51 |
 | Cert Security Checks | 18 |
 | TLS Vulnerability Scans | 11 |
 | Go SDK Functions | 50+ |
@@ -313,21 +319,23 @@ See [skills/](skills/) for all documents and [CLAUDE.md](CLAUDE.md) for the full
 
 ### 简介
 
-`cert-skills` 是一个 AI 原生的证书安全工具包，支持四种接入方式：**Skills**（38个渐进式披露文档）、**CLI**（39个命令）、**MCP 服务器**（40个工具）、**Go SDK**（50+函数）。
+`cert-skills` 是一个 AI 原生的证书安全工具包，支持四种接入方式：**Skills**（45个可执行提示词）、**CLI**（48个命令）、**MCP 服务器**（51个工具）、**Go SDK**（50+函数）。
 
 ### 🤖 AI 一键接入
 
-**Skills 接入（推荐）：** AI Agent 读取 `skills/` 目录了解能力，然后直接调用 CLI 命令：
+**Skills 接入（推荐）：** 45个可执行提示词技能，复制到项目即可自动识别：
 
 ```bash
-# 一键安装
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.1_linux_x86_64.tar.gz | tar xz && sudo mv cert-skills /usr/local/bin/
-
-# 调用任意 Skill（JSON输出方便AI解析）
-cert-skills analyze example.com -o json
-cert-skills scan-cert-security example.com -o json
-cert-skills jarm suspicious.com -o json
+# 一键安装 — 复制全部 45 个技能到你的项目
+git clone https://github.com/cyberspacesec/certificate-skills.git
+cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 ```
+
+每个 Skill 是一个**可执行提示词**（不是文档），告诉 AI Agent：
+- **何时使用** — 触发短语自动激活技能
+- **何时不使用** — 避免选错工具的边界
+- **操作指令** — 包含 CLI 和 MCP 工具调用的分步工作流
+- **反模式** — 常见错误和需避免的做法
 
 **MCP 接入（Claude Code）：**
 
@@ -341,6 +349,8 @@ cert-skills jarm suspicious.com -o json
   }
 }
 ```
+
+**最佳体验：Skills + MCP 配合使用。** Skills 提供提示词智能，MCP 提供工具执行。
 
 **Go SDK 接入：**
 
@@ -365,9 +375,9 @@ cd certificate-skills && go build -o cert-skills ./cmd/
 
 | 类别 | 数量 | 说明 |
 |------|------|------|
-| Skills | 38 | AI Agent 渐进式披露文档 |
-| CLI 命令 | 39 | 全部能力通过命令行暴露 |
-| MCP 工具 | 40 | AI Agent 直接调用 |
+| Skills | 45 | AI Agent 可执行提示词 |
+| CLI 命令 | 48 | 全部能力通过命令行暴露 |
+| MCP 工具 | 51 | AI Agent 直接调用 |
 | 证书安全检查 | 18 | CERT-001 到 CERT-018 |
 | TLS 漏洞扫描 | 11 | Heartbleed 到 DROWN |
 | Go SDK | 50+ | 含 7 个离线分析函数 |

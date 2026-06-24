@@ -244,7 +244,7 @@ func HandleCertCompare(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallT
 
 	var comparison *pkg.CertComparison
 
-	// 判断目标类型：文件路径 or 域名
+	// Determine target type: file path or domain
 	isFile1 := isFilePath(target1)
 	isFile2 := isFilePath(target2)
 
@@ -253,7 +253,7 @@ func HandleCertCompare(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallT
 	} else if !isFile1 && !isFile2 {
 		comparison, err = pkg.CompareCertsFromDomains(target1, target2)
 	} else if isFile1 && !isFile2 {
-		// 文件 vs 域名
+		// File vs domain
 		cert1, err1 := pkg.ReadCertFromFile(target1)
 		if err1 != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("failed to read cert from %s: %v", target1, err1)), nil
@@ -270,7 +270,7 @@ func HandleCertCompare(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallT
 		comparison = pkg.CompareCerts(cert1, certs2[0])
 		err = nil
 	} else {
-		// 域名 vs 文件
+		// Both are domains
 		conn1, err1 := pkg.TLSDial(target1)
 		if err1 != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("failed to connect to %s: %v", target1, err1)), nil
@@ -310,7 +310,7 @@ func HandleCertBatchAnalyze(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	return marshalResult(result)
 }
 
-// isFilePath 判断目标是否为文件路径
+// isFilePath checks if a target string looks like a file path.
 func isFilePath(target string) bool {
 	fileExts := []string{".pem", ".crt", ".cer", ".der", ".p7b", ".p7c"}
 	for _, ext := range fileExts {
@@ -748,5 +748,299 @@ func HandleCheckBundleCompleteness(ctx context.Context, req mcp.CallToolRequest)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to check bundle: %v", err)), nil
 	}
+	return marshalResult(result)
+}
+
+// HandleSignCertificate signs a terminal certificate using a CA.
+func HandleSignCertificate(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	caCertPath, err := req.RequireString("ca_cert_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	caKeyPath, err := req.RequireString("ca_key_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	ipStrings := req.GetStringSlice("ip_addresses", []string{})
+	var ipAddrs []net.IP
+	for _, s := range ipStrings {
+		ip := net.ParseIP(s)
+		if ip == nil {
+			return mcp.NewToolResultError(fmt.Sprintf("invalid IP address: %s", s)), nil
+		}
+		ipAddrs = append(ipAddrs, ip)
+	}
+
+	signReq := pkg.SignCertRequest{
+		CACertPath:     caCertPath,
+		CAKeyPath:      caKeyPath,
+		CommonName:     req.GetString("common_name", "localhost"),
+		Organization:   req.GetString("organization", ""),
+		Country:        req.GetString("country", ""),
+		Province:       req.GetString("province", ""),
+		Locality:       req.GetString("locality", ""),
+		DNSNames:       req.GetStringSlice("dns_names", []string{}),
+		IPAddresses:    ipAddrs,
+		ValidityDays:   req.GetInt("validity_days", 365),
+		KeySize:        req.GetInt("key_size", 2048),
+		KeyType:        req.GetString("key_type", "rsa"),
+		KeyUsage:       req.GetString("key_usage", "server"),
+		OutputCertPath: req.GetString("output_cert_path", ""),
+		OutputKeyPath:  req.GetString("output_key_path", ""),
+	}
+
+	result, err := pkg.SignCertificate(signReq)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to sign certificate: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleGenerateIntermediateCA generates an intermediate CA certificate.
+func HandleGenerateIntermediateCA(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	parentCertPath, err := req.RequireString("parent_cert_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	parentKeyPath, err := req.RequireString("parent_key_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	caReq := pkg.IntermediateCARequest{
+		ParentCertPath:    parentCertPath,
+		ParentKeyPath:     parentKeyPath,
+		CommonName:        req.GetString("common_name", "Intermediate CA"),
+		Organization:      req.GetString("organization", ""),
+		Country:           req.GetString("country", ""),
+		Province:          req.GetString("province", ""),
+		Locality:          req.GetString("locality", ""),
+		ValidityDays:      req.GetInt("validity_days", 1825),
+		KeySize:           req.GetInt("key_size", 4096),
+		KeyType:           req.GetString("key_type", "rsa"),
+		PathLenConstraint: req.GetInt("path_len_constraint", 0),
+		OutputCertPath:    req.GetString("output_cert_path", ""),
+		OutputKeyPath:     req.GetString("output_key_path", ""),
+	}
+
+	result, err := pkg.GenerateIntermediateCA(caReq)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to generate intermediate CA: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleGenerateCRL generates a Certificate Revocation List.
+func HandleGenerateCRL(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	caCertPath, err := req.RequireString("ca_cert_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	caKeyPath, err := req.RequireString("ca_key_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	serialNumbers := req.GetStringSlice("serial_numbers", []string{})
+	reasons := req.GetStringSlice("reasons", []string{})
+
+	var revokedCerts []pkg.RevokedEntry
+	for i, s := range serialNumbers {
+		entry := pkg.RevokedEntry{SerialNumber: s}
+		if i < len(reasons) {
+			entry.Reason = reasons[i]
+		}
+		revokedCerts = append(revokedCerts, entry)
+	}
+
+	crlReq := pkg.CRLGenerateRequest{
+		CACertPath:   caCertPath,
+		CAKeyPath:    caKeyPath,
+		RevokedCerts: revokedCerts,
+		NextUpdate:   req.GetInt("next_update_days", 30),
+		Number:       int64(req.GetInt("crl_number", 1)),
+		OutputPath:   req.GetString("output_path", "crl.pem"),
+	}
+
+	result, err := pkg.GenerateCRL(crlReq)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to generate CRL: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleParseCRL parses a CRL file.
+func HandleParseCRL(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	crlPath, err := req.RequireString("crl_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.ParseCRL(crlPath)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to parse CRL: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleVerifyCRLSignature verifies a CRL signature against a CA certificate.
+func HandleVerifyCRLSignature(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	crlPath, err := req.RequireString("crl_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	caCertPath, err := req.RequireString("ca_cert_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.VerifyCRLSignature(crlPath, caCertPath)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to verify CRL signature: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCheckCertRevokedByCRL checks if a certificate is revoked in a CRL.
+func HandleCheckCertRevokedByCRL(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	certPath, err := req.RequireString("cert_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	crlPath, err := req.RequireString("crl_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, err := pkg.CheckCertRevokedByCRL(certPath, crlPath)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to check revocation: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleCloneCertificate clones an existing certificate.
+func HandleCloneCertificate(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	sourceCertPath, err := req.RequireString("source_cert_path")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	cloneReq := pkg.CloneCertRequest{
+		SourceCertPath:  sourceCertPath,
+		KeySize:         req.GetInt("key_size", 2048),
+		KeyType:         req.GetString("key_type", "rsa"),
+		ValidityDays:    req.GetInt("validity_days", 365),
+		ModifySubject:   req.GetBool("modify_subject", false),
+		NewCommonName:   req.GetString("new_common_name", ""),
+		NewOrganization: req.GetString("new_organization", ""),
+		OutputCertPath:  req.GetString("output_cert_path", ""),
+		OutputKeyPath:   req.GetString("output_key_path", ""),
+	}
+
+	caCertPath := req.GetString("ca_cert_path", "")
+	caKeyPath := req.GetString("ca_key_path", "")
+	if caCertPath != "" && caKeyPath != "" {
+		cloneReq.CACertPath = caCertPath
+		cloneReq.CAKeyPath = caKeyPath
+	}
+
+	result, err := pkg.CloneCertificate(cloneReq)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to clone certificate: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleGenerateDomainVariants generates domain variant certificates.
+func HandleGenerateDomainVariants(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	baseDomain, err := req.RequireString("base_domain")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	variantReq := pkg.DomainVariantRequest{
+		BaseDomain:   baseDomain,
+		VariantTypes: req.GetStringSlice("variant_types", []string{}),
+		KeySize:      req.GetInt("key_size", 2048),
+		KeyType:      req.GetString("key_type", "rsa"),
+		ValidityDays: req.GetInt("validity_days", 365),
+		OutputDir:    req.GetString("output_dir", "."),
+		Organization: req.GetString("organization", ""),
+	}
+
+	caCertPath := req.GetString("ca_cert_path", "")
+	caKeyPath := req.GetString("ca_key_path", "")
+	if caCertPath != "" && caKeyPath != "" {
+		variantReq.CACertPath = caCertPath
+		variantReq.CAKeyPath = caKeyPath
+	}
+
+	result, err := pkg.GenerateDomainVariants(variantReq)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to generate domain variants: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleFingerprintMatch handles the cert_match_fingerprints tool.
+func HandleFingerprintMatch(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target := request.GetString("target", "")
+	if target == "" {
+		return mcp.NewToolResultError("target is required"), nil
+	}
+
+	result, err := pkg.MatchFingerprints(target)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to match fingerprints: %v", err)), nil
+	}
+	return marshalResult(result)
+}
+
+// HandleFingerprintMatchByHash handles the cert_match_fingerprint_by_hash tool.
+func HandleFingerprintMatchByHash(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	fpType := request.GetString("type", "")
+	hash := request.GetString("hash", "")
+	if fpType == "" || hash == "" {
+		return mcp.NewToolResultError("type and hash are required"), nil
+	}
+
+	matches := pkg.MatchFingerprintByHash(fpType, hash)
+	return marshalResult(matches)
+}
+
+// HandleDetectChange handles the cert_detect_change tool.
+func HandleDetectChange(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	target := request.GetString("target", "")
+	if target == "" {
+		return mcp.NewToolResultError("target is required"), nil
+	}
+
+	snapshotDir := request.GetString("snapshot_dir", "")
+	saveSnapshot := request.GetBool("save", false)
+
+	store := pkg.NewSnapshotStore(snapshotDir)
+
+	// Load previous snapshot
+	prev, err := store.LoadLatest(target)
+	if err != nil {
+		// Non-fatal: just means no previous snapshot
+		prev = nil
+	}
+
+	result, err := pkg.DetectChange(target, prev)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to detect change: %v", err)), nil
+	}
+
+	// Save new snapshot if requested
+	if saveSnapshot && result.CurrentSnap != nil {
+		if err := store.Save(result.CurrentSnap); err != nil {
+			// Non-fatal, just note it
+			result.Error = fmt.Sprintf("snapshot save failed: %v", err)
+		}
+	}
+
 	return marshalResult(result)
 }

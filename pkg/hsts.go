@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,10 +25,10 @@ func CheckHSTS(domain string) *HSTSResult {
 
 	// Create custom transport that skips cert verification (we're checking headers, not cert validity)
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
 			Timeout: 10 * time.Second,
 		}).DialContext,
+		TLSClientConfig: insecureTLSConfig(),
 	}
 	client := &http.Client{
 		Transport: transport,

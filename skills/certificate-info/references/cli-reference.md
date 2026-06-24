@@ -1,11 +1,11 @@
 # CLI Reference: Certificate Info Commands
 
-## `cert-hacker info`
+## `cert-skills info`
 
 ### Synopsis
 
 ```bash
-cert-hacker info [domain:port | file] [domain2] [domain3]... [--output json|text]
+cert-skills info [domain:port | file] [domain2] [domain3]... [--output json|text]
 ```
 
 ### Arguments
@@ -71,12 +71,12 @@ Auto-detected by extension:
 }
 ```
 
-## `cert-hacker parse`
+## `cert-skills parse`
 
 ### Synopsis
 
 ```bash
-cert-hacker parse <certificate-file> [--output json|text]
+cert-skills parse <certificate-file> [--output json|text]
 ```
 
 ### Supported Formats

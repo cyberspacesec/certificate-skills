@@ -1,32 +1,34 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 )
 
-// SecurityAnalysis 安全分析结果
+// SecurityAnalysis is the security analysis result.
 type SecurityAnalysis struct {
 	Target           string           `json:"target"`
-	OverallScore     int              `json:"overall_score"`     // 总体安全评分 (0-100)
-	SecurityLevel    string           `json:"security_level"`    // 安全等级: Critical, High, Medium, Low, Good
-	Issues           []SecurityIssue  `json:"issues"`            // 发现的安全问题
-	Recommendations  []string         `json:"recommendations"`   // 安全建议
-	CertificateCheck CertificateCheck `json:"certificate_check"` // 证书检查结果
-	TLSCheck         TLSCheck         `json:"tls_check"`         // TLS检查结果
-	ExpirationCheck  ExpirationCheck  `json:"expiration_check"`  // 过期检查
+	OverallScore     int              `json:"overall_score"`     // Overall security score (0-100)
+	SecurityLevel    string           `json:"security_level"`    // Security level: Critical, High, Medium, Low, Good
+	Issues           []SecurityIssue  `json:"issues"`            // Discovered security issues
+	Recommendations  []string         `json:"recommendations"`   // Security recommendations
+	CertificateCheck CertificateCheck `json:"certificate_check"` // Certificate check result
+	TLSCheck         TLSCheck         `json:"tls_check"`         // TLS check result
+	ExpirationCheck  ExpirationCheck  `json:"expiration_check"`  // Expiration check
 }
 
-// SecurityIssue 安全问题
+// SecurityIssue represents a security issue.
 type SecurityIssue struct {
 	Severity    string `json:"severity"`    // Critical, High, Medium, Low
-	Type        string `json:"type"`        // 问题类型
-	Description string `json:"description"` // 问题描述
-	Impact      string `json:"impact"`      // 影响描述
+	Type        string `json:"type"`        // Issue type
+	Description string `json:"description"` // Issue description
+	Impact      string `json:"impact"`      // Impact description
 }
 
-// CertificateCheck 证书检查结果
+// CertificateCheck is the certificate check result.
 type CertificateCheck struct {
 	IsValid         bool     `json:"is_valid"`
 	IsSelfSigned    bool     `json:"is_self_signed"`
@@ -45,7 +47,7 @@ type CertificateCheck struct {
 	Warnings        []string `json:"warnings"`
 }
 
-// TLSCheck TLS连接检查结果
+// TLSCheck is the TLS connection check result.
 type TLSCheck struct {
 	Version             string      `json:"version"`
 	CipherSuite         string      `json:"cipher_suite"`
@@ -57,7 +59,7 @@ type TLSCheck struct {
 	Warnings            []string    `json:"warnings"`
 }
 
-// ExpirationCheck 过期检查
+// ExpirationCheck is the expiration check.
 type ExpirationCheck struct {
 	DaysUntilExpiry int    `json:"days_until_expiry"`
 	ExpirationDate  string `json:"expiration_date"`
@@ -65,14 +67,14 @@ type ExpirationCheck struct {
 	Message         string `json:"message"`
 }
 
-// BatchSecurityAnalysis 批量安全分析
+// BatchSecurityAnalysis is the batch security analysis.
 type BatchSecurityAnalysis struct {
 	Results    []SecurityAnalysis `json:"results"`
 	TotalCount int                `json:"total_count"`
 	Summary    BatchSummary       `json:"summary"`
 }
 
-// BatchSummary 批量分析摘要
+// BatchSummary is the batch analysis summary.
 type BatchSummary struct {
 	GoodCount     int `json:"good_count"`
 	MediumCount   int `json:"medium_count"`
@@ -81,27 +83,27 @@ type BatchSummary struct {
 	AverageScore  int `json:"average_score"`
 }
 
-// AnalyzeSecurity 执行安全分析
-func AnalyzeSecurity(target string) (*SecurityAnalysis, error) {
+// AnalyzeSecurityWithContext performs security analysis with context support.
+func AnalyzeSecurityWithContext(ctx context.Context, target string) (*SecurityAnalysis, error) {
 	analysis := &SecurityAnalysis{
 		Target:          target,
 		Issues:          []SecurityIssue{},
 		Recommendations: []string{},
 	}
 
-	// 获取SSL信息
-	sslInfo, err := GetCertFromDomain(target)
+	// Get SSL info
+	sslInfo, err := GetCertFromDomainWithContext(ctx, target)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get SSL info: %v", err)
+		return nil, err // already wrapped by GetCertFromDomainWithContext
 	}
 
 	if len(sslInfo.PeerCerts.Certificates) == 0 {
-		return nil, fmt.Errorf("no certificates found")
+		return nil, ErrCertNotFound
 	}
 
 	cert := sslInfo.PeerCerts.Certificates[0]
 
-	// 执行各项检查
+	// Perform checks
 	analysis.CertificateCheck = analyzeCertificate(&cert, sslInfo)
 	analysis.TLSCheck = analyzeTLS(sslInfo)
 	analysis.ExpirationCheck = analyzeExpiration(&cert)
@@ -110,19 +112,24 @@ func AnalyzeSecurity(target string) (*SecurityAnalysis, error) {
 	hstsResult := CheckHSTS(target)
 	analysis.TLSCheck.HSTS = hstsResult
 
-	// 收集安全问题
+	// Collect security issues
 	analysis.collectSecurityIssues()
 
-	// 计算总体评分
+	// Calculate overall score
 	analysis.calculateOverallScore()
 
-	// 生成安全建议
+	// Generate security recommendations
 	analysis.generateRecommendations()
 
 	return analysis, nil
 }
 
-// analyzeCertificate 分析证书安全性
+// AnalyzeSecurity performs security analysis.
+func AnalyzeSecurity(target string) (*SecurityAnalysis, error) {
+	return AnalyzeSecurityWithContext(context.Background(), target)
+}
+
+// analyzeCertificate analyzes certificate security.
 func analyzeCertificate(cert *CertInfo, sslInfo *SSLInfo) CertificateCheck {
 	check := CertificateCheck{
 		IsValid:      true,
@@ -134,13 +141,13 @@ func analyzeCertificate(cert *CertInfo, sslInfo *SSLInfo) CertificateCheck {
 		ChainValid:   sslInfo.PeerCerts.IsValid,
 	}
 
-	// 检查是否过期
+	// Check if expired
 	now := time.Now()
 	check.IsExpired = now.After(cert.NotAfter)
 	check.DaysUntilExpiry = int(cert.NotAfter.Sub(now).Hours() / 24)
 	check.IsExpiringSoon = check.DaysUntilExpiry <= 30 && check.DaysUntilExpiry > 0
 
-	// 检查签名算法安全性
+	// Check signature algorithm security
 	weakSignatures := []string{"MD5", "SHA1"}
 	for _, weak := range weakSignatures {
 		if strings.Contains(strings.ToUpper(cert.SignatureAlgorithm), weak) {
@@ -150,7 +157,7 @@ func analyzeCertificate(cert *CertInfo, sslInfo *SSLInfo) CertificateCheck {
 		}
 	}
 
-	// 检查是否为通配符证书
+	// Check if wildcard certificate
 	for _, dnsName := range cert.DNSNames {
 		if strings.HasPrefix(dnsName, "*.") {
 			check.WildcardCert = true
@@ -158,25 +165,25 @@ func analyzeCertificate(cert *CertInfo, sslInfo *SSLInfo) CertificateCheck {
 		}
 	}
 
-	// 检查是否自签名
+	// Check if self-signed
 	if cert.Subject == cert.Issuer {
 		check.IsSelfSigned = true
 		check.Warnings = append(check.Warnings, "Self-signed certificate detected")
 	}
 
-	// 检查弱密钥长度 (RSA < 2048 bits)
+	// Check weak key size (RSA < 2048 bits)
 	if cert.KeySize > 0 && cert.KeySize < 2048 {
 		check.WeakKeySize = true
 		check.Warnings = append(check.Warnings, fmt.Sprintf("Weak key size: %d bits (minimum 2048 recommended)", cert.KeySize))
 	}
 
-	// 检查证书链验证结果
+	// Check certificate chain validation result
 	if !sslInfo.PeerCerts.IsValid {
 		check.ChainValid = false
 		check.Warnings = append(check.Warnings, "Certificate chain validation failed")
 	}
 
-	// 检查证书有效期是否过长 (> 398 days for public certs, per CA/Browser Forum)
+	// Check if certificate validity period is too long (> 398 days for public certs, per CA/Browser Forum)
 	validityDays := int(cert.NotAfter.Sub(cert.NotBefore).Hours() / 24)
 	if validityDays > 398 && !check.IsSelfSigned {
 		check.ShortValidity = false // It's actually long validity, but we flag it
@@ -186,7 +193,7 @@ func analyzeCertificate(cert *CertInfo, sslInfo *SSLInfo) CertificateCheck {
 	return check
 }
 
-// analyzeTLS 分析TLS连接安全性
+// analyzeTLS analyzes TLS connection security.
 func analyzeTLS(sslInfo *SSLInfo) TLSCheck {
 	check := TLSCheck{
 		Version:       sslInfo.TLSVersion,
@@ -197,7 +204,7 @@ func analyzeTLS(sslInfo *SSLInfo) TLSCheck {
 		Warnings:      []string{},
 	}
 
-	// 检查TLS版本安全性
+	// Check TLS version security
 	secureVersions := []string{"TLS 1.2", "TLS 1.3"}
 	check.IsSecureVersion = false
 	for _, version := range secureVersions {
@@ -211,11 +218,11 @@ func analyzeTLS(sslInfo *SSLInfo) TLSCheck {
 		check.Warnings = append(check.Warnings, fmt.Sprintf("Insecure TLS version: %s", sslInfo.TLSVersion))
 	}
 
-	// 检查加密套件安全性（简化检查）
+	// Check cipher suite security (simplified check)
 	cipherSuite := strings.ToUpper(sslInfo.CipherSuite)
 	check.IsSecureCipherSuite = true
 
-	// 检查弱加密套件
+	// Check weak cipher suites
 	weakCiphers := []string{"RC4", "DES", "3DES", "NULL", "EXPORT"}
 	for _, weak := range weakCiphers {
 		if strings.Contains(cipherSuite, weak) {
@@ -228,7 +235,7 @@ func analyzeTLS(sslInfo *SSLInfo) TLSCheck {
 	return check
 }
 
-// analyzeExpiration 分析证书过期情况
+// analyzeExpiration analyzes certificate expiration status.
 func analyzeExpiration(cert *CertInfo) ExpirationCheck {
 	now := time.Now()
 	daysUntilExpiry := int(cert.NotAfter.Sub(now).Hours() / 24)
@@ -255,9 +262,9 @@ func analyzeExpiration(cert *CertInfo) ExpirationCheck {
 	return check
 }
 
-// collectSecurityIssues 收集安全问题
+// collectSecurityIssues collects security issues.
 func (analysis *SecurityAnalysis) collectSecurityIssues() {
-	// 证书相关问题
+	// Certificate-related issues
 	if analysis.CertificateCheck.IsExpired {
 		analysis.Issues = append(analysis.Issues, SecurityIssue{
 			Severity:    "Critical",
@@ -312,7 +319,7 @@ func (analysis *SecurityAnalysis) collectSecurityIssues() {
 		})
 	}
 
-	// TLS相关问题
+	// TLS-related issues
 	if !analysis.TLSCheck.IsSecureVersion {
 		analysis.Issues = append(analysis.Issues, SecurityIssue{
 			Severity:    "High",
@@ -350,7 +357,7 @@ func (analysis *SecurityAnalysis) collectSecurityIssues() {
 	}
 }
 
-// calculateOverallScore 计算总体安全评分
+// calculateOverallScore calculates the overall security score.
 func (analysis *SecurityAnalysis) calculateOverallScore() {
 	score := 100
 
@@ -373,7 +380,7 @@ func (analysis *SecurityAnalysis) calculateOverallScore() {
 
 	analysis.OverallScore = score
 
-	// 确定安全等级
+	// Determine security level
 	if score >= 90 {
 		analysis.SecurityLevel = "Good"
 	} else if score >= 70 {
@@ -385,7 +392,7 @@ func (analysis *SecurityAnalysis) calculateOverallScore() {
 	}
 }
 
-// generateRecommendations 生成安全建议
+// generateRecommendations generates security recommendations.
 func (analysis *SecurityAnalysis) generateRecommendations() {
 	recommendations := []string{}
 
@@ -428,48 +435,84 @@ func (analysis *SecurityAnalysis) generateRecommendations() {
 	analysis.Recommendations = recommendations
 }
 
-// BatchAnalyzeSecurity 批量分析多个目标的安全性
-func BatchAnalyzeSecurity(targets []string) *BatchSecurityAnalysis {
+// BatchAnalyzeSecurityWithContext performs concurrent batch analysis with context support.
+// It analyzes up to 10 targets in parallel for significantly faster results.
+func BatchAnalyzeSecurityWithContext(ctx context.Context, targets []string) *BatchSecurityAnalysis {
 	result := &BatchSecurityAnalysis{
-		Results:    make([]SecurityAnalysis, 0, len(targets)),
+		Results:    make([]SecurityAnalysis, len(targets)),
 		TotalCount: len(targets),
 	}
 
-	totalScore := 0
+	// Limit concurrency to avoid overwhelming the network
+	maxConcurrency := 10
+	if len(targets) < maxConcurrency {
+		maxConcurrency = len(targets)
+	}
 
-	for _, target := range targets {
-		analysis, err := AnalyzeSecurity(target)
-		if err != nil {
-			// 跳过失败的目标，记录错误信息
-			failedAnalysis := SecurityAnalysis{
-				Target:        target,
-				OverallScore:  0,
-				SecurityLevel: "Error",
-				Issues: []SecurityIssue{
-					{
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxConcurrency)
+
+	for i, target := range targets {
+		wg.Add(1)
+		go func(idx int, t string) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			// Check context cancellation
+			select {
+			case <-ctx.Done():
+				result.Results[idx] = SecurityAnalysis{
+					Target:        t,
+					OverallScore:  0,
+					SecurityLevel: "Error",
+					Issues: []SecurityIssue{{
+						Severity:    "Critical",
+						Type:        "Cancelled",
+						Description: fmt.Sprintf("Analysis cancelled: %v", ctx.Err()),
+						Impact:      "Unable to assess security posture",
+					}},
+				}
+				return
+			default:
+			}
+
+			analysis, err := AnalyzeSecurityWithContext(ctx, t)
+			if err != nil {
+				result.Results[idx] = SecurityAnalysis{
+					Target:        t,
+					OverallScore:  0,
+					SecurityLevel: "Error",
+					Issues: []SecurityIssue{{
 						Severity:    "Critical",
 						Type:        "Connection Failed",
 						Description: fmt.Sprintf("Failed to analyze: %v", err),
 						Impact:      "Unable to assess security posture",
-					},
-				},
+					}},
+				}
+				return
 			}
-			result.Results = append(result.Results, failedAnalysis)
-			result.Summary.CriticalCount++
-			continue
-		}
 
-		result.Results = append(result.Results, *analysis)
-		totalScore += analysis.OverallScore
+			result.Results[idx] = *analysis
+		}(i, target)
+	}
 
-		switch analysis.SecurityLevel {
+	wg.Wait()
+
+	// Calculate summary from results
+	totalScore := 0
+	for _, a := range result.Results {
+		totalScore += a.OverallScore
+		switch a.SecurityLevel {
 		case "Good":
 			result.Summary.GoodCount++
 		case "Medium":
 			result.Summary.MediumCount++
 		case "Low":
 			result.Summary.LowCount++
-		case "Critical":
+		case "Critical", "Error":
 			result.Summary.CriticalCount++
 		}
 	}
@@ -479,4 +522,9 @@ func BatchAnalyzeSecurity(targets []string) *BatchSecurityAnalysis {
 	}
 
 	return result
+}
+
+// BatchAnalyzeSecurity performs batch security analysis on multiple targets.
+func BatchAnalyzeSecurity(targets []string) *BatchSecurityAnalysis {
+	return BatchAnalyzeSecurityWithContext(context.Background(), targets)
 }

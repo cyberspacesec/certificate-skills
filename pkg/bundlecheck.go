@@ -37,13 +37,13 @@ func CheckBundleCompleteness(target string) (*BundleCheckResult, error) {
 
 	conn, err := TLSDial(target)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect: %v", err)
+		return nil, err // already wrapped by TLSDial
 	}
 	defer conn.Close()
 
 	state := conn.ConnectionState()
 	if len(state.PeerCertificates) == 0 {
-		return nil, fmt.Errorf("no certificates found")
+		return nil, ErrCertNotFound
 	}
 
 	chain := state.PeerCertificates
@@ -187,17 +187,17 @@ func fetchIntermediateFromAIA(url string) (*x509.Certificate, error) {
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch AIA URL: %v", err)
+		return nil, NewCertError("aia_fetch", url, fmt.Errorf("%w: %v", ErrAIAFetchFailed, err))
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("AIA URL returned status %d", resp.StatusCode)
+		return nil, NewCertError("aia_fetch", url, fmt.Errorf("%w: HTTP %d", ErrAIAFetchFailed, resp.StatusCode))
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read AIA response: %v", err)
+		return nil, NewCertError("aia_fetch", url, fmt.Errorf("%w: read response: %v", ErrAIAFetchFailed, err))
 	}
 
 	// Try DER format first (most common for AIA)
@@ -212,14 +212,14 @@ func fetchIntermediateFromAIA(url string) (*x509.Certificate, error) {
 		return cert, nil
 	}
 
-	return nil, fmt.Errorf("failed to parse certificate from AIA response")
+	return nil, NewCertError("aia_fetch", "", fmt.Errorf("%w: failed to parse certificate from AIA response", ErrCertParseFailed))
 }
 
 // parseCertFromPEM attempts to parse a certificate from PEM data.
 func parseCertFromPEM(data []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(data)
 	if block == nil {
-		return nil, fmt.Errorf("no PEM block found")
+		return nil, NewCertError("parse", "", fmt.Errorf("%w: no PEM block found", ErrCertParseFailed))
 	}
 	return x509.ParseCertificate(block.Bytes)
 }

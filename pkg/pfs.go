@@ -3,8 +3,6 @@ package pkg
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
-	"time"
 )
 
 // tlsCurveName returns the name of a TLS elliptic curve.
@@ -45,15 +43,8 @@ func CheckPFS(target string) (*PFSResult, error) {
 		NonPFSCiphers: []string{},
 	}
 
-	host, port := parseHostPort(target)
-
 	// Connect and check the negotiated cipher suite
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp",
-		fmt.Sprintf("%s:%s", host, port),
-		&tls.Config{InsecureSkipVerify: true},
-	)
+	conn, err := TLSDial(target)
 	if err != nil {
 		result.Error = fmt.Sprintf("failed to connect: %v", err)
 		return result, nil

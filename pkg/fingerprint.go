@@ -9,23 +9,23 @@ import (
 	"fmt"
 )
 
-// GenerateFingerprints 生成证书指纹
+// GenerateFingerprints generates certificate fingerprints.
 func GenerateFingerprints(cert *x509.Certificate) map[string]string {
 	fingerprints := make(map[string]string)
 
-	// MD5 指纹
+	// MD5 fingerprint
 	md5Hash := md5.Sum(cert.Raw)
 	fingerprints["md5"] = formatFingerprint(md5Hash[:])
 
-	// SHA-1 指纹
+	// SHA-1 fingerprint
 	sha1Hash := sha1.Sum(cert.Raw)
 	fingerprints["sha1"] = formatFingerprint(sha1Hash[:])
 
-	// SHA-256 指纹
+	// SHA-256 fingerprint
 	sha256Hash := sha256.Sum256(cert.Raw)
 	fingerprints["sha256"] = formatFingerprint(sha256Hash[:])
 
-	// 公钥指纹 (用于 SSL Pinning)
+	// Public key fingerprint (for SSL Pinning)
 	if cert.PublicKey != nil {
 		pubKeyDER, err := x509.MarshalPKIXPublicKey(cert.PublicKey)
 		if err == nil {
@@ -37,7 +37,7 @@ func GenerateFingerprints(cert *x509.Certificate) map[string]string {
 	return fingerprints
 }
 
-// formatFingerprint 格式化指纹为标准格式 (用冒号分隔)
+// formatFingerprint formats the fingerprint in standard format (colon-separated).
 func formatFingerprint(hash []byte) string {
 	hexStr := hex.EncodeToString(hash)
 	var formatted string
@@ -52,37 +52,37 @@ func formatFingerprint(hash []byte) string {
 	return fmt.Sprintf("%s", formatted)
 }
 
-// GenerateFingerprintFromBytes 从证书字节数据生成指纹
+// GenerateFingerprintFromBytes generates fingerprints from certificate byte data.
 func GenerateFingerprintFromBytes(certData []byte) map[string]string {
 	fingerprints := make(map[string]string)
 
-	// MD5 指纹
+	// MD5 fingerprint
 	md5Hash := md5.Sum(certData)
 	fingerprints["md5"] = formatFingerprint(md5Hash[:])
 
-	// SHA-1 指纹
+	// SHA-1 fingerprint
 	sha1Hash := sha1.Sum(certData)
 	fingerprints["sha1"] = formatFingerprint(sha1Hash[:])
 
-	// SHA-256 指纹
+	// SHA-256 fingerprint
 	sha256Hash := sha256.Sum256(certData)
 	fingerprints["sha256"] = formatFingerprint(sha256Hash[:])
 
 	return fingerprints
 }
 
-// CompareCertFingerprints 比较两个证书的指纹
+// CompareCertFingerprints compares fingerprints of two certificates.
 func CompareCertFingerprints(cert1, cert2 *x509.Certificate) bool {
 	fp1 := GenerateFingerprints(cert1)
 	fp2 := GenerateFingerprints(cert2)
 
-	// 比较 SHA-256 指纹
+	// Compare SHA-256 fingerprints
 	return fp1["sha256"] == fp2["sha256"]
 }
 
-// ValidateFingerprint 验证指纹格式是否正确
+// ValidateFingerprint validates whether a fingerprint format is correct.
 func ValidateFingerprint(fingerprint string, hashType string) bool {
-	// 移除所有冒号和空格
+	// Remove all colons and spaces
 	cleaned := ""
 	for _, char := range fingerprint {
 		if char != ':' && char != ' ' {
@@ -90,7 +90,7 @@ func ValidateFingerprint(fingerprint string, hashType string) bool {
 		}
 	}
 
-	// 检查长度和字符
+	// Check length and characters
 	expectedLengths := map[string]int{
 		"md5":    32, // 16 bytes * 2 hex chars
 		"sha1":   40, // 20 bytes * 2 hex chars
@@ -102,7 +102,7 @@ func ValidateFingerprint(fingerprint string, hashType string) bool {
 		return false
 	}
 
-	// 检查是否为有效的十六进制字符
+	// Check if valid hexadecimal characters
 	for _, char := range cleaned {
 		if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F')) {
 			return false

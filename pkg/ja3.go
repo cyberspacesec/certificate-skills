@@ -5,9 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
-	"net"
 	"strings"
-	"time"
 )
 
 // JA3Result represents the result of a JA3/JA3S fingerprint scan.
@@ -43,16 +41,11 @@ type JA3Result struct {
 // and the JA3S hash represents the server's hello as seen by us.
 // For cyberspace mapping, JA3S is more useful (fingerprint the server).
 func JA3Scan(target string) (*JA3Result, error) {
-	host, port := parseHostPort(target)
-	addr := net.JoinHostPort(host, port)
-
 	result := &JA3Result{
 		Target: target,
 	}
 
-	dialer := &net.Dialer{
-		Timeout: 10 * time.Second,
-	}
+	host, _ := parseHostPort(target)
 
 	// Build a comprehensive Client Hello with common cipher suites and extensions
 	// to get a full server response for JA3S fingerprinting
@@ -69,7 +62,7 @@ func JA3Scan(target string) (*JA3Result, error) {
 		MinVersion: tls.VersionTLS12,
 	}
 
-	conn, err := tls.DialWithDialer(dialer, "tcp", addr, config)
+	conn, err := TLSDialWithConfig(target, config)
 	if err != nil {
 		result.Error = fmt.Sprintf("failed to connect: %v", err)
 		return result, nil

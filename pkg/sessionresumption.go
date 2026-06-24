@@ -3,8 +3,6 @@ package pkg
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
-	"time"
 )
 
 // SessionResumptionResult represents the result of a TLS session resumption check.
@@ -26,18 +24,13 @@ func CheckSessionResumption(target string) (*SessionResumptionResult, error) {
 	host, port := parseHostPort(target)
 	addr := fmt.Sprintf("%s:%s", host, port)
 
-	// First connection: get session state
+	// First connection: get session state with session cache enabled
 	config := &tls.Config{
 		InsecureSkipVerify: true,
 		ClientSessionCache: tls.NewLRUClientSessionCache(1),
 	}
 
-	conn1, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp",
-		addr,
-		config,
-	)
+	conn1, err := TLSDialWithConfig(target, config)
 	if err != nil {
 		result.Error = fmt.Sprintf("failed to connect: %v", err)
 		return result, nil
@@ -55,12 +48,7 @@ func CheckSessionResumption(target string) (*SessionResumptionResult, error) {
 	conn1.Close()
 
 	// Second connection: attempt session resumption
-	conn2, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp",
-		addr,
-		config,
-	)
+	conn2, err := TLSDialWithConfig(target, config)
 	if err != nil {
 		// Can't test resumption, but first connection was OK
 		result.SupportsSessionTicket = false
@@ -74,12 +62,10 @@ func CheckSessionResumption(target string) (*SessionResumptionResult, error) {
 	// If the second connection resumed, DidResume will be true
 	if state2.DidResume {
 		// The session was resumed - check which method
-		// If session tickets are used, the server sends a NewSessionTicket
-		// If session IDs are used, the server echoes back the same session ID
 		result.SupportsSessionTicket = true
 		result.SupportsSessionID = session != nil
 	} else {
-		// Session was not resumed - neither method is supported or server chose not to
+		// Session was not resumed
 		result.SupportsSessionTicket = false
 		result.SupportsSessionID = false
 	}

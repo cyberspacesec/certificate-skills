@@ -21,7 +21,7 @@ OCSP stapling (formally: TLS Certificate Status Request extension) allows the se
 - Protects client privacy
 - Faster handshake completion
 
-**Detection:** `cert-hacker info <domain>` shows `HasOCSPStaple` field.
+**Detection:** `cert-skills info <domain>` shows `HasOCSPStaple` field.
 
 ## OCSP Must-Staple
 

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"time"
 )
@@ -126,15 +127,20 @@ func TLSProtocolScan(target string) (*TLSProtocolScanResult, error) {
 
 // probeTLSVersion attempts a TLS connection with a specific protocol version.
 func probeTLSVersion(addr string, version uint16) (bool, error) {
-	dialer := &net.Dialer{
-		Timeout: 5 * time.Second,
-	}
-
-	conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{
+	config := &tls.Config{
 		MinVersion:         version,
 		MaxVersion:         version,
 		InsecureSkipVerify: true,
-	})
+	}
+
+	// Extract host and port from addr for TLSDialRaw
+	host, port, _ := net.SplitHostPort(addr)
+	target := host
+	if port != "443" {
+		target = fmt.Sprintf("%s:%s", host, port)
+	}
+
+	conn, err := TLSDialRaw(target, config, 5*time.Second)
 	if err != nil {
 		return false, err
 	}

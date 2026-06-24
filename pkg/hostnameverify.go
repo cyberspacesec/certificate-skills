@@ -1,12 +1,9 @@
 package pkg
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"net"
 	"strings"
-	"time"
 )
 
 // HostnameVerifyResult represents the result of a hostname verification check.
@@ -32,18 +29,12 @@ func VerifyHostname(target string) (*HostnameVerifyResult, error) {
 		Warnings: []string{},
 	}
 
-	host, port := parseHostPort(target)
+	host, _ := parseHostPort(target)
 	result.Hostname = host
 	result.Target = target
 
-	addr := fmt.Sprintf("%s:%s", host, port)
-
-	// First, connect with InsecureSkipVerify to get the certificate
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp", addr,
-		&tls.Config{InsecureSkipVerify: true},
-	)
+	// Connect to get the certificate
+	conn, err := TLSDial(target)
 	if err != nil {
 		result.Error = fmt.Sprintf("failed to connect: %v", err)
 		return result, nil

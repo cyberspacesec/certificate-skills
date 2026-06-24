@@ -150,7 +150,7 @@ func checkOCSP(cert *x509.Certificate, issuer *x509.Certificate) OCSPStatus {
 		status.Error = fmt.Sprintf("failed to create HTTP GET request: %v", err)
 		return status
 	}
-	req.Header.Set("User-Agent", "cert-hacker/1.0")
+	req.Header.Set("User-Agent", "cert-skills/1.0")
 	req.Header.Set("Accept", "application/ocsp-response")
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -222,7 +222,7 @@ func checkCRL(cert *x509.Certificate) CRLStatus {
 		status.Error = fmt.Sprintf("failed to create CRL request: %v", err)
 		return status
 	}
-	req.Header.Set("User-Agent", "cert-hacker/1.0")
+	req.Header.Set("User-Agent", "cert-skills/1.0")
 
 	resp, err := client.Do(req)
 	if err != nil {

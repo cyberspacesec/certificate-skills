@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
@@ -14,7 +15,7 @@ import (
 	"time"
 )
 
-// BatchResult 批量处理结果
+// BatchResult represents the result of a batch analysis operation.
 type BatchResult struct {
 	Target   string    `json:"target"`
 	SSLInfo  *SSLInfo  `json:"ssl_info,omitempty"`
@@ -22,7 +23,7 @@ type BatchResult struct {
 	Error    error     `json:"error,omitempty"`
 }
 
-// CertInfo 证书信息结构体
+// CertInfo represents certificate information.
 type CertInfo struct {
 	Subject            string            `json:"subject"`
 	Issuer             string            `json:"issuer"`
@@ -41,7 +42,7 @@ type CertInfo struct {
 	Fingerprints       map[string]string `json:"fingerprints"`
 }
 
-// CertChain 证书链信息
+// CertChain represents certificate chain information.
 type CertChain struct {
 	Certificates []CertInfo `json:"certificates"`
 	ChainLength  int        `json:"chain_length"`
@@ -49,7 +50,7 @@ type CertChain struct {
 	TrustAnchor  string     `json:"trust_anchor"`
 }
 
-// SSLInfo SSL连接信息
+// SSLInfo represents SSL/TLS connection information.
 type SSLInfo struct {
 	TLSVersion    string        `json:"tls_version"`
 	CipherSuite   string        `json:"cipher_suite"`
@@ -61,41 +62,33 @@ type SSLInfo struct {
 	OCSPResponse  []byte        `json:"ocsp_response,omitempty"`
 }
 
-// GetCertFromDomain 从域名获取证书
-func GetCertFromDomain(domain string) (*SSLInfo, error) {
-	// 解析域名和端口
-	host, port := parseHostPort(domain)
-
+// GetCertFromDomainWithContext retrieves certificate information from a domain with context support.
+func GetCertFromDomainWithContext(ctx context.Context, domain string) (*SSLInfo, error) {
 	start := time.Now()
 
-	// 建立TLS连接
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp",
-		fmt.Sprintf("%s:%s", host, port),
-		&tls.Config{InsecureSkipVerify: true},
-	)
+	// Establish TLS connection
+	conn, err := TLSDialWithContext(ctx, domain, defaultDialOptions())
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to %s:%s: %v", host, port, err)
+		return nil, err
 	}
 	defer conn.Close()
 
 	handshakeTime := time.Since(start)
 
-	// 获取连接状态
+	// Get connection state
 	state := conn.ConnectionState()
 
-	// 构建证书链信息
+	// Build certificate chain info
 	certChain, err := buildCertChain(state.PeerCertificates)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build certificate chain: %v", err)
+		return nil, WrapChainError(domain, err)
 	}
 
-	// 检测 HTTP/2 支持：ALPN 协议协商结果包含 h2
+	// Detect HTTP/2 support: ALPN negotiation includes h2
 	supportsHTTP2 := state.NegotiatedProtocol == "h2"
 	hasOCSPStaple := len(state.OCSPResponse) > 0
 
-	// 构建SSL信息
+	// Build SSL info
 	sslInfo := &SSLInfo{
 		TLSVersion:    getTLSVersionName(state.Version),
 		CipherSuite:   tls.CipherSuiteName(state.CipherSuite),
@@ -110,38 +103,43 @@ func GetCertFromDomain(domain string) (*SSLInfo, error) {
 	return sslInfo, nil
 }
 
-// GetCertFromFile 从文件读取证书（支持 PEM 和 DER 格式）
+// GetCertFromDomain retrieves certificate information from a domain.
+func GetCertFromDomain(domain string) (*SSLInfo, error) {
+	return GetCertFromDomainWithContext(context.Background(), domain)
+}
+
+// GetCertFromFile reads a certificate from a file (supports PEM and DER formats).
 func GetCertFromFile(filename string) (*CertInfo, error) {
-	// 读取文件内容
+	// Read file content
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read certificate file: %v", err)
+		return nil, WrapFileError(filename, err)
 	}
 
-	// 尝试解析PEM格式
+	// Try parsing as PEM format
 	block, _ := pem.Decode(data)
 	if block != nil {
-		// PEM格式成功解码
+		// PEM decoded successfully
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse certificate: %v", err)
+			return nil, WrapCertParseError(filename, err)
 		}
 		return buildCertInfo(cert), nil
 	}
 
-	// PEM解码失败，尝试DER格式（二进制）
+	// PEM decode failed, try DER format (binary)
 	cert, err := x509.ParseCertificate(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse certificate as PEM or DER format: %v", err)
+		return nil, WrapCertParseError(filename, fmt.Errorf("failed as PEM or DER format: %v", err))
 	}
 
 	return buildCertInfo(cert), nil
 }
 
-// buildCertChain 构建证书链信息（包含真实证书链验证）
+// buildCertChain builds certificate chain info with real chain verification.
 func buildCertChain(certs []*x509.Certificate) (*CertChain, error) {
 	if len(certs) == 0 {
-		return nil, fmt.Errorf("no certificates in chain")
+		return nil, ErrCertNotFound
 	}
 
 	chain := &CertChain{
@@ -153,23 +151,23 @@ func buildCertChain(certs []*x509.Certificate) (*CertChain, error) {
 		chain.Certificates[i] = *buildCertInfo(cert)
 	}
 
-	// 设置信任锚点（根证书）
+	// Set trust anchor (root certificate)
 	if len(certs) > 0 {
 		lastCert := certs[len(certs)-1]
 		chain.TrustAnchor = lastCert.Subject.CommonName
 	}
 
-	// 使用系统证书池验证证书链
+	// Verify certificate chain using system cert pool
 	leafCert := certs[0]
 	intermediates := x509.NewCertPool()
 	for _, cert := range certs[1:] {
 		intermediates.AddCert(cert)
 	}
 
-	// 尝试使用系统根证书验证
+	// Try verifying with system root certificates
 	rootCAs, err := x509.SystemCertPool()
 	if err != nil {
-		// 无法加载系统证书池，标记为无法验证
+		// Cannot load system cert pool, mark as unverifiable
 		chain.IsValid = false
 		chain.TrustAnchor = "Unable to verify (system cert pool unavailable)"
 		return chain, nil
@@ -178,15 +176,15 @@ func buildCertChain(certs []*x509.Certificate) (*CertChain, error) {
 	verifyOpts := x509.VerifyOptions{
 		Roots:         rootCAs,
 		Intermediates: intermediates,
-		// 不强制 DNS 名称匹配，因为分析场景只需验证链的完整性
+		// Don't enforce DNS name matching; analysis only needs chain integrity
 	}
 
 	_, err = leafCert.Verify(verifyOpts)
 	chain.IsValid = err == nil
 
 	if err != nil {
-		// 如果系统根证书验证失败，尝试用链中最后一个证书作为根
-		// 这种情况出现在自签名证书或私有 CA 场景
+		// If system root verification fails, try using the last cert in chain as root.
+		// This occurs with self-signed certificates or private CAs.
 		selfSignedOpts := x509.VerifyOptions{
 			Roots:         x509.NewCertPool(),
 			Intermediates: intermediates,
@@ -200,7 +198,7 @@ func buildCertChain(certs []*x509.Certificate) (*CertChain, error) {
 	return chain, nil
 }
 
-// buildCertInfo 构建证书信息
+// buildCertInfo builds certificate info from an x509 certificate.
 func buildCertInfo(cert *x509.Certificate) *CertInfo {
 	info := &CertInfo{
 		Subject:            cert.Subject.String(),
@@ -216,32 +214,32 @@ func buildCertInfo(cert *x509.Certificate) *CertInfo {
 		Fingerprints:       make(map[string]string),
 	}
 
-	// 提取密钥大小
+	// Extract key size
 	switch key := cert.PublicKey.(type) {
 	case *rsa.PublicKey:
 		info.KeySize = key.N.BitLen()
 	case *ecdsa.PublicKey:
 		info.KeySize = key.Curve.Params().BitSize
 	case ed25519.PublicKey:
-		info.KeySize = 256 // Ed25519 固定为 256 位
+		info.KeySize = 256 // Ed25519 is always 256 bits
 	}
 
-	// 转换IP地址为字符串
+	// Convert IP addresses to strings
 	for _, ip := range cert.IPAddresses {
 		info.IPAddresses = append(info.IPAddresses, ip.String())
 	}
 
-	// 解析密钥用途
+	// Parse key usage
 	info.KeyUsage = parseKeyUsage(cert.KeyUsage)
 	info.ExtKeyUsage = parseExtKeyUsage(cert.ExtKeyUsage)
 
-	// 生成指纹
+	// Generate fingerprints
 	info.Fingerprints = GenerateFingerprints(cert)
 
 	return info
 }
 
-// parseHostPort 解析主机名和端口 (支持 IPv6 地址如 [::1]:443)
+// parseHostPort parses hostname and port (supports IPv6 addresses like [::1]:443).
 func parseHostPort(addr string) (host, port string) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -262,7 +260,7 @@ func IsFileTarget(target string) bool {
 	return false
 }
 
-// getTLSVersionName 获取TLS版本名称
+// getTLSVersionName returns the human-readable TLS version name.
 func getTLSVersionName(version uint16) string {
 	switch version {
 	case tls.VersionTLS10:
@@ -278,7 +276,7 @@ func getTLSVersionName(version uint16) string {
 	}
 }
 
-// parseKeyUsage 解析密钥用途
+// parseKeyUsage parses key usage bitmask to human-readable strings.
 func parseKeyUsage(usage x509.KeyUsage) []string {
 	var usages []string
 
@@ -313,7 +311,7 @@ func parseKeyUsage(usage x509.KeyUsage) []string {
 	return usages
 }
 
-// parseExtKeyUsage 解析扩展密钥用途
+// parseExtKeyUsage parses extended key usage to human-readable strings.
 func parseExtKeyUsage(usage []x509.ExtKeyUsage) []string {
 	var usages []string
 

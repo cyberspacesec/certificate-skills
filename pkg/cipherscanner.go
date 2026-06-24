@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"sort"
 	"time"
@@ -181,16 +182,21 @@ func CipherSuiteScan(target string, tlsVersion uint16) (*CipherScanResult, error
 
 // probeCipherSuite attempts a TLS connection with a specific cipher suite.
 func probeCipherSuite(addr string, tlsVersion uint16, cipherID uint16) (bool, error) {
-	dialer := &net.Dialer{
-		Timeout: 5 * time.Second,
-	}
-
-	conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{
+	config := &tls.Config{
 		MinVersion:         tlsVersion,
 		MaxVersion:         tlsVersion,
 		CipherSuites:       []uint16{cipherID},
 		InsecureSkipVerify: true,
-	})
+	}
+
+	// Extract host and port from addr for TLSDialRaw
+	host, port, _ := net.SplitHostPort(addr)
+	target := host
+	if port != "443" {
+		target = fmt.Sprintf("%s:%s", host, port)
+	}
+
+	conn, err := TLSDialRaw(target, config, 5*time.Second)
 	if err != nil {
 		return false, err
 	}

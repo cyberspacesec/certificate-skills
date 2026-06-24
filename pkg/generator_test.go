@@ -36,7 +36,7 @@ func TestGenerateSelfSignedCert_RSA(t *testing.T) {
 		t.Error("Message should not be empty")
 	}
 
-	// 验证文件存在
+	// Verify files exist
 	if _, err := os.Stat(result.CertificatePath); os.IsNotExist(err) {
 		t.Error("Certificate file should exist")
 	}
@@ -60,7 +60,7 @@ func TestGenerateSelfSignedCert_ECDSA(t *testing.T) {
 	defer os.Remove(result.CertificatePath)
 	defer os.Remove(result.PrivateKeyPath)
 
-	// 验证证书包含 ECDSA 公钥
+	// Verify certificate contains ECDSA public key
 	certData, _ := os.ReadFile(result.CertificatePath)
 	block, _ := pem.Decode(certData)
 	cert, _ := x509.ParseCertificate(block.Bytes)
@@ -83,7 +83,7 @@ func TestGenerateSelfSignedCert_Ed25519(t *testing.T) {
 	defer os.Remove(result.CertificatePath)
 	defer os.Remove(result.PrivateKeyPath)
 
-	// 验证证书包含 Ed25519 公钥
+	// Verify certificate contains Ed25519 public key
 	certData, _ := os.ReadFile(result.CertificatePath)
 	block, _ := pem.Decode(certData)
 	cert, _ := x509.ParseCertificate(block.Bytes)
@@ -120,7 +120,7 @@ func TestGenerateSelfSignedCert_CA(t *testing.T) {
 	defer os.Remove(result.CertificatePath)
 	defer os.Remove(result.PrivateKeyPath)
 
-	// 验证证书是 CA 证书
+	// Verify certificate is a CA certificate
 	certData, _ := os.ReadFile(result.CertificatePath)
 	block, _ := pem.Decode(certData)
 	cert, _ := x509.ParseCertificate(block.Bytes)
@@ -210,7 +210,7 @@ func TestGenerateCSR(t *testing.T) {
 		t.Error("CSR PEM should not be empty")
 	}
 
-	// 验证 PEM 格式
+	// Verify PEM format
 	block, _ := pem.Decode([]byte(csrPEM))
 	if block == nil || block.Type != "CERTIFICATE REQUEST" {
 		t.Error("CSR should be valid PEM with CERTIFICATE REQUEST type")

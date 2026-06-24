@@ -1,11 +1,8 @@
 package pkg
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net"
 	"strings"
-	"time"
 )
 
 // WildcardResult represents the result of a wildcard certificate analysis.
@@ -229,16 +226,9 @@ func GetTrustedDomains(target string) (*TrustedDomainsResult, error) {
 		Target: target,
 	}
 
-	host, port := parseHostPort(target)
-	addr := fmt.Sprintf("%s:%s", host, port)
-
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp", addr,
-		&tls.Config{InsecureSkipVerify: true},
-	)
+	conn, err := TLSDial(target)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect: %v", err)
+		return nil, err
 	}
 	defer conn.Close()
 

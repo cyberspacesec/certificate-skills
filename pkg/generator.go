@@ -18,24 +18,24 @@ import (
 	"time"
 )
 
-// CertificateRequest 证书生成请求
+// CertificateRequest is the certificate generation request.
 type CertificateRequest struct {
-	CommonName     string   `json:"common_name"`      // 通用名称
-	Organization   string   `json:"organization"`     // 组织
-	Country        string   `json:"country"`          // 国家
-	Province       string   `json:"province"`         // 省份
-	Locality       string   `json:"locality"`         // 地区
-	DNSNames       []string `json:"dns_names"`        // DNS名称
-	IPAddresses    []net.IP `json:"ip_addresses"`     // IP地址
-	ValidityDays   int      `json:"validity_days"`    // 有效期天数
-	KeySize        int      `json:"key_size"`         // RSA密钥长度
-	KeyType        string   `json:"key_type"`         // 密钥类型: rsa, ecdsa, ed25519
-	IsCA           bool     `json:"is_ca"`            // 是否为CA证书
-	OutputCertPath string   `json:"output_cert_path"` // 证书输出路径
-	OutputKeyPath  string   `json:"output_key_path"`  // 私钥输出路径
+	CommonName     string   `json:"common_name"`      // Common name
+	Organization   string   `json:"organization"`     // Organization
+	Country        string   `json:"country"`          // Country
+	Province       string   `json:"province"`         // Province
+	Locality       string   `json:"locality"`         // Locality
+	DNSNames       []string `json:"dns_names"`        // DNS names
+	IPAddresses    []net.IP `json:"ip_addresses"`     // IP addresses
+	ValidityDays   int      `json:"validity_days"`    // Validity period in days
+	KeySize        int      `json:"key_size"`         // RSA key length
+	KeyType        string   `json:"key_type"`         // Key type: rsa, ecdsa, ed25519
+	IsCA           bool     `json:"is_ca"`            // Whether this is a CA certificate
+	OutputCertPath string   `json:"output_cert_path"` // Certificate output path
+	OutputKeyPath  string   `json:"output_key_path"`  // Private key output path
 }
 
-// GenerationResult 证书生成结果
+// GenerationResult is the certificate generation result.
 type GenerationResult struct {
 	CertificatePath string            `json:"certificate_path"`
 	PrivateKeyPath  string            `json:"private_key_path"`
@@ -43,9 +43,9 @@ type GenerationResult struct {
 	Message         string            `json:"message"`
 }
 
-// GenerateSelfSignedCert 生成自签名证书
+// GenerateSelfSignedCert generates a self-signed certificate.
 func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
-	// 设置默认值
+	// Set defaults
 	if req.KeyType == "" {
 		req.KeyType = "rsa"
 	}
@@ -69,7 +69,7 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		req.OutputKeyPath = fmt.Sprintf("%s-key.pem", req.CommonName)
 	}
 
-	// 生成私钥和公钥
+	// Generate private key and public key
 	var publicKey crypto.PublicKey
 	var privateKeyBytes []byte
 
@@ -122,10 +122,10 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		privateKeyBytes = pkcs8Key
 
 	default:
-		return nil, fmt.Errorf("unsupported key type: %s (use rsa, ecdsa, or ed25519)", req.KeyType)
+		return nil, NewCertError("generate", req.CommonName, fmt.Errorf("unsupported key type: %s (use rsa, ecdsa, or ed25519)", req.KeyType))
 	}
 
-	// 创建证书模板
+	// Create certificate template
 	template := x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
@@ -144,26 +144,26 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		IPAddresses:           req.IPAddresses,
 	}
 
-	// Ed25519 不支持 KeyEncipherment，只设置 DigitalSignature
+	// Ed25519 does not support KeyEncipherment, set DigitalSignature only
 	if req.KeyType == "ed25519" {
 		template.KeyUsage = x509.KeyUsageDigitalSignature
 	}
 
-	// 如果是CA证书，设置相应的属性
+	// If this is a CA certificate, set the corresponding attributes
 	if req.IsCA {
 		template.IsCA = true
-		template.KeyUsage |= x509.KeyUsageCertSign
+		template.KeyUsage |= x509.KeyUsageCertSign | x509.KeyUsageCRLSign
 		template.BasicConstraintsValid = true
 	}
 
-	// 如果没有指定DNS名称，添加CommonName
+	// If no DNS names specified, add CommonName
 	if len(req.DNSNames) == 0 && req.CommonName != "" {
 		template.DNSNames = append(template.DNSNames, req.CommonName)
 	}
 
-	// 生成自签名证书 (self-signed: 使用自己的模板作为 parent)
-	// 对于 Ed25519，签名算法会由 Go 标准库自动选择
-	// 需要传入实际的私钥用于签名
+	// Generate self-signed certificate (self-signed: use own template as parent)
+	// For Ed25519, the signature algorithm is automatically selected by the Go standard library
+	// The actual private key must be passed in for signing
 	var signer crypto.Signer
 	switch req.KeyType {
 	case "rsa":
@@ -182,7 +182,7 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		return nil, fmt.Errorf("failed to create certificate: %v", err)
 	}
 
-	// 保存证书到文件
+	// Save certificate to file
 	certFile, err := os.Create(req.OutputCertPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create certificate file: %v", err)
@@ -197,7 +197,7 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		return nil, fmt.Errorf("failed to write certificate: %v", err)
 	}
 
-	// 保存私钥到文件
+	// Save private key to file
 	keyFile, err := os.Create(req.OutputKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create private key file: %v", err)
@@ -212,13 +212,13 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 		return nil, fmt.Errorf("failed to write private key: %v", err)
 	}
 
-	// 解析证书以生成指纹
+	// Parse certificate to generate fingerprints
 	cert, err := x509.ParseCertificate(certDER)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse generated certificate: %v", err)
 	}
 
-	// 生成指纹
+	// Generate fingerprints
 	fingerprints := GenerateFingerprints(cert)
 
 	result := &GenerationResult{
@@ -231,9 +231,9 @@ func GenerateSelfSignedCert(req CertificateRequest) (*GenerationResult, error) {
 	return result, nil
 }
 
-// GenerateCSR 生成证书签名请求 (Certificate Signing Request)
+// GenerateCSR generates a Certificate Signing Request.
 func GenerateCSR(req CertificateRequest) (string, error) {
-	// 设置默认值
+	// Set defaults
 	if req.KeyType == "" {
 		req.KeyType = "rsa"
 	}
@@ -284,7 +284,7 @@ func GenerateCSR(req CertificateRequest) (string, error) {
 		return "", fmt.Errorf("unsupported key type: %s (use rsa, ecdsa, or ed25519)", req.KeyType)
 	}
 
-	// 创建CSR模板
+	// Create CSR template
 	template := x509.CertificateRequest{
 		Subject: pkix.Name{
 			CommonName:   req.CommonName,
@@ -297,13 +297,13 @@ func GenerateCSR(req CertificateRequest) (string, error) {
 		IPAddresses: req.IPAddresses,
 	}
 
-	// 生成CSR
+	// Generate CSR
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, &template, signer)
 	if err != nil {
 		return "", fmt.Errorf("failed to create CSR: %v", err)
 	}
 
-	// 转换为PEM格式
+	// Convert to PEM format
 	csrPEM := pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE REQUEST",
 		Bytes: csrDER,
@@ -312,9 +312,9 @@ func GenerateCSR(req CertificateRequest) (string, error) {
 	return string(csrPEM), nil
 }
 
-// ValidateCertificateFiles 验证生成的证书文件
+// ValidateCertificateFiles validates the generated certificate files.
 func ValidateCertificateFiles(certPath, keyPath string) error {
-	// 检查证书文件
+	// Check certificate file
 	certData, err := os.ReadFile(certPath)
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %v", err)
@@ -330,7 +330,7 @@ func ValidateCertificateFiles(certPath, keyPath string) error {
 		return fmt.Errorf("failed to parse certificate: %v", err)
 	}
 
-	// 检查私钥文件
+	// Check private key file
 	keyData, err := os.ReadFile(keyPath)
 	if err != nil {
 		return fmt.Errorf("failed to read private key file: %v", err)
@@ -346,7 +346,7 @@ func ValidateCertificateFiles(certPath, keyPath string) error {
 		return fmt.Errorf("failed to parse private key: %v", err)
 	}
 
-	// 验证私钥和证书是否匹配
+	// Verify private key and certificate match
 	switch priv := privateKey.(type) {
 	case *rsa.PrivateKey:
 		rsaPublicKey, ok := cert.PublicKey.(*rsa.PublicKey)

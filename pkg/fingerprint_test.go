@@ -22,7 +22,7 @@ func TestGenerateFingerprints(t *testing.T) {
 	defer os.Remove(result.CertificatePath)
 	defer os.Remove(result.PrivateKeyPath)
 
-	// 从文件读取证书获取 x509.Certificate
+	// Read certificate from file to get x509.Certificate
 	certData, err := os.ReadFile(result.CertificatePath)
 	if err != nil {
 		t.Fatalf("Failed to read cert file: %v", err)
@@ -35,7 +35,7 @@ func TestGenerateFingerprints(t *testing.T) {
 
 	fingerprints := GenerateFingerprints(cert)
 
-	// 检查所有指纹类型都存在
+	// Check all fingerprint types exist
 	expectedKeys := []string{"md5", "sha1", "sha256", "public_key_sha256"}
 	for _, key := range expectedKeys {
 		if fingerprints[key] == "" {
@@ -43,7 +43,7 @@ func TestGenerateFingerprints(t *testing.T) {
 		}
 	}
 
-	// 检查 SHA-256 指纹格式 (64 hex chars with colons = 95 chars)
+	// Check SHA-256 fingerprint format (64 hex chars with colons = 95 chars)
 	if len(fingerprints["sha256"]) != 95 {
 		t.Errorf("SHA-256 fingerprint has unexpected length: %d", len(fingerprints["sha256"]))
 	}
@@ -100,7 +100,7 @@ func TestCompareCertFingerprints(t *testing.T) {
 		t.Fatalf("Failed to parse certificate: %v", err)
 	}
 
-	// 同一证书比较应为 true
+	// Same certificate comparison should be true
 	if !CompareCertFingerprints(cert, cert) {
 		t.Error("Same certificate fingerprints should match")
 	}

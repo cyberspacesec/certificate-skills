@@ -41,16 +41,15 @@ type CertSecuritySummary struct {
 // ScanCertSecurity performs certificate-specific security checks.
 // These checks focus on the certificate's properties rather than the TLS protocol.
 func ScanCertSecurity(target string) (*CertSecurityResult, error) {
-	host, port := parseHostPort(target)
-	addr := fmt.Sprintf("%s:%s", host, port)
-
 	result := &CertSecurityResult{
 		Target: target,
 	}
 
-	conn, err := TLSDial(addr)
+	host, _ := parseHostPort(target)
+
+	conn, err := TLSDial(target)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect: %v", err)
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -445,7 +444,18 @@ func checkNameConstraints(cert *x509.Certificate, host string, state *tls.Connec
 		}
 
 		constraint := extractCAConstraint(ca, i)
-		if constraint == nil || !constraint.IsConstraining {
+		if constraint == nil {
+			continue
+		}
+
+		constraint.IsConstraining = len(constraint.PermittedDNS) > 0 ||
+			len(constraint.ExcludedDNS) > 0 ||
+			len(constraint.PermittedIPs) > 0 ||
+			len(constraint.ExcludedIPs) > 0 ||
+			len(constraint.PermittedEmails) > 0 ||
+			len(constraint.ExcludedEmails) > 0
+
+		if !constraint.IsConstraining {
 			continue
 		}
 

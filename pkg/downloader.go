@@ -1,15 +1,12 @@
 package pkg
 
 import (
-	"crypto/tls"
 	"encoding/pem"
 	"fmt"
-	"net"
 	"os"
-	"time"
 )
 
-// DownloadResult 证书下载结果
+// DownloadResult is the certificate download result.
 type DownloadResult struct {
 	Target      string   `json:"target"`
 	SavedFiles  []string `json:"saved_files"`
@@ -17,18 +14,18 @@ type DownloadResult struct {
 	Message     string   `json:"message"`
 }
 
-// DownloadCertsFromDomain 从域名下载证书链并保存到文件
+// DownloadCertsFromDomain downloads the certificate chain from a domain and saves it to files.
 func DownloadCertsFromDomain(target string, outputDir string) (*DownloadResult, error) {
 	if outputDir == "" {
 		outputDir = "."
 	}
 
-	// 解析主机名用于文件命名
+	// Parse hostname for file naming
 	host, _ := parseHostPort(target)
 
 	savedFiles := []string{}
 
-	// 连接到目标获取原始证书
+	// Connect to target to retrieve raw certificates
 	conn, err := TLSDial(target)
 	if err != nil {
 		return nil, err
@@ -38,11 +35,11 @@ func DownloadCertsFromDomain(target string, outputDir string) (*DownloadResult, 
 	state := conn.ConnectionState()
 	certs := state.PeerCertificates
 
-	// 保存整个证书链到单个文件
+	// Save entire certificate chain to a single file
 	chainPath := fmt.Sprintf("%s/%s-chain.pem", outputDir, host)
 	chainFile, err := os.Create(chainPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create chain file: %v", err)
+		return nil, WrapFileError(chainPath, err)
 	}
 	defer chainFile.Close()
 
@@ -57,12 +54,12 @@ func DownloadCertsFromDomain(target string, outputDir string) (*DownloadResult, 
 	}
 	savedFiles = append(savedFiles, chainPath)
 
-	// 保存叶子证书到单独文件
+	// Save leaf certificate to a separate file
 	if len(certs) > 0 {
 		leafPath := fmt.Sprintf("%s/%s.pem", outputDir, host)
 		leafFile, err := os.Create(leafPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create leaf cert file: %v", err)
+			return nil, WrapFileError(leafPath, err)
 		}
 		defer leafFile.Close()
 
@@ -84,21 +81,4 @@ func DownloadCertsFromDomain(target string, outputDir string) (*DownloadResult, 
 	}
 
 	return result, nil
-}
-
-// TLSDial 建立TLS连接并返回连接对象（公开函数，供 comparator 等模块复用）
-func TLSDial(target string) (*tls.Conn, error) {
-	host, port := parseHostPort(target)
-
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp",
-		fmt.Sprintf("%s:%s", host, port),
-		&tls.Config{InsecureSkipVerify: true},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to %s:%s: %v", host, port, err)
-	}
-
-	return conn, nil
 }

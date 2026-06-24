@@ -96,3 +96,8 @@ func WrapCRLError(target string, err error) error {
 func WrapChainError(target string, err error) error {
 	return NewCertError("verify_chain", target, fmt.Errorf("%w: %v", ErrChainVerification, err))
 }
+
+// WrapFileError wraps a file I/O error.
+func WrapFileError(path string, err error) error {
+	return NewCertError("file", path, fmt.Errorf("%w: %v", ErrFileNotFound, err))
+}

@@ -1,10 +1,8 @@
 package pkg
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"net"
 	"time"
 )
 
@@ -41,22 +39,16 @@ func VerifyCertChain(target string) (*ChainVerifyResult, error) {
 		Warnings:       []string{},
 	}
 
-	host, port := parseHostPort(target)
-	addr := fmt.Sprintf("%s:%s", host, port)
-
-	// Connect with certificate verification enabled to get verified chains
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp",
-		addr,
-		&tls.Config{InsecureSkipVerify: true}, // We verify manually below
-	)
+	// Connect to get the certificate chain
+	conn, err := TLSDial(target)
 	if err != nil {
 		result.IsValid = false
 		result.Errors = append(result.Errors, fmt.Sprintf("TLS connection failed: %v", err))
 		return result, nil
 	}
 	defer conn.Close()
+
+	host, _ := parseHostPort(target)
 
 	state := conn.ConnectionState()
 	result.ChainLength = len(state.PeerCertificates)

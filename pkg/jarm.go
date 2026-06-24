@@ -279,10 +279,6 @@ func JARMScan(target string) (*JARMResult, error) {
 // The fingerprint is derived from the Server Hello parameters:
 // TLS version, cipher suite, and ALPN.
 func jarmProbeServer(addr, hostname string, probe jarmProbe) (string, string, string, error) {
-	dialer := &net.Dialer{
-		Timeout: 5 * time.Second,
-	}
-
 	config := &tls.Config{
 		ServerName:         hostname,
 		MinVersion:         probe.Version,
@@ -297,7 +293,14 @@ func jarmProbeServer(addr, hostname string, probe jarmProbe) (string, string, st
 		config.ServerName = ""
 	}
 
-	conn, err := tls.DialWithDialer(dialer, "tcp", addr, config)
+	// Extract host:port for TLSDialRaw
+	host, port, _ := net.SplitHostPort(addr)
+	target := host
+	if port != "443" {
+		target = fmt.Sprintf("%s:%s", host, port)
+	}
+
+	conn, err := TLSDialRaw(target, config, 5*time.Second)
 	if err != nil {
 		return "", "", "", err
 	}

@@ -47,6 +47,6 @@ Downloaded PEM files can be used with:
 
 - **Web servers**: Configure nginx/apache with the chain and leaf files
 - **Trust stores**: Add the chain file to system or application trust stores
-- **Inspection**: Use `cert-hacker parse <file>` to view certificate details
-- **Fingerprinting**: Use `cert-hacker fingerprint <file>` to generate fingerprints
-- **Comparison**: Use `cert-hacker compare --target1 <file> --target2 <domain>` to verify
+- **Inspection**: Use `cert-skills parse <file>` to view certificate details
+- **Fingerprinting**: Use `cert-skills fingerprint <file>` to generate fingerprints
+- **Comparison**: Use `cert-skills compare --target1 <file> --target2 <domain>` to verify

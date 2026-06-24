@@ -1,12 +1,10 @@
 package pkg
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/hex"
 	"fmt"
-	"net"
 	"time"
 )
 
@@ -46,14 +44,7 @@ func CheckSCT(target string) (*SCTResult, error) {
 		Warnings: []string{},
 	}
 
-	host, port := parseHostPort(target)
-	addr := fmt.Sprintf("%s:%s", host, port)
-
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 10 * time.Second},
-		"tcp", addr,
-		&tls.Config{InsecureSkipVerify: true},
-	)
+	conn, err := TLSDial(target)
 	if err != nil {
 		result.Error = fmt.Sprintf("failed to connect: %v", err)
 		return result, nil

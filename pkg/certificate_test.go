@@ -22,7 +22,7 @@ func TestGetCertFromFile_PEM(t *testing.T) {
 	defer os.Remove(result.CertificatePath)
 	defer os.Remove(result.PrivateKeyPath)
 
-	// 解析生成的证书
+	// Parse the generated certificate
 	certInfo, err := GetCertFromFile(result.CertificatePath)
 	if err != nil {
 		t.Fatalf("GetCertFromFile failed: %v", err)
@@ -85,7 +85,7 @@ func TestGetCertFromFile_DER(t *testing.T) {
 	defer os.Remove(result.CertificatePath)
 	defer os.Remove(result.PrivateKeyPath)
 
-	// 将 PEM 转为 DER 格式
+	// Convert PEM to DER format
 	pemData, err := os.ReadFile(result.CertificatePath)
 	if err != nil {
 		t.Fatalf("Failed to read PEM file: %v", err)
@@ -100,7 +100,7 @@ func TestGetCertFromFile_DER(t *testing.T) {
 	derFile.Write(block.Bytes)
 	derFile.Close()
 
-	// 解析 DER 格式证书
+	// Parse DER format certificate
 	certInfo, err := GetCertFromFile(derFile.Name())
 	if err != nil {
 		t.Fatalf("GetCertFromFile DER failed: %v", err)
@@ -129,7 +129,7 @@ func TestGetCertFromFile_ECDSA_DER(t *testing.T) {
 	defer os.Remove(result.CertificatePath)
 	defer os.Remove(result.PrivateKeyPath)
 
-	// 将 PEM 转为 DER
+	// Convert PEM to DER
 	pemData, err := os.ReadFile(result.CertificatePath)
 	if err != nil {
 		t.Fatalf("Failed to read PEM file: %v", err)

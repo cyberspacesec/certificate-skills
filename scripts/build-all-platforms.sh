@@ -1,22 +1,37 @@
 #!/usr/bin/env bash
 # scripts/build-all-platforms.sh
-# Cross-platform build for cert-hacker CLI and MCP server
+# Cross-platform build for cert-skills CLI and MCP server
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BIN_DIR="$PROJECT_ROOT/bin"
-CLI_BINARY="cert-hacker"
-MCP_BINARY="cert-hacker-mcp"
-VERSION="${1:-plugin-1.0.0}"
+GO_CACHE_DIR="${GO_CACHE_DIR:-$PROJECT_ROOT/.cache/go-build}"
+GO_MOD_CACHE_DIR="${GO_MOD_CACHE_DIR:-$PROJECT_ROOT/.cache/go-mod}"
+CLI_BINARY="cert-skills"
+MCP_BINARY="cert-skills-mcp"
+VERSION="${1:-0.1.1}"
 COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-LDFLAGS="-ldflags \"-X main.version=$VERSION -X main.commit=$COMMIT -X main.date=$DATE\""
+LDFLAGS=(-ldflags "-s -w -X main.version=$VERSION -X main.commit=$COMMIT -X main.date=$DATE")
 
 mkdir -p "$BIN_DIR"
+mkdir -p "$GO_CACHE_DIR" "$GO_MOD_CACHE_DIR"
 
-echo "=== Building cert-hacker for all platforms ==="
+EXISTING_GO_MOD_CACHE="$(go env GOMODCACHE 2>/dev/null || true)"
+if [ ! -d "$GO_MOD_CACHE_DIR/cache/download" ] &&
+    [ -n "$EXISTING_GO_MOD_CACHE" ] &&
+    [ "$EXISTING_GO_MOD_CACHE" != "$GO_MOD_CACHE_DIR" ] &&
+    [ -d "$EXISTING_GO_MOD_CACHE/cache/download" ]; then
+    cp -a "$EXISTING_GO_MOD_CACHE/." "$GO_MOD_CACHE_DIR/"
+    chmod -R u+rwX "$GO_MOD_CACHE_DIR"
+fi
+
+export GOCACHE="$GO_CACHE_DIR"
+export GOMODCACHE="$GO_MOD_CACHE_DIR"
+
+echo "=== Building cert-skills for all platforms ==="
 echo "Version: $VERSION"
 echo ""
 
@@ -43,10 +58,10 @@ for PLATFORM in "${PLATFORMS[@]}"; do
     cd "$PROJECT_ROOT"
 
     echo -n "Building CLI for $GOOS/$GOARCH... "
-    GOOS=$GOOS GOARCH=$GOARCH eval "GOTOOLCHAIN=local go build $LDFLAGS -o $CLI_OUTPUT cmd/main.go" && echo "OK" || echo "FAILED"
+    GOOS=$GOOS GOARCH=$GOARCH go build -trimpath "${LDFLAGS[@]}" -o "$CLI_OUTPUT" ./cmd/ && echo "OK" || echo "FAILED"
 
     echo -n "Building MCP for $GOOS/$GOARCH... "
-    GOOS=$GOOS GOARCH=$GOARCH eval "GOTOOLCHAIN=local go build $LDFLAGS -o $MCP_OUTPUT cmd/mcp/main.go" && echo "OK" || echo "FAILED"
+    GOOS=$GOOS GOARCH=$GOARCH go build -trimpath "${LDFLAGS[@]}" -o "$MCP_OUTPUT" ./cmd/mcp/ && echo "OK" || echo "FAILED"
 done
 
 echo ""

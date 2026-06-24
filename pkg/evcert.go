@@ -62,9 +62,7 @@ func DetectEV(target string) (*EVResult, error) {
 		EVOIDs: []string{},
 	}
 
-	host, port := parseHostPort(target)
-
-	conn, err := TLSDial(fmt.Sprintf("%s:%s", host, port))
+	conn, err := TLSDial(target)
 	if err != nil {
 		result.Reason = fmt.Sprintf("failed to connect: %v", err)
 		return result, nil

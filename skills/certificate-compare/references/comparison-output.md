@@ -61,5 +61,5 @@ When verifying a certificate rotation:
 1. **Compare old cert vs new cert** — check if the rotation happened
 2. **If key matches** — same key pair was reused (common with automated renewal)
 3. **If key differs** — new key pair generated (common with manual renewal)
-4. **Verify the new cert** — use `cert-hacker validate` to check cert/key pair
-5. **Test the new cert** — use `cert-hacker analyze` for security assessment
+4. **Verify the new cert** — use `cert-skills validate` to check cert/key pair
+5. **Test the new cert** — use `cert-skills analyze` for security assessment

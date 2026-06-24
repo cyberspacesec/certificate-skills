@@ -223,7 +223,18 @@ func CheckNameConstraintsFromCert(chain []*x509.Certificate) *NameConstraintsRes
 		}
 
 		constraint := extractCAConstraint(ca, i)
-		if constraint == nil || !constraint.IsConstraining {
+		if constraint == nil {
+			continue
+		}
+
+		constraint.IsConstraining = len(constraint.PermittedDNS) > 0 ||
+			len(constraint.ExcludedDNS) > 0 ||
+			len(constraint.PermittedIPs) > 0 ||
+			len(constraint.ExcludedIPs) > 0 ||
+			len(constraint.PermittedEmails) > 0 ||
+			len(constraint.ExcludedEmails) > 0
+
+		if !constraint.IsConstraining {
 			continue
 		}
 

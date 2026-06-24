@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// CertComparison 证书比较结果
+// CertComparison is the certificate comparison result.
 type CertComparison struct {
 	Match        bool             `json:"match"`
 	MatchDetails MatchDetails     `json:"match_details"`
@@ -19,7 +19,7 @@ type CertComparison struct {
 	Differences  []CertDifference `json:"differences"`
 }
 
-// MatchDetails 匹配详情
+// MatchDetails contains match details.
 type MatchDetails struct {
 	SHA256Match    bool `json:"sha256_match"`
 	PublicKeyMatch bool `json:"public_key_match"`
@@ -27,7 +27,7 @@ type MatchDetails struct {
 	IssuerMatch    bool `json:"issuer_match"`
 }
 
-// CertSummary 证书摘要
+// CertSummary is the certificate summary.
 type CertSummary struct {
 	Subject            string    `json:"subject"`
 	Issuer             string    `json:"issuer"`
@@ -40,40 +40,40 @@ type CertSummary struct {
 	DNSNames           []string  `json:"dns_names"`
 }
 
-// CertDifference 证书差异
+// CertDifference represents a certificate difference.
 type CertDifference struct {
 	Field    string `json:"field"`
 	Cert1Val string `json:"cert1_value"`
 	Cert2Val string `json:"cert2_value"`
 }
 
-// CompareCerts 比较两个 x509.Certificate 对象
+// CompareCerts compares two x509.Certificate objects.
 func CompareCerts(cert1, cert2 *x509.Certificate) *CertComparison {
 	fp1 := GenerateFingerprints(cert1)
 	fp2 := GenerateFingerprints(cert2)
 
 	comparison := &CertComparison{}
 
-	// 指纹比较
+	// Fingerprint comparison
 	comparison.MatchDetails.SHA256Match = fp1["sha256"] == fp2["sha256"]
 	comparison.MatchDetails.PublicKeyMatch = fp1["public_key_sha256"] == fp2["public_key_sha256"]
 	comparison.MatchDetails.SubjectMatch = cert1.Subject.String() == cert2.Subject.String()
 	comparison.MatchDetails.IssuerMatch = cert1.Issuer.String() == cert2.Issuer.String()
 
-	// 两个证书完全匹配 = SHA-256 指纹相同
+	// Two certificates fully match = SHA-256 fingerprints are identical
 	comparison.Match = comparison.MatchDetails.SHA256Match
 
-	// 证书摘要
+	// Certificate summary
 	comparison.Cert1Summary = buildCertSummary(cert1)
 	comparison.Cert2Summary = buildCertSummary(cert2)
 
-	// 查找差异
+	// Find differences
 	comparison.Differences = findDifferences(cert1, cert2)
 
 	return comparison
 }
 
-// buildCertSummary 构建证书摘要
+// buildCertSummary builds a certificate summary.
 func buildCertSummary(cert *x509.Certificate) CertSummary {
 	summary := CertSummary{
 		Subject:            cert.Subject.String(),
@@ -96,7 +96,7 @@ func buildCertSummary(cert *x509.Certificate) CertSummary {
 	return summary
 }
 
-// findDifferences 查找两个证书之间的差异
+// findDifferences finds differences between two certificates.
 func findDifferences(cert1, cert2 *x509.Certificate) []CertDifference {
 	var diffs []CertDifference
 
@@ -151,7 +151,7 @@ func findDifferences(cert1, cert2 *x509.Certificate) []CertDifference {
 	return diffs
 }
 
-// CompareCertsFromDomains 从两个域名获取证书并比较
+// CompareCertsFromDomains fetches certificates from two domains and compares them.
 func CompareCertsFromDomains(domain1, domain2 string) (*CertComparison, error) {
 	conn1, err := TLSDial(domain1)
 	if err != nil {
@@ -178,7 +178,7 @@ func CompareCertsFromDomains(domain1, domain2 string) (*CertComparison, error) {
 	return CompareCerts(certs1[0], certs2[0]), nil
 }
 
-// CompareCertsFromFiles 从两个文件读取证书并比较
+// CompareCertsFromFiles reads certificates from two files and compares them.
 func CompareCertsFromFiles(file1, file2 string) (*CertComparison, error) {
 	cert1, err := ReadCertFromFile(file1)
 	if err != nil {
@@ -193,19 +193,19 @@ func CompareCertsFromFiles(file1, file2 string) (*CertComparison, error) {
 	return CompareCerts(cert1, cert2), nil
 }
 
-// ReadCertFromFile 从文件读取原始 x509.Certificate 对象（公开函数，供 MCP handler 等模块复用）
+// ReadCertFromFile reads a raw x509.Certificate object from a file (public function, reusable by MCP handler and other modules).
 func ReadCertFromFile(filename string) (*x509.Certificate, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %v", err)
 	}
 
-	// 尝试 PEM 格式
+	// Try PEM format
 	block, _ := pem.Decode(data)
 	if block != nil {
 		return x509.ParseCertificate(block.Bytes)
 	}
 
-	// 尝试 DER 格式
+	// Try DER format
 	return x509.ParseCertificate(data)
 }
