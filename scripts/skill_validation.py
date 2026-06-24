@@ -1275,8 +1275,11 @@ def validate_eval_metadata_output_schema(path: pathlib.Path) -> list[str]:
     errors = []
     if not isinstance(metadata.get("eval_id"), int) or isinstance(metadata.get("eval_id"), bool):
         errors.append(f"{path}: eval_metadata eval_id must be an integer")
-    if not isinstance(metadata.get("eval_name"), str) or not metadata["eval_name"]:
+    eval_name = metadata.get("eval_name")
+    if not isinstance(eval_name, str) or not eval_name:
         errors.append(f"{path}: eval_metadata eval_name must be a non-empty string")
+    elif path.parent.name != eval_name:
+        errors.append(f"{path}: eval_metadata eval_name should match containing eval directory")
     if not isinstance(metadata.get("prompt"), str) or not metadata["prompt"]:
         errors.append(f"{path}: eval_metadata prompt must be a non-empty string")
     assertions = metadata.get("assertions")

@@ -325,7 +325,7 @@ Repository layout:
 - `make validate-skills` uses [`scripts/skill_validation.py`](scripts/skill_validation.py) to enforce Anthropic-style metadata, eval, link, layout, and tool-parity constraints.
 - [`scripts/package-skills.py`](scripts/package-skills.py) reuses the same validator before writing `.skill` archives.
 - Generated `.skill` archives, skill eval workspaces, skill benchmark outputs, `dist/` outputs, Go test binaries, `bin/` outputs, and coverage reports are ignored and must not be tracked as source files.
-- When local skill eval, benchmark, blind-comparison, or description-optimization outputs are present, validation also checks official generated-output placement and field shapes such as `eval_metadata.json`, `grading.json`, `metrics.json`, `timing.json`, workspace-root `history.json` and `feedback.json`, workspace `benchmark.md`, workspace and benchmark-mode `benchmark.json`, `comparison-N.json` naming, `analysis.json`, and trigger eval sets, including nested grading, benchmark expectations, benchmark result, benchmark notes, benchmark summary stat, comparison, analysis, and A/B blind-comparison label fields.
+- When local skill eval, benchmark, blind-comparison, or description-optimization outputs are present, validation also checks official generated-output placement and field shapes such as `eval_metadata.json` eval-name directory matching, `grading.json`, `metrics.json`, `timing.json`, workspace-root `history.json` and `feedback.json`, workspace `benchmark.md`, workspace and benchmark-mode `benchmark.json`, `comparison-N.json` naming, `analysis.json`, and trigger eval sets, including nested grading, benchmark expectations, benchmark result, benchmark notes, benchmark summary stat, comparison, analysis, and A/B blind-comparison label fields.
 
 Build portable `.skill` archives:
 
@@ -403,7 +403,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - `make validate-skills` 使用 [`scripts/skill_validation.py`](scripts/skill_validation.py) 校验 Anthropic-style 元数据、eval、链接、目录布局和工具元数据一致性。
 - [`scripts/package-skills.py`](scripts/package-skills.py) 在写入 `.skill` archives 前复用同一套校验器。
 - 生成的 `.skill` archives、skill eval workspaces、skill benchmark outputs、`dist/` 输出、Go test binaries、`bin/` 输出和 coverage reports 会被忽略，不能作为源码跟踪。
-- 如果本地存在 skill eval、benchmark、blind-comparison 或 description-optimization 输出，校验还会检查官方 generated-output 位置和字段结构，例如 `eval_metadata.json`、`grading.json`、`metrics.json`、`timing.json`、workspace-root `history.json` 与 `feedback.json`、workspace `benchmark.md`、workspace 和 benchmark-mode `benchmark.json`、`comparison-N.json` 命名、`analysis.json` 和 trigger eval sets，包括 grading、benchmark expectations、benchmark result、benchmark notes、benchmark summary stat、comparison、analysis 与 A/B blind-comparison 标签字段。
+- 如果本地存在 skill eval、benchmark、blind-comparison 或 description-optimization 输出，校验还会检查官方 generated-output 位置和字段结构，例如 `eval_metadata.json` eval-name 目录匹配、`grading.json`、`metrics.json`、`timing.json`、workspace-root `history.json` 与 `feedback.json`、workspace `benchmark.md`、workspace 和 benchmark-mode `benchmark.json`、`comparison-N.json` 命名、`analysis.json` 和 trigger eval sets，包括 grading、benchmark expectations、benchmark result、benchmark notes、benchmark summary stat、comparison、analysis 与 A/B blind-comparison 标签字段。
 
 打包 portable `.skill` archives：
 
