@@ -55,6 +55,7 @@
         "Reference files over 300 lines include a Contents or Table of Contents heading.",
         "Every file under skill scripts/ and assets/ directories is linked from that skill's SKILL.md.",
         "Files under skill scripts/ directories are executable.",
+        "Skill package content rejects high-risk shell patterns that could compromise the user's system.",
         "Skill directory and frontmatter names are lowercase hyphenated.",
         "Portable SKILL.md files keep When to Use trigger guidance in frontmatter descriptions instead of body sections.",
         "Portable skills do not duplicate repository installation instructions.",

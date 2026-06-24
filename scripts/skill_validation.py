@@ -24,6 +24,21 @@ EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GENERATED_ARTIFACT_IGNORE_PATTERNS = ("*.skill", "*-workspace/", "/dist/")
 DESCRIPTION_MAX_WORDS = 100
+DISALLOWED_SKILL_CONTENT_PATTERNS = (
+    (re.compile(r"\brm\s+-rf\s+/(?:\s|$)"), "destructive root deletion command"),
+    (re.compile(r"\bmkfs(?:\.[A-Za-z0-9_+-]+)?\s+"), "filesystem formatting command"),
+    (
+        re.compile(r"\bdd\b[^\n]*\bof=/dev/(?:sd|vd|xvd|nvme|disk|mapper)"),
+        "raw block-device overwrite command",
+    ),
+    (
+        re.compile(r"\b(?:nc|ncat)\b[^\n]*(?:\s-e\s|--exec\b|--sh-exec\b)"),
+        "netcat exec shell command",
+    ),
+    (re.compile(r"(?:\bbash\s+-i\b[^\n]*/dev/tcp|/dev/tcp/)"), "reverse shell TCP redirection"),
+    (re.compile(r"\bcurl\b[^\n]*\|\s*(?:sh|bash)\b"), "remote shell installer command"),
+    (re.compile(r"\bwget\b[^\n]*\|\s*(?:sh|bash)\b"), "remote shell installer command"),
+)
 PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS = ("## When to Use", "## When NOT to Use")
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
@@ -606,6 +621,23 @@ def legacy_reference_errors(repo_root: pathlib.Path) -> list[str]:
     return errors
 
 
+def skill_package_safety_errors(skill_dir: pathlib.Path) -> list[str]:
+    errors = []
+    if not skill_dir.is_dir():
+        return errors
+
+    for file_path in sorted(path for path in skill_dir.rglob("*") if path.is_file()):
+        try:
+            text = file_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            for pattern, label in DISALLOWED_SKILL_CONTENT_PATTERNS:
+                if pattern.search(line):
+                    errors.append(f"{file_path}:{line_no}: disallowed skill content: {label}")
+    return errors
+
+
 def packaging_script_errors(repo_root: pathlib.Path) -> list[str]:
     script = repo_root / "scripts" / "package-skills.py"
     errors = []
@@ -677,6 +709,7 @@ def validate_repository(repo_root: pathlib.Path, run_package_check: bool = True)
         for skill_dir in sorted(path for path in root.iterdir() if path.is_dir()):
             errors.extend(frontmatter_errors(skill_dir, mode))
             errors.extend(package_layout_errors(skill_dir))
+            errors.extend(skill_package_safety_errors(skill_dir))
             if mode == "claude":
                 errors.extend(claude_prompt_section_errors(skill_dir / "SKILL.md"))
             else:
@@ -701,6 +734,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
     errors = []
     errors.extend(package_layout_errors(skill_dir))
     errors.extend(frontmatter_errors(skill_dir, "portable"))
+    errors.extend(skill_package_safety_errors(skill_dir))
     errors.extend(skill_file_link_errors(skill_dir / "SKILL.md", require_reference_usage_cue=True))
 
     evals_file = skill_dir / "evals" / "evals.json"
