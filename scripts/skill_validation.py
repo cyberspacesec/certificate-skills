@@ -1630,7 +1630,9 @@ def validate_eval_workspace_file_layout(workspace: pathlib.Path, path: pathlib.P
             )
         return errors
 
-    if name in {"grading.json", "timing.json"}:
+    if name in {"grading.json", "timing.json", "analysis.json"} or (
+        name.startswith("comparison") and name.endswith(".json")
+    ):
         parent_parts = relative_parts[:-1]
         if not is_eval_run_dir_parts(parent_parts):
             errors.append(
