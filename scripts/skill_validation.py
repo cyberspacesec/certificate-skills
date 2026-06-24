@@ -1130,6 +1130,8 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
         return []
 
     errors = []
+    metadata_evals_run: list[int | str] | None = None
+    metadata_runs_per_configuration: int | None = None
     metadata = benchmark.get("metadata")
     if not isinstance(metadata, dict):
         errors.append(f"{path}: benchmark.json metadata must be an object")
@@ -1142,10 +1144,16 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
             errors.append(f"{path}: metadata.evals_run must be a list")
         elif not all(isinstance(item, (int, str)) and not isinstance(item, bool) for item in metadata["evals_run"]):
             errors.append(f"{path}: metadata.evals_run entries must be strings or integers")
+        else:
+            metadata_evals_run = metadata["evals_run"]
         if not isinstance(metadata.get("runs_per_configuration"), int) or isinstance(
             metadata.get("runs_per_configuration"), bool
         ):
             errors.append(f"{path}: metadata.runs_per_configuration must be an integer")
+        else:
+            metadata_runs_per_configuration = metadata["runs_per_configuration"]
+            if metadata_runs_per_configuration < 1:
+                errors.append(f"{path}: metadata.runs_per_configuration must be at least 1")
         for optional_string_field in ("skill_path", "executor_model", "analyzer_model"):
             if optional_string_field in metadata and not isinstance(metadata.get(optional_string_field), str):
                 errors.append(f"{path}: metadata.{optional_string_field} must be a string when present")
@@ -1155,6 +1163,11 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
         errors.append(f"{path}: benchmark.json runs must be a list")
     else:
         run_positions: dict[tuple[int, int], dict[str, int]] = {}
+        run_identities: dict[tuple[int, str, str, int], int] = {}
+        observed_eval_ids: set[int] = set()
+        observed_eval_names: set[str] = set()
+        observed_evals: set[tuple[int, str]] = set()
+        run_counts: dict[tuple[int, str, str], set[int]] = {}
         for idx, run in enumerate(runs):
             if not isinstance(run, dict):
                 errors.append(f"{path}: runs[{idx}] must be an object")
@@ -1181,6 +1194,22 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
             ):
                 group = (run["eval_id"], run["run_number"])
                 run_positions.setdefault(group, {}).setdefault(run["configuration"], idx)
+                if isinstance(run.get("eval_name"), str) and run["eval_name"]:
+                    identity = (run["eval_id"], run["eval_name"], run["configuration"], run["run_number"])
+                    if identity in run_identities:
+                        errors.append(
+                            f"{path}: runs[{idx}] duplicates eval_id {run['eval_id']} "
+                            f"eval_name {run['eval_name']} configuration {run['configuration']} "
+                            f"run_number {run['run_number']} from runs[{run_identities[identity]}]"
+                        )
+                    else:
+                        run_identities[identity] = idx
+                    observed_eval_ids.add(run["eval_id"])
+                    observed_eval_names.add(run["eval_name"])
+                    observed_evals.add((run["eval_id"], run["eval_name"]))
+                    run_counts.setdefault((run["eval_id"], run["eval_name"], run["configuration"]), set()).add(
+                        run["run_number"]
+                    )
 
             result = run.get("result")
             if not isinstance(result, dict):
@@ -1240,6 +1269,31 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                     f"{path}: runs for eval_id {eval_id} run_number {run_number} should place "
                     "with_skill before without_skill"
                 )
+        if metadata_evals_run is not None:
+            expected_eval_ids = {
+                item for item in metadata_evals_run if isinstance(item, int) and not isinstance(item, bool)
+            }
+            expected_eval_names = {item for item in metadata_evals_run if isinstance(item, str)}
+            for eval_id, eval_name in sorted(observed_evals):
+                if eval_id not in expected_eval_ids and eval_name not in expected_eval_names:
+                    errors.append(
+                        f"{path}: runs for eval_id {eval_id} eval_name {eval_name} "
+                        "must be listed in metadata.evals_run"
+                    )
+            for eval_id in sorted(expected_eval_ids - observed_eval_ids):
+                errors.append(f"{path}: metadata.evals_run includes eval_id {eval_id} with no matching run")
+            for eval_name in sorted(expected_eval_names - observed_eval_names):
+                errors.append(f"{path}: metadata.evals_run includes eval_name {eval_name} with no matching run")
+        if metadata_runs_per_configuration is not None and metadata_runs_per_configuration >= 1:
+            for eval_id, eval_name in sorted(observed_evals):
+                for configuration in BENCHMARK_RUN_SUMMARY_CONFIGS:
+                    run_numbers = run_counts.get((eval_id, eval_name, configuration), set())
+                    if len(run_numbers) != metadata_runs_per_configuration:
+                        errors.append(
+                            f"{path}: eval_id {eval_id} eval_name {eval_name} configuration {configuration} "
+                            f"has {len(run_numbers)} run(s), expected metadata.runs_per_configuration "
+                            f"{metadata_runs_per_configuration}"
+                        )
 
     run_summary = benchmark.get("run_summary")
     if not isinstance(run_summary, dict):
