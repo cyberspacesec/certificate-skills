@@ -475,12 +475,17 @@ func init() {
 	rootCmd.AddCommand(verifyHostnameCmd)
 	rootCmd.AddCommand(detectEVCmd)
 	rootCmd.AddCommand(matchFingerprintsCmd)
+	rootCmd.AddCommand(matchFingerprintByHashCmd)
 	rootCmd.AddCommand(detectChangeCmd)
+
+	matchFingerprintByHashCmd.Flags().String("type", "", "Fingerprint type: jarm, ja3, cert_sha256, or spki")
+	matchFingerprintByHashCmd.Flags().String("hash", "", "Fingerprint hash to match, with or without colons")
 }
 
 var matchFingerprintsCmd = &cobra.Command{
-	Use:   "match-fp [domain:port]",
-	Short: "Match TLS fingerprints against known services",
+	Use:     "match-fp [domain:port]",
+	Aliases: []string{"match-fingerprints"},
+	Short:   "Match TLS fingerprints against known services",
 	Long: `Collect JARM, JA3, and certificate fingerprints from a target and
 match them against a built-in database of known services (CDN, cloud, C2, VPN, etc.).
 
@@ -488,6 +493,7 @@ Essential for cyberspace mapping and C2 infrastructure detection.
 
 Examples:
   cert-skills match-fp google.com
+  cert-skills match-fingerprints google.com
   cert-skills match-fp suspicious-server.com --output json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -546,6 +552,65 @@ Examples:
 			fmt.Printf("\nNo known fingerprint matches found.\n")
 		}
 	},
+}
+
+var matchFingerprintByHashCmd = &cobra.Command{
+	Use:   "match-fingerprint-by-hash",
+	Short: "Match a single TLS fingerprint hash against known services",
+	Long: `Match a single JARM, JA3, certificate SHA-256, or SPKI SHA-256 hash
+against the built-in fingerprint database of known services.
+
+This command is offline and does not connect to the target service.
+
+Examples:
+  cert-skills match-fingerprint-by-hash --type jarm --hash 29d29d15d29d29d21c29d29d29d29dea0f89a2e5e6f1eadc8e8d8e8d8e8d05
+  cert-skills match-fingerprint-by-hash --type cert_sha256 --hash ab:cd:ef --output json`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fpType, _ := cmd.Flags().GetString("type")
+		hash, _ := cmd.Flags().GetString("hash")
+		outputFormat, _ := cmd.Flags().GetString("output")
+
+		fpType = strings.TrimSpace(strings.ToLower(fpType))
+		hash = strings.TrimSpace(hash)
+		if fpType == "" || hash == "" {
+			fmt.Fprintln(os.Stderr, "Error: both --type and --hash are required")
+			os.Exit(1)
+		}
+		if !isSupportedFingerprintMatchType(fpType) {
+			fmt.Fprintf(os.Stderr, "Error: unsupported --type %q (use jarm, ja3, cert_sha256, or spki)\n", fpType)
+			os.Exit(1)
+		}
+
+		matches := pkg.MatchFingerprintByHash(fpType, hash)
+		if outputFormat == "json" {
+			data, _ := json.MarshalIndent(matches, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+
+		fmt.Println(display.SectionHeader("Fingerprint Hash Matching Results"))
+		fmt.Println(display.BulletKeyValue("Type", fpType))
+		fmt.Println(display.BulletKeyValue("Hash", hash))
+		if len(matches) == 0 {
+			fmt.Printf("\nNo known fingerprint matches found.\n")
+			return
+		}
+
+		fmt.Printf("\nMatches Found (%d):\n", len(matches))
+		for _, m := range matches {
+			fmt.Printf("  [%s] %s (confidence: %.0f%%, source: %s)\n",
+				strings.ToUpper(m.Category), m.Label, m.Confidence*100, m.Source)
+		}
+	},
+}
+
+func isSupportedFingerprintMatchType(fpType string) bool {
+	switch fpType {
+	case "jarm", "ja3", "cert_sha256", "spki":
+		return true
+	default:
+		return false
+	}
 }
 
 var detectChangeCmd = &cobra.Command{

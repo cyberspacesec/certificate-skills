@@ -119,7 +119,7 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
 - [x] **7.1 Testing and Documentation**
   - [x] Unit test coverage (30+ test files, all pkg packages covered)
   - [x] golangci-lint configuration and CI integration
-  - [x] MCP tool documentation (51 tools)
+  - [x] MCP tool documentation (54 tools)
   - [x] Usage examples and tutorials
   - [x] All Chinese comments translated to English
   - [x] All cert-hacker references updated to cert-skills
@@ -142,7 +142,7 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
 - **Linting**: golangci-lint
 - **Build Tool**: Make + GoReleaser
 
-## 🚀 CLI Command Reference (48 commands)
+## 🚀 CLI Command Reference (51 commands)
 
 | Command | Description | Example |
 |---------|-------------|---------|
@@ -171,6 +171,9 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
 | `search-ct` | CT log search | `cert-skills search-ct google.com` |
 | `ct-enumerate` | CT subdomain enumeration | `cert-skills ct-enumerate google.com` |
 | `search-ct-fingerprint` | CT fingerprint search | `cert-skills search-ct-fingerprint <sha256>` |
+| `map-scan` | Batch mapping scan | `cert-skills map-scan --hosts example.com,github.com --ports 443` |
+| `map-parse` | Offline mapping analysis | `cert-skills map-parse certs/*.pem --output json` |
+| `map-timeline` | Certificate lifecycle timeline | `cert-skills map-timeline snapshots/*.json --output json` |
 | `check-revocation` | OCSP/CRL revocation check | `cert-skills check-revocation google.com` |
 | `check-hsts` | HSTS detection | `cert-skills check-hsts google.com` |
 | `check-pfs` | PFS support check | `cert-skills check-pfs google.com` |
@@ -192,10 +195,10 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
 | `check-name-constraints` | Name constraints check | `cert-skills check-name-constraints example.com` |
 | `check-bundle` | Bundle completeness check | `cert-skills check-bundle example.com` |
 | `detect-change` | Certificate change detection | `cert-skills detect-change google.com --save` |
-| `match-fingerprints` | Fingerprint matching | `cert-skills match-fingerprints google.com` |
+| `match-fp` (`match-fingerprints`) | Fingerprint matching | `cert-skills match-fp google.com` |
 | `match-fingerprint-by-hash` | Match single fingerprint | `cert-skills match-fingerprint-by-hash --hash ... --type jarm` |
 
-## 🔌 MCP Tool Reference (51 tools)
+## 🔌 MCP Tool Reference (54 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -250,13 +253,16 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
 | `cert_detect_change` | Detect certificate changes |
 | `cert_match_fingerprints` | Match TLS fingerprints |
 | `cert_match_fingerprint_by_hash` | Match single fingerprint hash |
+| `cert_map_scan` | Batch collect certificates for mapping |
+| `cert_map_parse_files` | Parse certificate files and build mapping summaries |
+| `cert_map_timeline` | Build certificate lifecycle timelines |
 
 ---
 
-## 📊 Project Status (Updated: 2026-06-21)
+## 📊 Project Status (Updated: 2026-06-24)
 
 ### ✅ Completed Features
-1. **Infrastructure**: Complete Go project structure, CLI (48 commands), MCP server (51 tools, stdio/SSE/Streamable HTTP)
+1. **Infrastructure**: Complete Go project structure, CLI (51 commands), MCP server (54 tools, stdio/SSE/Streamable HTTP)
 2. **Certificate Retrieval**: Domain and file certificate retrieval, chain support, DER auto-detection
 3. **Certificate Parsing**: Full certificate info parsing + KeySize + HTTP/2 detection + OCSP Stapling
 4. **Certificate Fingerprints**: SHA1/SHA256/MD5/PublicKey SHA256 fingerprint generation
@@ -269,10 +275,10 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
 11. **TLS Scanning**: Protocol version detection (TLS 1.0-1.3), cipher suite enumeration (secure/weak)
 12. **Vulnerability Scanning**: 11 TLS vulnerability checks (Heartbleed/POODLE/ROBOT, etc.)
 13. **Batch Processing**: Batch security analysis, certificate comparison (domain/file), CSV output
-14. **Cyberspace Mapping**: CT log search + subdomain enumeration + fingerprint search, JARM/JA3 fingerprints, trusted domain extraction, certificate change detection
+14. **Cyberspace Mapping**: CT log search + subdomain enumeration + fingerprint search, JARM/JA3 fingerprints, trusted domain extraction, certificate change detection, batch scanning, offline parsing, clustering, topology, and timelines
 15. **Compliance Checks**: 18 cert security checks, 8 compliance checks (SCT/CAA/key usage/serial entropy/policy/name constraints/OCSP Must-Staple/distrusted CA)
 16. **Output Formats**: Text/JSON/CSV output formats
-17. **48 CLI Commands + 51 MCP Tools**: Complete toolset
+17. **51 CLI Commands + 54 MCP Tools**: Complete toolset
 18. **45 Skills**: AI Agent executable prompt definitions
 19. **Unit Tests**: 30+ test files covering all pkg packages, offline tests with -short flag
 20. **Code Quality**: golangci-lint configured, all Chinese comments translated to English, all cert-hacker references updated

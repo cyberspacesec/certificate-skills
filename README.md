@@ -2,7 +2,7 @@
 
 **AI-Native Certificate Security Toolkit — Skills · CLI · MCP · Go SDK**
 
-A comprehensive SSL/TLS certificate security toolkit designed for AI agents, security researchers, and cyberspace mapping. Four integration modes: **Skills** (45 executable prompts), **CLI** (48 commands), **MCP Server** (51 tools), **Go SDK** (50+ functions).
+A comprehensive SSL/TLS certificate security toolkit designed for AI agents, security researchers, and cyberspace mapping. Four integration modes: **Skills** (45 executable prompts), **CLI** (51 commands), **MCP Server** (54 tools), **Go SDK** (50+ functions).
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -60,6 +60,7 @@ cert-skills scan-vulns google.com                      # 11 TLS vulnerability sc
 cert-skills search-ct example.com                      # CT log search
 cert-skills jarm suspicious.com -o json                # JARM fingerprint (JSON)
 cert-skills detect-change google.com --save            # Certificate change detection
+cert-skills map-scan --hosts example.com -o json       # Batch mapping scan
 ```
 
 ### Go SDK (For Programmatic Use)
@@ -91,6 +92,7 @@ Certificate generation (RSA/ECDSA/Ed25519), CSR generation, cert-key validation,
 
 ### 🌐 Cyberspace Mapping
 CT log search, subdomain enumeration, JARM/JA3 fingerprinting, EV detection, HSTS, CAA, SCT, wildcard analysis, trusted domain extraction, PFS, session resumption, expiry monitoring, revocation check
+Batch certificate collection, offline certificate parsing, de-duplication, clustering, topology, and lifecycle timeline generation
 
 ---
 
@@ -177,8 +179,12 @@ cert-skills check-sct <domain>                  # SCT compliance
 # Cyberspace mapping
 cert-skills search-ct <domain>                  # Search CT logs
 cert-skills ct-enumerate <domain>               # Enumerate subdomains
+cert-skills map-scan --hosts a.com,b.com        # Batch collect certs
+cert-skills map-parse certs/*.pem               # Offline mapping analysis
+cert-skills map-timeline snapshots/*.json       # Lifecycle timeline
 cert-skills jarm <domain>                       # JARM fingerprint
 cert-skills ja3 <domain>                        # JA3 fingerprint
+cert-skills match-fp <domain>                   # Match known fingerprints
 cert-skills detect-change <domain> --save        # Certificate change detection
 cert-skills detect-ev <domain>                  # EV detection
 cert-skills check-wildcard <domain>             # Wildcard analysis
@@ -304,8 +310,8 @@ See [.claude/skills/](.claude/skills/) for all skills and [CLAUDE.md](CLAUDE.md)
 | Metric | Count |
 |--------|-------|
 | Skills | 45 |
-| CLI Commands | 48 |
-| MCP Tools | 51 |
+| CLI Commands | 51 |
+| MCP Tools | 54 |
 | Cert Security Checks | 18 |
 | TLS Vulnerability Scans | 11 |
 | Go SDK Functions | 50+ |
@@ -319,7 +325,7 @@ See [.claude/skills/](.claude/skills/) for all skills and [CLAUDE.md](CLAUDE.md)
 
 ### 简介
 
-`cert-skills` 是一个 AI 原生的证书安全工具包，支持四种接入方式：**Skills**（45个可执行提示词）、**CLI**（48个命令）、**MCP 服务器**（51个工具）、**Go SDK**（50+函数）。
+`cert-skills` 是一个 AI 原生的证书安全工具包，支持四种接入方式：**Skills**（45个可执行提示词）、**CLI**（51个命令）、**MCP 服务器**（54个工具）、**Go SDK**（50+函数）。
 
 ### 🤖 AI 一键接入
 
@@ -376,8 +382,8 @@ cd certificate-skills && go build -o cert-skills ./cmd/
 | 类别 | 数量 | 说明 |
 |------|------|------|
 | Skills | 45 | AI Agent 可执行提示词 |
-| CLI 命令 | 48 | 全部能力通过命令行暴露 |
-| MCP 工具 | 51 | AI Agent 直接调用 |
+| CLI 命令 | 51 | 全部能力通过命令行暴露 |
+| MCP 工具 | 54 | AI Agent 直接调用 |
 | 证书安全检查 | 18 | CERT-001 到 CERT-018 |
 | TLS 漏洞扫描 | 11 | Heartbleed 到 DROWN |
 | Go SDK | 50+ | 含 7 个离线分析函数 |
