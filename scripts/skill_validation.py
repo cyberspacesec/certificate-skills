@@ -1186,11 +1186,27 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                         if not isinstance(expectation, dict):
                             errors.append(f"{path}: runs[{idx}].expectations[{expectation_idx}] must be an object")
                             continue
-                        missing = sorted(GRADING_EXPECTATION_KEYS - set(expectation))
-                        if missing:
+                        keys = set(expectation)
+                        if keys != GRADING_EXPECTATION_KEYS:
+                            expected = ", ".join(sorted(GRADING_EXPECTATION_KEYS))
+                            found = ", ".join(sorted(keys))
                             errors.append(
-                                f"{path}: runs[{idx}].expectations[{expectation_idx}] missing key(s): "
-                                f"{', '.join(missing)}"
+                                f"{path}: runs[{idx}].expectations[{expectation_idx}] must use exactly "
+                                f"{expected} fields, found {found}"
+                            )
+                            continue
+                        if not isinstance(expectation.get("text"), str) or not expectation["text"]:
+                            errors.append(
+                                f"{path}: runs[{idx}].expectations[{expectation_idx}].text "
+                                "must be a non-empty string"
+                            )
+                        if not isinstance(expectation.get("passed"), bool):
+                            errors.append(
+                                f"{path}: runs[{idx}].expectations[{expectation_idx}].passed must be a boolean"
+                            )
+                        if not isinstance(expectation.get("evidence"), str):
+                            errors.append(
+                                f"{path}: runs[{idx}].expectations[{expectation_idx}].evidence must be a string"
                             )
             if "notes" in run:
                 errors.extend(validate_string_list_field(path, run, f"runs[{idx}]", "notes"))
@@ -1609,6 +1625,11 @@ def validate_eval_workspace_file_layout(workspace: pathlib.Path, path: pathlib.P
             )
         return errors
 
+    if name == "benchmark.json":
+        if len(relative_parts) != 2 or not is_eval_iteration_dirname(relative_parts[0]):
+            errors.append(f"{path}: benchmark.json should be located at <workspace>/iteration-N/benchmark.json")
+        return errors
+
     return errors
 
 
@@ -1654,6 +1675,8 @@ def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
             errors.extend(validate_metrics_output_schema(path))
         for path in sorted(workspace.rglob("timing.json")):
             errors.extend(validate_timing_output_schema(path))
+        for path in sorted(workspace.rglob("benchmark.json")):
+            errors.extend(validate_benchmark_output_schema(path))
         for path in sorted(workspace.rglob("feedback.json")):
             errors.extend(validate_feedback_output_schema(path))
         for path in sorted(workspace.rglob("comparison-*.json")):
