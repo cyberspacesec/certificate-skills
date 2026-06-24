@@ -1,0 +1,27 @@
+{
+  "skill_name": "jarm-fingerprint",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need JARM for example.com.",
+      "expected_output": "Use the jarm-fingerprint skill for this jarm fingerprint request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects jarm-fingerprint for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_jarm.",
+        "Keeps the response focused on generating JARM TLS server fingerprints for server identification, C2 infrastructure detection, and cyberspace mapping."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused jarm fingerprint workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the jarm-fingerprint skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects jarm-fingerprint instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

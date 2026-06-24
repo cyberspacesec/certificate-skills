@@ -1,0 +1,27 @@
+{
+  "skill_name": "certificate-csr",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need generate CSR for api.internal.example with SANs api.internal.example and 10.0.0.10.",
+      "expected_output": "Use the certificate-csr skill for this certificate csr request and produce the documented result for api.internal.example with SANs api.internal.example and 10.0.0.10.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-csr for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_generate_csr.",
+        "Keeps the response focused on generating a Certificate Signing Request (CSR) for submitting to a Certificate Authority."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused certificate csr workflow for api.internal.example with SANs api.internal.example and 10.0.0.10; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the certificate-csr skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-csr instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

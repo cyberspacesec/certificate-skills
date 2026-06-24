@@ -1,0 +1,27 @@
+{
+  "skill_name": "certificate-change-detection",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need certificate monitoring for example.com using the previous snapshot baseline.json.",
+      "expected_output": "Use the certificate-change-detection skill for this certificate change detection request and produce the documented result for example.com using the previous snapshot baseline.json.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-change-detection for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_detect_change.",
+        "Keeps the response focused on detecting certificate changes over time - renewal, key rotation, issuer change, or expiry."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused certificate change detection workflow for example.com using the previous snapshot baseline.json; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the certificate-change-detection skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-change-detection instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

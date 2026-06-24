@@ -1,0 +1,27 @@
+{
+  "skill_name": "hsts-checker",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need HSTS for example.com.",
+      "expected_output": "Use the hsts-checker skill for this hsts checker request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects hsts-checker for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_check_hsts.",
+        "Keeps the response focused on checking HSTS (HTTP Strict Transport Security) status and policy compliance for a domain."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused hsts checker workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the hsts-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects hsts-checker instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

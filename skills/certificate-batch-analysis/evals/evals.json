@@ -1,0 +1,27 @@
+{
+  "skill_name": "certificate-batch-analysis",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need batch cert analysis for example.com, api.example.com, and mail.example.com.",
+      "expected_output": "Use the certificate-batch-analysis skill for this certificate batch analysis request and produce the documented result for example.com, api.example.com, and mail.example.com.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-batch-analysis for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_batch_analyze.",
+        "Keeps the response focused on analyzing SSL/TLS security for multiple domains at once, batch security scoring, or comparing security posture across organizations."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused certificate batch analysis workflow for example.com, api.example.com, and mail.example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the certificate-batch-analysis skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-batch-analysis instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

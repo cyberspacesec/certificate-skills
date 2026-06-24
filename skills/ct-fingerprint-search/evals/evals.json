@@ -1,0 +1,27 @@
+{
+  "skill_name": "ct-fingerprint-search",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need CT fingerprint search for SHA-256 fingerprint 9a7b112233445566778899aabbccddeeff00123456789abcdef0112233445566.",
+      "expected_output": "Use the ct-fingerprint-search skill for this ct fingerprint search request and produce the documented result for SHA-256 fingerprint 9a7b112233445566778899aabbccddeeff00123456789abcdef0112233445566.",
+      "files": [],
+      "expectations": [
+        "Selects ct-fingerprint-search for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_search_ct_fingerprint.",
+        "Keeps the response focused on searching Certificate Transparency logs by SHA-256 certificate fingerprint."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused ct fingerprint search workflow for SHA-256 fingerprint 9a7b112233445566778899aabbccddeeff00123456789abcdef0112233445566; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the ct-fingerprint-search skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects ct-fingerprint-search instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

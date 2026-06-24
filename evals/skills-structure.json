@@ -28,6 +28,7 @@
       "prompt": "Audit skill package layout for progressive disclosure.",
       "assertions": [
         "evals/evals.json uses the skill-creator eval shape with skill_name and evals.",
+        "Every portable skill contains evals/evals.json with skill_name matching the skill directory.",
         "evals/skills-structure.json contains repository structure checks.",
         "SKILL.md files remain lightweight.",
         "Bundled resources live in supported skill-creator directories: references/, scripts/, assets/, or evals/.",

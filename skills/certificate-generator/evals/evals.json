@@ -1,0 +1,27 @@
+{
+  "skill_name": "certificate-generator",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need generate cert for dev.example.test with SANs dev.example.test and localhost.",
+      "expected_output": "Use the certificate-generator skill for this certificate generator request and produce the documented result for dev.example.test with SANs dev.example.test and localhost.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-generator for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_generate.",
+        "Keeps the response focused on generating self-signed SSL/TLS certificates for testing and development."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused certificate generator workflow for dev.example.test with SANs dev.example.test and localhost; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the certificate-generator skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-generator instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

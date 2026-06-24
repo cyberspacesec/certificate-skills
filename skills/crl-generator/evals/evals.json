@@ -1,0 +1,27 @@
+{
+  "skill_name": "crl-generator",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need generate CRL for ca.pem, ca-key.pem, and revoked serials 01A3 and 01A4.",
+      "expected_output": "Use the crl-generator skill for this crl generator request and produce the documented result for ca.pem, ca-key.pem, and revoked serials 01A3 and 01A4.",
+      "files": [],
+      "expectations": [
+        "Selects crl-generator for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_generate_crl, cert_parse_crl, cert_verify_crl_signature, cert_check_revoked_by_crl.",
+        "Keeps the response focused on generating Certificate Revocation Lists (CRLs), listing revoked certificate serials, or assigning RFC 5280 revocation reason codes."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused crl generator workflow for ca.pem, ca-key.pem, and revoked serials 01A3 and 01A4; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the crl-generator skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects crl-generator instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

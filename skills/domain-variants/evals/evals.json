@@ -1,0 +1,27 @@
+{
+  "skill_name": "domain-variants",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need domain variants for authorized test domain example.com.",
+      "expected_output": "Use the domain-variants skill for this domain variant generator request and produce the documented result for authorized test domain example.com.",
+      "files": [],
+      "expectations": [
+        "Selects domain-variants for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_generate_domain_variants.",
+        "Keeps the response focused on generating certificate test cases for domain variants such as homoglyphs, subdomains, TLD changes, hyphenation, or inserted characters for authorized phishing detection research."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused domain variant generator workflow for authorized test domain example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the domain-variants skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects domain-variants instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

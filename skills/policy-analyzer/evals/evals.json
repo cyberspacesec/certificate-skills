@@ -1,0 +1,27 @@
+{
+  "skill_name": "policy-analyzer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need certificate policy for example.com.",
+      "expected_output": "Use the policy-analyzer skill for this policy analyzer request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects policy-analyzer for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_check_policy, cert_detect_ev.",
+        "Keeps the response focused on analyzing certificate policy OIDs for DV/OV/EV classification and compliance checking."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused policy analyzer workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the policy-analyzer skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects policy-analyzer instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

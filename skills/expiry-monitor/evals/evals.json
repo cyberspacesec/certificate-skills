@@ -1,0 +1,27 @@
+{
+  "skill_name": "expiry-monitor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need cert expiry for example.com, api.example.com, and mail.example.com.",
+      "expected_output": "Use the expiry-monitor skill for this expiry monitor request and produce the documented result for example.com, api.example.com, and mail.example.com.",
+      "files": [],
+      "expectations": [
+        "Selects expiry-monitor for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_expiry_monitor.",
+        "Keeps the response focused on monitoring certificate expiration across multiple targets with urgency classification (Expired, Critical <=7d, Warning <=30d, Healthy)."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused expiry monitor workflow for example.com, api.example.com, and mail.example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the expiry-monitor skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects expiry-monitor instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

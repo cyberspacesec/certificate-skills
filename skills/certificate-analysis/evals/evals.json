@@ -1,0 +1,27 @@
+{
+  "skill_name": "certificate-analysis",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need SSL audit for example.com.",
+      "expected_output": "Use the certificate-analysis skill for this certificate analysis request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-analysis for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_analyze_security.",
+        "Keeps the response focused on performing SSL/TLS security analysis on a domain, checking certificate security scoring (0-100), auditing TLS configuration, or identifying certificate vulnerabilities."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused certificate analysis workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the certificate-analysis skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-analysis instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

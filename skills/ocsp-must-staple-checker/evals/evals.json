@@ -1,0 +1,27 @@
+{
+  "skill_name": "ocsp-must-staple-checker",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need OCSP Must-Staple for example.com.",
+      "expected_output": "Use the ocsp-must-staple-checker skill for this ocsp must staple checker request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects ocsp-must-staple-checker for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_check_ocsp_must_staple.",
+        "Keeps the response focused on checking OCSP Must-Staple (RFC 7633) compliance. A certificate with Must-Staple that fails to provide an OCSP staple causes hard-failures in compliant clients."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused ocsp must staple checker workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the ocsp-must-staple-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects ocsp-must-staple-checker instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

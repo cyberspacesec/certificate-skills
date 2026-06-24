@@ -1,0 +1,27 @@
+{
+  "skill_name": "ev-detector",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need EV certificate for example.com.",
+      "expected_output": "Use the ev-detector skill for this ev detector request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects ev-detector for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_detect_ev.",
+        "Keeps the response focused on detecting Extended Validation (EV) certificates through policy OID analysis."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused ev detector workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the ev-detector skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects ev-detector instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

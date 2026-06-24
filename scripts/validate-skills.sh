@@ -48,6 +48,53 @@ skill_names = {
     for path in pathlib.Path("skills").iterdir()
     if path.is_dir() and (path / "SKILL.md").is_file()
 }
+
+def validate_skill_creator_evals(
+    evals,
+    label,
+    expected_skill_name,
+    min_cases=1,
+    known_skill_names=None,
+    require_expected_skill_ref=True,
+):
+    if evals.get("skill_name") != expected_skill_name:
+        errors.append(f"{label} skill_name must be {expected_skill_name}")
+    eval_cases = evals.get("evals")
+    if not isinstance(eval_cases, list) or len(eval_cases) < min_cases:
+        errors.append(f"{label} evals must contain at least {min_cases} case(s)")
+        return
+
+    seen = set()
+    for idx, case in enumerate(eval_cases):
+        case_id = case.get("id")
+        if not isinstance(case_id, int):
+            errors.append(f"{label} evals[{idx}].id must be an integer")
+        elif case_id in seen:
+            errors.append(f"{label} duplicate eval case id: {case_id}")
+        else:
+            seen.add(case_id)
+        if not case.get("prompt"):
+            errors.append(f"{label} evals[{idx}].prompt is required")
+        if not case.get("expected_output"):
+            errors.append(f"{label} evals[{idx}].expected_output is required")
+        files = case.get("files")
+        if not isinstance(files, list):
+            errors.append(f"{label} evals[{idx}].files must be a list")
+        elif not all(isinstance(item, str) for item in files):
+            errors.append(f"{label} evals[{idx}].files entries must be strings")
+        expectations = case.get("expectations")
+        if not isinstance(expectations, list) or not expectations:
+            errors.append(f"{label} evals[{idx}].expectations must be a non-empty list")
+        elif not all(isinstance(item, str) and item for item in expectations):
+            errors.append(f"{label} evals[{idx}].expectations entries must be non-empty strings")
+        else:
+            expected_text = " ".join(expectations)
+            expected_output = str(case.get("expected_output", ""))
+            if require_expected_skill_ref and expected_skill_name not in expected_text and expected_skill_name not in expected_output:
+                errors.append(f"{label} evals[{idx}] should reference {expected_skill_name}")
+            if known_skill_names and not any(skill_name in expected_text or skill_name in expected_output for skill_name in known_skill_names):
+                errors.append(f"{label} evals[{idx}] should reference at least one known skill")
+
 if data.get("suite") != "certificate-skills-structure":
     errors.append("suite must be certificate-skills-structure")
 if not isinstance(data.get("version"), int):
@@ -71,36 +118,28 @@ else:
         if not isinstance(assertions, list) or not assertions:
             errors.append(f"cases[{idx}].assertions must be a non-empty list")
 
-if evals_data.get("skill_name") != "certificate-skills":
-    errors.append("evals/evals.json skill_name must be certificate-skills")
-eval_cases = evals_data.get("evals")
-if not isinstance(eval_cases, list) or not eval_cases:
-    errors.append("evals/evals.json evals must be a non-empty list")
-else:
-    seen = set()
-    for idx, case in enumerate(eval_cases):
-        case_id = case.get("id")
-        if not isinstance(case_id, int):
-            errors.append(f"evals/evals.json evals[{idx}].id must be an integer")
-        elif case_id in seen:
-            errors.append(f"duplicate eval case id: {case_id}")
-        else:
-            seen.add(case_id)
-        if not case.get("prompt"):
-            errors.append(f"evals/evals.json evals[{idx}].prompt is required")
-        if not case.get("expected_output"):
-            errors.append(f"evals/evals.json evals[{idx}].expected_output is required")
-        files = case.get("files")
-        if not isinstance(files, list):
-            errors.append(f"evals/evals.json evals[{idx}].files must be a list")
-        expectations = case.get("expectations")
-        if not isinstance(expectations, list) or not expectations:
-            errors.append(f"evals/evals.json evals[{idx}].expectations must be a non-empty list")
-        else:
-            expected_text = " ".join(str(item) for item in expectations)
-            expected_output = str(case.get("expected_output", ""))
-            if not any(skill_name in expected_text or skill_name in expected_output for skill_name in skill_names):
-                errors.append(f"evals/evals.json evals[{idx}] should reference at least one known skill")
+validate_skill_creator_evals(
+    evals_data,
+    "evals/evals.json",
+    "certificate-skills",
+    min_cases=1,
+    known_skill_names=skill_names,
+    require_expected_skill_ref=False,
+)
+
+for skill_name in sorted(skill_names):
+    skill_evals_path = pathlib.Path("skills") / skill_name / "evals" / "evals.json"
+    if not skill_evals_path.is_file():
+        errors.append(f"{skill_evals_path}: missing per-skill eval manifest")
+        continue
+    with open(skill_evals_path, "r", encoding="utf-8") as fh:
+        skill_evals = json.load(fh)
+    validate_skill_creator_evals(
+        skill_evals,
+        str(skill_evals_path),
+        skill_name,
+        min_cases=2,
+    )
 
 if errors:
     for error in errors:

@@ -1,0 +1,27 @@
+{
+  "skill_name": "certificate-download",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need download cert for example.com.",
+      "expected_output": "Use the certificate-download skill for this certificate download request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-download for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_download.",
+        "Keeps the response focused on downloading SSL/TLS certificate chain from a remote domain and saving to PEM files."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused certificate download workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the certificate-download skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects certificate-download instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

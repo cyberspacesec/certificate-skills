@@ -1,0 +1,27 @@
+{
+  "skill_name": "hostname-verifier",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need hostname mismatch for api.example.com against the certificate served by example.com.",
+      "expected_output": "Use the hostname-verifier skill for this hostname verifier request and produce the documented result for api.example.com against the certificate served by example.com.",
+      "files": [],
+      "expectations": [
+        "Selects hostname-verifier for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_verify_hostname.",
+        "Keeps the response focused on verifying certificate hostname matching and RFC 6125 compliance."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused hostname verifier workflow for api.example.com against the certificate served by example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the hostname-verifier skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects hostname-verifier instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}

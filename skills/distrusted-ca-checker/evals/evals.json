@@ -1,0 +1,27 @@
+{
+  "skill_name": "distrusted-ca-checker",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need distrusted CA for example.com.",
+      "expected_output": "Use the distrusted-ca-checker skill for this distrusted ca checker request and produce the documented result for example.com.",
+      "files": [],
+      "expectations": [
+        "Selects distrusted-ca-checker for requests matching its trigger description.",
+        "Uses the documented tool surface: cert_check_distrusted_ca.",
+        "Keeps the response focused on detecting certificates issued by known distrusted or compromised Certificate Authorities (DigiNotar, WoSign, StartCom, Symantec legacy, CNNIC, TrustCor, DarkMatter)."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Handle a focused distrusted ca checker workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "expected_output": "Use the distrusted-ca-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
+      "files": [],
+      "expectations": [
+        "Selects distrusted-ca-checker instead of a generic certificate or TLS skill.",
+        "Avoids unrelated scanning, generation, or remediation steps unless requested.",
+        "States any required inputs or limitations from the skill instructions."
+      ]
+    }
+  ]
+}
