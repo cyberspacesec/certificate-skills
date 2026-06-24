@@ -54,6 +54,7 @@ def validate_skill_creator_evals(
     label,
     expected_skill_name,
     min_cases=1,
+    files_root=None,
     known_skill_names=None,
     require_expected_skill_ref=True,
 ):
@@ -82,6 +83,24 @@ def validate_skill_creator_evals(
             errors.append(f"{label} evals[{idx}].files must be a list")
         elif not all(isinstance(item, str) for item in files):
             errors.append(f"{label} evals[{idx}].files entries must be strings")
+        elif files_root is not None:
+            root = files_root.resolve()
+            for item in files:
+                if not item:
+                    errors.append(f"{label} evals[{idx}].files entries must be non-empty strings")
+                    continue
+                file_path = pathlib.PurePosixPath(item)
+                if file_path.is_absolute() or ".." in file_path.parts:
+                    errors.append(f"{label} evals[{idx}].files entry must stay inside the skill root: {item}")
+                    continue
+                resolved = (root / pathlib.Path(item)).resolve()
+                try:
+                    resolved.relative_to(root)
+                except ValueError:
+                    errors.append(f"{label} evals[{idx}].files entry escapes the skill root: {item}")
+                    continue
+                if not resolved.is_file():
+                    errors.append(f"{label} evals[{idx}].files entry does not exist: {item}")
         expectations = case.get("expectations")
         if not isinstance(expectations, list) or not expectations:
             errors.append(f"{label} evals[{idx}].expectations must be a non-empty list")
@@ -123,6 +142,7 @@ validate_skill_creator_evals(
     "evals/evals.json",
     "certificate-skills",
     min_cases=1,
+    files_root=pathlib.Path("."),
     known_skill_names=skill_names,
     require_expected_skill_ref=False,
 )
@@ -139,6 +159,7 @@ for skill_name in sorted(skill_names):
         str(skill_evals_path),
         skill_name,
         min_cases=2,
+        files_root=pathlib.Path("skills") / skill_name,
     )
 
 if errors:

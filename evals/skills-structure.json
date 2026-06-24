@@ -35,6 +35,7 @@
       "assertions": [
         "evals/evals.json uses the skill-creator eval shape with skill_name and evals.",
         "Every portable skill contains evals/evals.json with skill_name matching the skill directory.",
+        "Eval files entries are relative paths that resolve to existing files inside the skill root.",
         "evals/skills-structure.json contains repository structure checks.",
         "scripts/package-skills.py can package portable skill directories into .skill archives.",
         "SKILL.md files remain lightweight.",
