@@ -172,6 +172,24 @@ def package_layout_errors(skill_dir: pathlib.Path) -> list[str]:
                 f"{skill_dir}: unsupported top-level skill package file {child.name!r} "
                 "(expected SKILL.md or files under bundled resource directories)"
             )
+
+    evals_dir = skill_dir / "evals"
+    if evals_dir.is_dir():
+        for child in sorted(evals_dir.iterdir()):
+            if child.name == "evals.json" and child.is_file():
+                continue
+            if child.name == "files" and child.is_dir():
+                continue
+            if child.is_dir():
+                errors.append(
+                    f"{skill_dir}: unsupported evals directory {child.name!r} "
+                    "(expected evals.json or files/)"
+                )
+            else:
+                errors.append(
+                    f"{skill_dir}: unsupported evals file {child.name!r} "
+                    "(expected evals.json or files/)"
+                )
     return errors
 
 
