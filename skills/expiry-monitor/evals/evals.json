@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused expiry monitor workflow for example.com, api.example.com, and mail.example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Check certificate expiry for example.com, api.example.com, and mail.example.com and flag anything close to renewal.",
       "expected_output": "Use the expiry-monitor skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

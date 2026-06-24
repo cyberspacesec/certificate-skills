@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused policy analyzer workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Analyze the certificate policies and CPS qualifiers for the certificate on example.com.",
       "expected_output": "Use the policy-analyzer skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

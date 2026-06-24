@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused hsts checker workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Check the HSTS policy for example.com and tell me whether it is preload-ready.",
       "expected_output": "Use the hsts-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

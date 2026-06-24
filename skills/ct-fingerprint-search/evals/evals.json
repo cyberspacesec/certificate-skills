@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused ct fingerprint search workflow for SHA-256 fingerprint 9a7b112233445566778899aabbccddeeff00123456789abcdef0112233445566; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Search CT logs for SHA-256 fingerprint 9a7b112233445566778899aabbccddeeff00123456789abcdef0112233445566.",
       "expected_output": "Use the ct-fingerprint-search skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

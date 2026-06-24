@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate download workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Download the certificate chain from example.com and save it for offline review.",
       "expected_output": "Use the certificate-download skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

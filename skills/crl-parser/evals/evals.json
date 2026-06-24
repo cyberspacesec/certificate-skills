@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused crl parser workflow for crl.pem and cert.pem; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Parse crl.pem and check whether cert.pem is listed as revoked.",
       "expected_output": "Use the crl-parser skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

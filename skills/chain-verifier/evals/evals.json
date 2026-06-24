@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused chain verifier workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Verify the full certificate chain for example.com and identify any missing or untrusted intermediates.",
       "expected_output": "Use the chain-verifier skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

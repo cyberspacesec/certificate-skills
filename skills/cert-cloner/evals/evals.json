@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate cloner workflow for example.com for authorized test use; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "For an authorized lab, clone the subject and extensions from example.com into a new test certificate.",
       "expected_output": "Use the cert-cloner skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

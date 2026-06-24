@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused session resumption checker workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Test whether example.com supports TLS session resumption and identify the mechanism.",
       "expected_output": "Use the session-resumption-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused cert security scanner workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Scan example.com for certificate-specific problems like weak signatures, short keys, hostname mismatches, and distrusted issuers.",
       "expected_output": "Use the cert-security-scanner skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

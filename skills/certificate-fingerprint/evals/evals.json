@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate fingerprint workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Calculate the SHA-256 and SHA-1 fingerprints for the certificate served by example.com.",
       "expected_output": "Use the certificate-fingerprint skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

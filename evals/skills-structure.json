@@ -42,6 +42,7 @@
         "evals/evals.json uses the skill-creator eval shape with skill_name and evals.",
         "Skill eval manifests use only the official skill_name and evals top-level fields.",
         "Skill eval cases use only id, prompt, expected_output, files, and expectations fields with the expected JSON types.",
+        "Skill eval prompts read like realistic user requests rather than evaluator control instructions.",
         "Skill eval case ids are consecutive integers starting at 1.",
         "Every portable skill contains evals/evals.json with skill_name matching the skill directory and 2-3 eval cases.",
         "Skill eval directories contain only evals.json and optional files/ fixtures.",

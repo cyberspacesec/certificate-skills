@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused key usage checker workflow for server-cert.pem for server authentication usage; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Check whether server-cert.pem has the right key usage and extended key usage for server authentication.",
       "expected_output": "Use the key-usage-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

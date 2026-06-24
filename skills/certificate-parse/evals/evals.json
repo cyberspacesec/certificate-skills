@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate parse workflow for cert.pem; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Parse cert.pem and summarize the subject, issuer, validity, SANs, and extensions.",
       "expected_output": "Use the certificate-parse skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

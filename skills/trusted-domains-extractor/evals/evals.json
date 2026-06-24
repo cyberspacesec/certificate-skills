@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused trusted domains extractor workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Extract trusted DNS names and IPs from the certificate served by example.com.",
       "expected_output": "Use the trusted-domains-extractor skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

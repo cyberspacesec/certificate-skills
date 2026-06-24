@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate compare workflow for old-cert.pem and new-cert.pem; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Show the meaningful differences between old-cert.pem and new-cert.pem.",
       "expected_output": "Use the certificate-compare skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

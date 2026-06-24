@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate batch analysis workflow for example.com, api.example.com, and mail.example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Compare the certificate posture for example.com, api.example.com, and mail.example.com in one batch report.",
       "expected_output": "Use the certificate-batch-analysis skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

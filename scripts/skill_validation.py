@@ -22,6 +22,10 @@ CLAUDE_REQUIRED_SECTIONS = (
 EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
+EVAL_PROMPT_CONTROL_PHRASES = (
+    "Handle a focused",
+    "do not switch to a broader certificate audit",
+)
 GENERATED_ARTIFACT_IGNORE_PATTERNS = (
     "*.skill",
     "*.test",
@@ -458,6 +462,8 @@ def validate_skill_creator_evals(
         prompt = case.get("prompt")
         if not isinstance(prompt, str) or not prompt:
             errors.append(f"{label} evals[{idx}].prompt is required")
+        elif any(phrase in prompt for phrase in EVAL_PROMPT_CONTROL_PHRASES):
+            errors.append(f"{label} evals[{idx}].prompt should read like a realistic user request")
 
         expected_output = case.get("expected_output")
         if not isinstance(expected_output, str) or not expected_output:

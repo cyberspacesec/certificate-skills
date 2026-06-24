@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate change detection workflow for example.com using the previous snapshot baseline.json; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Compare example.com against the previous snapshot in baseline.json and tell me what changed in the certificate.",
       "expected_output": "Use the certificate-change-detection skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

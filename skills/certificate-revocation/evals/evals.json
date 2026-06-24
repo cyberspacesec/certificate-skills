@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate revocation workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Check whether the certificate for example.com is revoked using OCSP and CRL data.",
       "expected_output": "Use the certificate-revocation skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

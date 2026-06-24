@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate transparency workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Look up certificate transparency entries for example.com and summarize recent issuances.",
       "expected_output": "Use the certificate-transparency skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused caa checker workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Can you tell me which CAs are authorized by CAA records for example.com?",
       "expected_output": "Use the caa-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

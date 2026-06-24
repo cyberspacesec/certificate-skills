@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused domain variant generator workflow for authorized test domain example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Generate authorized lookalike domain variants for example.com for a phishing detection test.",
       "expected_output": "Use the domain-variants skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

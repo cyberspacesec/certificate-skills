@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused pfs checker workflow for example.com; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Check whether example.com negotiates cipher suites that provide perfect forward secrecy.",
       "expected_output": "Use the pfs-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

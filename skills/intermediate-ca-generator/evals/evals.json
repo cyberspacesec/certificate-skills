@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused intermediate ca generator workflow for intermediate.internal.example using root-ca.pem and root-ca-key.pem; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Generate an intermediate CA certificate for intermediate.internal.example using root-ca.pem and root-ca-key.pem.",
       "expected_output": "Use the intermediate-ca-generator skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused certificate csr workflow for api.internal.example with SANs api.internal.example and 10.0.0.10; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Create a CSR for api.internal.example with SANs api.internal.example and 10.0.0.10.",
       "expected_output": "Use the certificate-csr skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

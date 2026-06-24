@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused name constraints checker workflow for leaf.example.com against constrained-ca.pem; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Verify leaf.example.com against constrained-ca.pem and report any name constraints violations.",
       "expected_output": "Use the name-constraints-checker skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

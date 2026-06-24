@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused ca certificate signer workflow for api.internal.example using ca.pem and ca-key.pem; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Sign a server certificate for api.internal.example with ca.pem and ca-key.pem.",
       "expected_output": "Use the ca-signer skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [

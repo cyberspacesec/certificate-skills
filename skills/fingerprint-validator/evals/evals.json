@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "prompt": "Handle a focused fingerprint validator workflow for SHA-256 fingerprint 9A:7B:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:12:34:56:78:9A:BC:DE:F0:11:22:33:44:55:66; do not switch to a broader certificate audit unless it is required.",
+      "prompt": "Validate SHA-256 fingerprint 9A:7B:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:12:34:56:78:9A:BC:DE:F0:11:22:33:44:55:66.",
       "expected_output": "Use the fingerprint-validator skill and avoid substituting adjacent skills when the user asks for this focused workflow.",
       "files": [],
       "expectations": [
