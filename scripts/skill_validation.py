@@ -42,6 +42,7 @@ BENCHMARK_RUN_RESULT_KEYS = {
 BENCHMARK_RUN_SUMMARY_CONFIGS = ("with_skill", "without_skill")
 BENCHMARK_RUN_SUMMARY_METRICS = ("pass_rate", "time_seconds", "tokens")
 BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev", "min", "max")
+PASS_RATE_TOLERANCE = 0.01
 COMPARISON_LABELS = ("A", "B")
 COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
 COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
@@ -1014,6 +1015,7 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
         return [f"{path}: grading.json expectations must be a list"]
 
     errors = []
+    expectation_passed_values: list[bool] = []
     for idx, expectation in enumerate(expectations):
         if not isinstance(expectation, dict):
             errors.append(f"{path}: expectations[{idx}] must be an object")
@@ -1028,6 +1030,8 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
             errors.append(f"{path}: expectations[{idx}].text must be a non-empty string")
         if not isinstance(expectation.get("passed"), bool):
             errors.append(f"{path}: expectations[{idx}].passed must be a boolean")
+        else:
+            expectation_passed_values.append(expectation["passed"])
         if not isinstance(expectation.get("evidence"), str):
             errors.append(f"{path}: expectations[{idx}].evidence must be a string")
 
@@ -1041,8 +1045,26 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
         for field in ("passed", "failed", "total"):
             if field in summary and not is_json_int(summary.get(field)):
                 errors.append(f"{path}: summary.{field} must be an integer")
+            elif field in summary and summary[field] < 0:
+                errors.append(f"{path}: summary.{field} must be non-negative")
         if "pass_rate" in summary and not is_json_number(summary.get("pass_rate")):
             errors.append(f"{path}: summary.pass_rate must be a number")
+        if len(expectation_passed_values) == len(expectations):
+            expected_passed = sum(expectation_passed_values)
+            expected_failed = len(expectation_passed_values) - expected_passed
+            expected_total = len(expectation_passed_values)
+            expected_pass_rate = expected_passed / expected_total if expected_total else 0.0
+            if is_json_int(summary.get("passed")) and summary["passed"] != expected_passed:
+                errors.append(f"{path}: summary.passed must equal passed expectations count {expected_passed}")
+            if is_json_int(summary.get("failed")) and summary["failed"] != expected_failed:
+                errors.append(f"{path}: summary.failed must equal failed expectations count {expected_failed}")
+            if is_json_int(summary.get("total")) and summary["total"] != expected_total:
+                errors.append(f"{path}: summary.total must equal expectations count {expected_total}")
+            if (
+                is_json_number(summary.get("pass_rate"))
+                and abs(summary["pass_rate"] - expected_pass_rate) > PASS_RATE_TOLERANCE
+            ):
+                errors.append(f"{path}: summary.pass_rate must match passed / total")
 
     execution_metrics = grading.get("execution_metrics")
     if not isinstance(execution_metrics, dict):
