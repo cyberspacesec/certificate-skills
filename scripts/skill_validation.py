@@ -24,6 +24,8 @@ EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GENERATED_ARTIFACT_IGNORE_PATTERNS = ("*.skill", "*-workspace/", "/dist/")
 DESCRIPTION_MAX_WORDS = 100
+PORTABLE_FRONTMATTER_KEYS = {"name", "description", "tools", "compatibility"}
+CLAUDE_FRONTMATTER_KEYS = {"name", "description", "allowed-tools", "compatibility"}
 DISALLOWED_SKILL_CONTENT_PATTERNS = (
     (re.compile(r"\brm\s+-rf\s+/(?:\s|$)"), "destructive root deletion command"),
     (re.compile(r"\bmkfs(?:\.[A-Za-z0-9_+-]+)?\s+"), "filesystem formatting command"),
@@ -179,9 +181,21 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
     if errors:
         return errors
 
+    lines = frontmatter_lines(skill_file)[0]
     line_count = len(skill_file.read_text(encoding="utf-8").splitlines())
     name = fields.get("name", "")
     description = fields.get("description", "")
+
+    if mode == "portable":
+        allowed_keys = PORTABLE_FRONTMATTER_KEYS
+    elif mode == "claude":
+        allowed_keys = CLAUDE_FRONTMATTER_KEYS
+    else:
+        allowed_keys = set()
+    for line in lines:
+        match = re.match(r"^([A-Za-z][A-Za-z0-9_-]*):", line)
+        if match and match.group(1) not in allowed_keys:
+            errors.append(f"{skill_file}: unsupported frontmatter key: {match.group(1)}")
 
     if line_count > 500:
         errors.append(

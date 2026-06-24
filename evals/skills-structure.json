@@ -10,6 +10,7 @@
         "Every immediate child directory under skills/ contains SKILL.md.",
         "Each SKILL.md begins with YAML frontmatter.",
         "Each frontmatter block contains name and description.",
+        "Portable frontmatter uses only name, description, tools, and optional compatibility fields.",
         "The frontmatter name matches the skill directory name.",
         "Skill names are 64 characters or fewer, use only lowercase letters, numbers, and hyphens, and avoid reserved words.",
         "Skill names and descriptions do not contain XML tags.",
@@ -25,6 +26,7 @@
         ".claude/skills and skills contain the same immediate skill directory names.",
         "Claude Code skill metadata uses the current certificate-skills MCP server prefix.",
         "Claude Code skill frontmatter uses allowed-tools and portable skill frontmatter uses tools.",
+        "Claude Code skill frontmatter uses only name, description, allowed-tools, and optional compatibility fields.",
         "Portable skill tools match the corresponding Claude Code allowed-tools after removing the MCP prefix.",
         "Claude Code skill prompts include When to Use, When NOT to Use, Instructions, and Anti-Patterns sections.",
         "No legacy MCP server-name references remain."

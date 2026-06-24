@@ -302,6 +302,7 @@ Frontmatter (name + trigger description + tools/allowed-tools)
 Repository layout:
 - [`skills/`](skills/) contains portable Anthropic-style skill packages (`SKILL.md` plus optional `references/`, `scripts/`, and `assets/`).
 - Each `SKILL.md` contains Markdown instructions after frontmatter, starting with an H1 and at least one H2 section.
+- Frontmatter uses only the supported `name`, `description`, tool metadata, and optional `compatibility` fields.
 - Frontmatter descriptions stay concise (100 words or fewer) and carry trigger guidance.
 - Portable skills keep trigger guidance in the frontmatter description, not `When to Use` body sections.
 - Portable skill reference links include a `Read when` cue so detailed material is loaded only when relevant.
@@ -369,6 +370,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 仓库结构：
 - [`skills/`](skills/) 保存可移植的 Anthropic-style skill packages（`SKILL.md` 和可选 `references/`、`scripts/`、`assets/`）。
 - 每个 `SKILL.md` 在 frontmatter 后包含 Markdown instructions，以 H1 开头并至少包含一个 H2 小节。
+- frontmatter 只使用受支持的 `name`、`description`、工具元数据和可选 `compatibility` 字段。
 - frontmatter description 保持简洁（不超过 100 words），并承载触发说明。
 - 可移植 skill 将触发说明保留在 frontmatter description 中，而不是 `When to Use` 正文段落。
 - 可移植 skill 的 reference 链接包含 `Read when` 提示，用于说明何时读取详细材料。
