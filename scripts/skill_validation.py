@@ -46,6 +46,11 @@ PASS_RATE_TOLERANCE = 0.01
 DURATION_SECONDS_TOLERANCE = 0.001
 COMPARISON_LABELS = ("A", "B")
 COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
+COMPARISON_RUBRIC_SCORE_RANGES = {
+    "content_score": (0, 5),
+    "structure_score": (0, 5),
+    "overall_score": (0, 10),
+}
 COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
 COMPARISON_OUTPUT_FILE_RE = re.compile(r"^comparison-\d+\.json$")
 ANALYSIS_INSTRUCTION_LABELS = ("winner", "loser")
@@ -130,6 +135,20 @@ def is_json_int(value: object) -> bool:
 
 def is_json_number(value: object) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def validate_number_range(
+    path: pathlib.Path,
+    label: str,
+    value: object,
+    minimum: int | float,
+    maximum: int | float,
+) -> list[str]:
+    if not is_json_number(value):
+        return [f"{path}: {label} must be a number"]
+    if not minimum <= value <= maximum:
+        return [f"{path}: {label} must be between {minimum:g} and {maximum:g}"]
+    return []
 
 
 def unquote_scalar(value: str) -> str:
@@ -1595,8 +1614,8 @@ def validate_comparison_rubric_schema(path: pathlib.Path, rubric: dict) -> list[
                     if not is_json_number(score):
                         errors.append(f"{path}: rubric.{label}.{section}.{score_name} must be a number")
         for field in COMPARISON_RUBRIC_SCORE_FIELDS:
-            if not is_json_number(entry.get(field)):
-                errors.append(f"{path}: rubric.{label}.{field} must be a number")
+            minimum, maximum = COMPARISON_RUBRIC_SCORE_RANGES[field]
+            errors.extend(validate_number_range(path, f"rubric.{label}.{field}", entry.get(field), minimum, maximum))
     return errors
 
 
@@ -1607,8 +1626,7 @@ def validate_comparison_output_quality_schema(path: pathlib.Path, output_quality
         if not isinstance(entry, dict):
             errors.append(f"{path}: output_quality.{label} must be an object")
             continue
-        if not is_json_number(entry.get("score")):
-            errors.append(f"{path}: output_quality.{label}.score must be a number")
+        errors.extend(validate_number_range(path, f"output_quality.{label}.score", entry.get("score"), 0, 10))
         for field in COMPARISON_OUTPUT_QUALITY_LIST_FIELDS:
             errors.extend(validate_string_list_field(path, entry, f"output_quality.{label}", field))
     return errors
@@ -1746,8 +1764,7 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
             if not isinstance(entry, dict):
                 errors.append(f"{path}: instruction_following.{label} must be an object")
                 continue
-            if not is_json_number(entry.get("score")):
-                errors.append(f"{path}: instruction_following.{label}.score must be a number")
+            errors.extend(validate_number_range(path, f"instruction_following.{label}.score", entry.get("score"), 0, 10))
             errors.extend(validate_string_list_field(path, entry, f"instruction_following.{label}", "issues"))
 
     suggestions = analysis.get("improvement_suggestions")
