@@ -47,6 +47,7 @@
         "Relative links from SKILL.md resolve to files inside the same skill package.",
         "Every file under a skill references/ directory is linked from that skill's SKILL.md.",
         "SKILL.md reference links explain when to read the referenced file.",
+        "Reference files over 300 lines include a Contents or Table of Contents heading.",
         "Skill directory and frontmatter names are lowercase hyphenated.",
         "Portable skills do not duplicate repository installation instructions.",
         "Portable skill descriptions match the trigger-oriented Claude Code skill descriptions."

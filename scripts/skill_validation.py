@@ -22,6 +22,8 @@ CLAUDE_REQUIRED_SECTIONS = (
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+REFERENCE_TOC_RE = re.compile(r"^#{1,3} (Table of Contents|Contents)$", re.MULTILINE)
+REFERENCE_TOC_MIN_LINES = 300
 REFERENCE_USAGE_CUE = "Read when"
 TOOLS_RE = re.compile(r"\bcert_[A-Za-z0-9_]+\b")
 CLAUDE_TOOLS_RE = re.compile(r"mcp__certificate-skills__(cert_[A-Za-z0-9_]+)")
@@ -403,6 +405,14 @@ def skill_file_link_errors(skill_file: pathlib.Path, require_reference_usage_cue
                 target = f"references/{reference_file.name}"
                 if target not in linked_targets:
                     errors.append(f"{skill_file}: reference file is not linked from SKILL.md: {target}")
+                reference_text = reference_file.read_text(encoding="utf-8")
+                reference_lines = reference_text.splitlines()
+                if len(reference_lines) > REFERENCE_TOC_MIN_LINES and not REFERENCE_TOC_RE.search(reference_text):
+                    errors.append(
+                        f"{reference_file}: large reference files should include a table of contents "
+                        f"(found {len(reference_lines)} lines, expected <= {REFERENCE_TOC_MIN_LINES} "
+                        "without a Contents or Table of Contents heading)"
+                    )
     return errors
 
 

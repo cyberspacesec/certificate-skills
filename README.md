@@ -302,6 +302,7 @@ Frontmatter (name + trigger description + tools/allowed-tools)
 Repository layout:
 - [`skills/`](skills/) contains portable Anthropic-style skill packages (`SKILL.md` plus optional `references/`).
 - Portable skill reference links include a `Read when` cue so detailed material is loaded only when relevant.
+- Reference files over 300 lines must include a `Contents` or `Table of Contents` heading.
 - Each portable skill includes `evals/evals.json` test prompts using the skill-creator eval schema.
 - [`.claude/skills/`](.claude/skills/) contains Claude Code-ready executable prompts with MCP `allowed-tools` metadata.
 - [`evals/evals.json`](evals/evals.json) contains repository-level skill-selection smoke evals.
@@ -362,6 +363,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 仓库结构：
 - [`skills/`](skills/) 保存可移植的 Anthropic-style skill packages（`SKILL.md` 和可选 `references/`）。
 - 可移植 skill 的 reference 链接包含 `Read when` 提示，用于说明何时读取详细材料。
+- 超过 300 行的 reference 文件必须包含 `Contents` 或 `Table of Contents` 标题。
 - 每个可移植 skill 都包含使用 skill-creator eval schema 的 `evals/evals.json` 测试提示词。
 - [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
 - [`evals/evals.json`](evals/evals.json) 保存仓库级技能选择 smoke eval。
