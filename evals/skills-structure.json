@@ -50,6 +50,7 @@
         "SKILL.md reference links explain when to read the referenced file.",
         "Reference files over 300 lines include a Contents or Table of Contents heading.",
         "Skill directory and frontmatter names are lowercase hyphenated.",
+        "Portable SKILL.md files keep When to Use trigger guidance in frontmatter descriptions instead of body sections.",
         "Portable skills do not duplicate repository installation instructions.",
         "Portable skill descriptions match the trigger-oriented Claude Code skill descriptions."
       ]

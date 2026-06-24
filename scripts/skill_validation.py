@@ -20,6 +20,7 @@ CLAUDE_REQUIRED_SECTIONS = (
     "## Anti-Patterns",
 )
 EVAL_WORKSPACE_SUFFIX = "-workspace"
+PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS = ("## When to Use", "## When NOT to Use")
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -484,6 +485,13 @@ def portable_prompt_errors(skill_dir: pathlib.Path, claude_root: pathlib.Path) -
     errors = []
     skill_file = skill_dir / "SKILL.md"
     text = skill_file.read_text(encoding="utf-8")
+    lines = set(text.splitlines())
+    for heading in PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS:
+        if heading in lines:
+            errors.append(
+                f"{skill_file}: portable trigger guidance should stay in frontmatter description, "
+                f"not body section {heading}"
+            )
     if INSTALLATION_RE.search(text):
         errors.append(f"{skill_file}: portable SKILL.md should not duplicate repository installation instructions")
 
