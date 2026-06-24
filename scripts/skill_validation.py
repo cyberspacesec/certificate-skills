@@ -210,10 +210,18 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
         allowed_keys = CLAUDE_FRONTMATTER_KEYS
     else:
         allowed_keys = set()
+    seen_keys: set[str] = set()
     for line in lines:
         match = re.match(r"^([A-Za-z][A-Za-z0-9_-]*):", line)
-        if match and match.group(1) not in allowed_keys:
-            errors.append(f"{skill_file}: unsupported frontmatter key: {match.group(1)}")
+        if not match:
+            continue
+        key = match.group(1)
+        if key in seen_keys:
+            errors.append(f"{skill_file}: duplicate frontmatter key: {key}")
+        else:
+            seen_keys.add(key)
+        if key not in allowed_keys:
+            errors.append(f"{skill_file}: unsupported frontmatter key: {key}")
 
     if line_count > 500:
         errors.append(

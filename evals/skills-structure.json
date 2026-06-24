@@ -10,6 +10,7 @@
         "Every immediate child directory under skills/ contains SKILL.md.",
         "Each SKILL.md begins with YAML frontmatter.",
         "Each frontmatter block contains name and description.",
+        "Frontmatter keys are unique within each SKILL.md.",
         "Portable frontmatter uses only name, description, tools, and optional compatibility fields.",
         "The frontmatter name matches the skill directory name.",
         "Skill names are 64 characters or fewer, use only lowercase letters, numbers, and hyphens, and avoid reserved words.",
