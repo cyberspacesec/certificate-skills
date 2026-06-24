@@ -570,6 +570,19 @@ def read_json(path: pathlib.Path) -> tuple[dict | None, list[str]]:
     return data, []
 
 
+def read_json_array(path: pathlib.Path) -> tuple[list | None, list[str]]:
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except FileNotFoundError:
+        return None, [f"missing file: {path}"]
+    except json.JSONDecodeError as exc:
+        return None, [f"{path}: invalid JSON: {exc}"]
+    if not isinstance(data, list):
+        return None, [f"{path}: top-level JSON value must be an array"]
+    return data, []
+
+
 def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
     errors = []
     manifest_path = repo_root / "evals" / "skills-structure.json"
@@ -1274,6 +1287,39 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
     return errors
 
 
+def validate_trigger_eval_set_schema(path: pathlib.Path) -> list[str]:
+    eval_set, errors = read_json_array(path)
+    if errors:
+        return errors
+    if eval_set is None:
+        return []
+
+    errors = []
+    if len(eval_set) != 20:
+        errors.append(f"{path}: trigger eval set should contain exactly 20 queries")
+
+    seen_trigger_values: set[bool] = set()
+    for idx, item in enumerate(eval_set):
+        if not isinstance(item, dict):
+            errors.append(f"{path}: trigger eval set item {idx} must be an object")
+            continue
+        unknown_keys = sorted(set(item) - {"query", "should_trigger"})
+        if unknown_keys:
+            errors.append(f"{path}: trigger eval set item {idx} contains unknown key(s): {', '.join(unknown_keys)}")
+        query = item.get("query")
+        if not isinstance(query, str) or not query.strip():
+            errors.append(f"{path}: trigger eval set item {idx}.query must be a non-empty string")
+        should_trigger = item.get("should_trigger")
+        if not isinstance(should_trigger, bool):
+            errors.append(f"{path}: trigger eval set item {idx}.should_trigger must be a boolean")
+        else:
+            seen_trigger_values.add(should_trigger)
+
+    if len(eval_set) == 20 and seen_trigger_values != {False, True}:
+        errors.append(f"{path}: trigger eval set must mix should-trigger and should-not-trigger queries")
+    return errors
+
+
 def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
     errors = []
     workspaces = sorted(
@@ -1299,6 +1345,9 @@ def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
             errors.extend(validate_comparison_output_schema(path))
         for path in sorted(workspace.rglob("analysis.json")):
             errors.extend(validate_analysis_output_schema(path))
+        for pattern in ("eval_set*.json", "*trigger-eval*.json", "*trigger_eval*.json"):
+            for path in sorted(workspace.rglob(pattern)):
+                errors.extend(validate_trigger_eval_set_schema(path))
     benchmarks_dir = repo_root / "benchmarks"
     if benchmarks_dir.is_dir():
         for path in sorted(benchmarks_dir.rglob("benchmark.json")):
