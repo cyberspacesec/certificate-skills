@@ -49,6 +49,9 @@ COMPARISON_OUTPUT_FILE_RE = re.compile(r"^comparison-\d+\.json$")
 ANALYSIS_INSTRUCTION_LABELS = ("winner", "loser")
 ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS = ("winner_execution_pattern", "loser_execution_pattern")
 HISTORY_GRADING_RESULTS = {"baseline", "won", "lost", "tie"}
+TRIGGER_EVAL_COUNT = 20
+TRIGGER_EVAL_LABEL_MIN = 8
+TRIGGER_EVAL_LABEL_MAX = 10
 EVAL_PROMPT_CONTROL_PHRASES = (
     "Handle a focused",
     "do not switch to a broader certificate audit",
@@ -1563,10 +1566,11 @@ def validate_trigger_eval_set_schema(path: pathlib.Path) -> list[str]:
         return []
 
     errors = []
-    if len(eval_set) != 20:
-        errors.append(f"{path}: trigger eval set should contain exactly 20 queries")
+    if len(eval_set) != TRIGGER_EVAL_COUNT:
+        errors.append(f"{path}: trigger eval set should contain exactly {TRIGGER_EVAL_COUNT} queries")
 
     seen_trigger_values: set[bool] = set()
+    trigger_counts = {True: 0, False: 0}
     for idx, item in enumerate(eval_set):
         if not isinstance(item, dict):
             errors.append(f"{path}: trigger eval set item {idx} must be an object")
@@ -1582,9 +1586,16 @@ def validate_trigger_eval_set_schema(path: pathlib.Path) -> list[str]:
             errors.append(f"{path}: trigger eval set item {idx}.should_trigger must be a boolean")
         else:
             seen_trigger_values.add(should_trigger)
+            trigger_counts[should_trigger] += 1
 
-    if len(eval_set) == 20 and seen_trigger_values != {False, True}:
+    if len(eval_set) == TRIGGER_EVAL_COUNT and seen_trigger_values != {False, True}:
         errors.append(f"{path}: trigger eval set must mix should-trigger and should-not-trigger queries")
+    for label, count in (("should-trigger", trigger_counts[True]), ("should-not-trigger", trigger_counts[False])):
+        if count and not TRIGGER_EVAL_LABEL_MIN <= count <= TRIGGER_EVAL_LABEL_MAX:
+            errors.append(
+                f"{path}: trigger eval set should contain "
+                f"{TRIGGER_EVAL_LABEL_MIN}-{TRIGGER_EVAL_LABEL_MAX} {label} queries"
+            )
     return errors
 
 
