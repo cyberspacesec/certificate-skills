@@ -1701,6 +1701,13 @@ def eval_workspace_layout_errors(workspace: pathlib.Path) -> list[str]:
     return errors
 
 
+def validate_benchmarks_file_layout(benchmarks_dir: pathlib.Path, path: pathlib.Path) -> list[str]:
+    relative_parts = path.relative_to(benchmarks_dir).parts
+    if path.name == "benchmark.json" and len(relative_parts) != 2:
+        return [f"{path}: benchmark.json should be located at benchmarks/<timestamp>/benchmark.json"]
+    return []
+
+
 def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
     errors = []
     workspaces = sorted(
@@ -1735,6 +1742,7 @@ def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
     benchmarks_dir = repo_root / "benchmarks"
     if benchmarks_dir.is_dir():
         for path in sorted(benchmarks_dir.rglob("benchmark.json")):
+            errors.extend(validate_benchmarks_file_layout(benchmarks_dir, path))
             errors.extend(validate_benchmark_output_schema(path))
     return errors
 
