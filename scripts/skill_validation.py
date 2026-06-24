@@ -22,7 +22,15 @@ CLAUDE_REQUIRED_SECTIONS = (
 EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
-GENERATED_ARTIFACT_IGNORE_PATTERNS = ("*.skill", "*-workspace/", "/dist/")
+GENERATED_ARTIFACT_IGNORE_PATTERNS = (
+    "*.skill",
+    "*.test",
+    "*-workspace/",
+    "/bin/",
+    "/dist/",
+    "coverage.html",
+    "coverage.out",
+)
 DISALLOWED_PACKAGED_ARTIFACT_NAMES = {".DS_Store", "Thumbs.db", "__pycache__"}
 DISALLOWED_PACKAGED_ARTIFACT_SUFFIXES = {".pyc", ".pyo"}
 DESCRIPTION_MAX_WORDS = 100
@@ -880,6 +888,12 @@ def tracked_repository_artifact_errors(repo_root: pathlib.Path) -> list[str]:
         path = pathlib.PurePosixPath(relative_path)
         if path.suffix == ".skill":
             errors.append(f"{relative_path}: generated .skill archive should not be tracked")
+        if path.suffix == ".test":
+            errors.append(f"{relative_path}: generated Go test binary should not be tracked")
+        if path.parts and path.parts[0] == "bin":
+            errors.append(f"{relative_path}: generated binary output should not be tracked")
+        if path.name in {"coverage.html", "coverage.out"}:
+            errors.append(f"{relative_path}: generated coverage report should not be tracked")
         if any(part.endswith(EVAL_WORKSPACE_SUFFIX) for part in path.parts):
             errors.append(f"{relative_path}: skill eval workspaces should not be tracked")
     return errors
