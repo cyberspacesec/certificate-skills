@@ -43,6 +43,7 @@
         "Every portable skill contains evals/evals.json with skill_name matching the skill directory and 2-3 eval cases.",
         "Skill eval directories contain only evals.json and optional files/ fixtures.",
         "Skill eval files entries, when present, are relative paths under evals/files/ that resolve inside the skill root.",
+        "Every skill eval fixture under evals/files/ is referenced by at least one eval case.",
         "evals/skills-structure.json contains repository structure checks.",
         "scripts/skill_validation.py contains shared repository and package validation logic.",
         "scripts/validate-skills.sh delegates to the shared Python validator.",

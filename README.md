@@ -313,6 +313,7 @@ Repository layout:
 - Each portable skill includes `evals/evals.json` with 2-3 test prompts using only the skill-creator eval schema fields.
 - Skill `evals/` directories contain only `evals.json` and optional `files/` fixtures.
 - Skill eval file fixtures, when used, live under `evals/files/`.
+- Every `evals/files/` fixture is referenced by at least one eval case.
 - [`.claude/skills/`](.claude/skills/) contains Claude Code-ready executable prompts with MCP `allowed-tools` metadata.
 - [`evals/evals.json`](evals/evals.json) contains repository-level skill-selection smoke evals.
 - [`evals/skills-structure.json`](evals/skills-structure.json) contains repository structure checks used by `make validate-skills`.
@@ -384,6 +385,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - 每个可移植 skill 都包含 `evals/evals.json`，内含 2-3 个测试提示词，并且只使用 skill-creator eval schema 字段。
 - skill `evals/` 目录只包含 `evals.json` 和可选的 `files/` fixture。
 - skill eval 文件测试 fixture 如有使用，放在 `evals/files/` 下。
+- 每个 `evals/files/` fixture 至少被一个 eval case 引用。
 - [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
 - [`evals/evals.json`](evals/evals.json) 保存仓库级技能选择 smoke eval。
 - [`evals/skills-structure.json`](evals/skills-structure.json) 保存仓库结构检查，由 `make validate-skills` 校验。

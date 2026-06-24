@@ -406,6 +406,29 @@ def validate_skill_creator_evals(
     return errors
 
 
+def eval_fixture_usage_errors(skill_dir: pathlib.Path, evals: dict, label: str) -> list[str]:
+    fixtures_dir = skill_dir / "evals" / "files"
+    if not fixtures_dir.is_dir():
+        return []
+
+    referenced: set[str] = set()
+    eval_cases = evals.get("evals")
+    if isinstance(eval_cases, list):
+        for case in eval_cases:
+            if not isinstance(case, dict):
+                continue
+            files = case.get("files", [])
+            if isinstance(files, list):
+                referenced.update(item for item in files if isinstance(item, str))
+
+    errors = []
+    for fixture in sorted(path for path in fixtures_dir.rglob("*") if path.is_file()):
+        target = fixture.relative_to(skill_dir).as_posix()
+        if target not in referenced:
+            errors.append(f"{label}: eval fixture is not referenced from evals[].files: {target}")
+    return errors
+
+
 def read_json(path: pathlib.Path) -> tuple[dict | None, list[str]]:
     try:
         with path.open("r", encoding="utf-8") as fh:
@@ -491,6 +514,7 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
                     required_files_prefix="evals/files/",
                 )
             )
+            errors.extend(eval_fixture_usage_errors(skill_dir, skill_evals, str(skill_evals_path)))
 
     return errors
 
@@ -806,6 +830,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
                 required_files_prefix="evals/files/",
             )
         )
+        errors.extend(eval_fixture_usage_errors(skill_dir, skill_evals, str(evals_file)))
     return errors
 
 
