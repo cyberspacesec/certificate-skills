@@ -46,6 +46,7 @@ DISALLOWED_SKILL_CONTENT_PATTERNS = (
 PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS = ("## When to Use", "## When NOT to Use")
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+MARKDOWN_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REFERENCE_TOC_RE = re.compile(r"^#{1,3} (Table of Contents|Contents)$", re.MULTILINE)
 REFERENCE_TOC_MIN_LINES = 300
@@ -117,12 +118,22 @@ def body_lines(skill_file: pathlib.Path) -> tuple[list[str], list[str]]:
 
 def markdown_lines_outside_fences(lines: list[str]) -> list[str]:
     content = []
-    in_fence = False
+    fence_char = ""
+    fence_len = 0
     for line in lines:
-        if line.startswith("```"):
-            in_fence = not in_fence
-            continue
-        if not in_fence:
+        match = MARKDOWN_FENCE_RE.match(line)
+        if match:
+            marker = match.group(1)
+            char = marker[0]
+            if not fence_char:
+                fence_char = char
+                fence_len = len(marker)
+                continue
+            if char == fence_char and len(marker) >= fence_len and not line[match.end() :].strip():
+                fence_char = ""
+                fence_len = 0
+                continue
+        if not fence_char:
             content.append(line)
     return content
 
@@ -721,7 +732,7 @@ def tool_metadata_parity_errors(repo_root: pathlib.Path) -> list[str]:
 
 def claude_prompt_section_errors(skill_file: pathlib.Path) -> list[str]:
     text = skill_file.read_text(encoding="utf-8")
-    lines = set(text.splitlines())
+    lines = set(markdown_lines_outside_fences(text.splitlines()))
     return [
         f"{skill_file}: missing executable prompt section: {heading}"
         for heading in CLAUDE_REQUIRED_SECTIONS
