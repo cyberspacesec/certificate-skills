@@ -301,7 +301,7 @@ Frontmatter (name + trigger description + tools/allowed-tools)
 
 Repository layout:
 - [`skills/`](skills/) contains portable Anthropic-style skill packages (`SKILL.md` plus optional `references/`, `scripts/`, and `assets/`).
-- Each `SKILL.md` contains Markdown instructions after frontmatter, starting with an H1 and at least one H2 section.
+- Each `SKILL.md` contains Markdown instructions after frontmatter, with exactly one H1 outside fenced code blocks and at least one H2 section.
 - Frontmatter uses only the supported `name`, `description`, tool metadata, and optional `compatibility` fields.
 - Frontmatter keys are unique within each `SKILL.md`.
 - Tool metadata fields are non-empty YAML lists using the expected portable or Claude Code tool-name format.
@@ -376,7 +376,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 
 仓库结构：
 - [`skills/`](skills/) 保存可移植的 Anthropic-style skill packages（`SKILL.md` 和可选 `references/`、`scripts/`、`assets/`）。
-- 每个 `SKILL.md` 在 frontmatter 后包含 Markdown instructions，以 H1 开头并至少包含一个 H2 小节。
+- 每个 `SKILL.md` 在 frontmatter 后包含 Markdown instructions，fenced code block 外只包含一个 H1，并至少包含一个 H2 小节。
 - frontmatter 只使用受支持的 `name`、`description`、工具元数据和可选 `compatibility` 字段。
 - 每个 `SKILL.md` 内的 frontmatter key 不能重复。
 - 工具元数据字段必须是非空 YAML list，并使用对应的 portable 或 Claude Code 工具名格式。

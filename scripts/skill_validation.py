@@ -115,6 +115,18 @@ def body_lines(skill_file: pathlib.Path) -> tuple[list[str], list[str]]:
     return lines[close_index + 1 :], []
 
 
+def markdown_lines_outside_fences(lines: list[str]) -> list[str]:
+    content = []
+    in_fence = False
+    for line in lines:
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if not in_fence:
+            content.append(line)
+    return content
+
+
 def read_frontmatter(skill_file: pathlib.Path) -> tuple[dict[str, str], list[str]]:
     lines, errors = frontmatter_lines(skill_file)
     if errors:
@@ -365,11 +377,14 @@ def markdown_instruction_errors(skill_file: pathlib.Path) -> list[str]:
     if errors:
         return []
 
-    content = [line for line in lines if line.strip()]
+    content = [line for line in markdown_lines_outside_fences(lines) if line.strip()]
     if not content:
         return [f"{skill_file}: SKILL.md should include Markdown instructions after frontmatter"]
     if not content[0].startswith("# "):
         return [f"{skill_file}: SKILL.md instructions should start with an H1 heading"]
+    h1_headings = [line for line in content if line.startswith("# ")]
+    if len(h1_headings) != 1:
+        return [f"{skill_file}: SKILL.md instructions should contain exactly one H1 heading"]
     if not any(line.startswith("## ") for line in content[1:]):
         return [f"{skill_file}: SKILL.md instructions should include at least one H2 section"]
     return []
@@ -725,7 +740,7 @@ def portable_prompt_errors(skill_dir: pathlib.Path, claude_root: pathlib.Path) -
     errors = []
     skill_file = skill_dir / "SKILL.md"
     text = skill_file.read_text(encoding="utf-8")
-    lines = set(text.splitlines())
+    lines = set(markdown_lines_outside_fences(text.splitlines()))
     for heading in PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS:
         if heading in lines:
             errors.append(
