@@ -1542,11 +1542,13 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
         errors.append(f"{path}: history iterations must be a list")
     else:
         version_counts: dict[str, int] = {}
+        parent_refs: list[tuple[int, str, str]] = []
         current_best_iterations: list[tuple[int, str]] = []
         for idx, iteration in enumerate(iterations):
             if not isinstance(iteration, dict):
                 errors.append(f"{path}: iterations[{idx}] must be an object")
                 continue
+            version = None
             if not isinstance(iteration.get("version"), str) or not iteration["version"]:
                 errors.append(f"{path}: iterations[{idx}].version must be a non-empty string")
             else:
@@ -1555,6 +1557,10 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
             parent = iteration.get("parent")
             if parent is not None and not isinstance(parent, str):
                 errors.append(f"{path}: iterations[{idx}].parent must be a string or null")
+            elif isinstance(parent, str) and not parent:
+                errors.append(f"{path}: iterations[{idx}].parent must be a non-empty string or null")
+            elif isinstance(parent, str) and isinstance(version, str):
+                parent_refs.append((idx, version, parent))
             if not isinstance(iteration.get("expectation_pass_rate"), (int, float)) or isinstance(
                 iteration.get("expectation_pass_rate"), bool
             ):
@@ -1570,6 +1576,11 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
         duplicate_versions = sorted(version for version, count in version_counts.items() if count > 1)
         if duplicate_versions:
             errors.append(f"{path}: history iteration versions must be unique: {', '.join(duplicate_versions)}")
+        for idx, version, parent in parent_refs:
+            if parent == version:
+                errors.append(f"{path}: iterations[{idx}].parent must not reference its own version")
+            elif parent not in version_counts:
+                errors.append(f"{path}: iterations[{idx}].parent must match an iterations[].version")
         current_best = history.get("current_best")
         if isinstance(current_best, str) and current_best:
             if current_best not in version_counts:
