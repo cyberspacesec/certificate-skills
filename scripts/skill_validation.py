@@ -22,6 +22,7 @@ CLAUDE_REQUIRED_SECTIONS = (
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+REFERENCE_USAGE_CUE = "Read when"
 TOOLS_RE = re.compile(r"\bcert_[A-Za-z0-9_]+\b")
 CLAUDE_TOOLS_RE = re.compile(r"mcp__certificate-skills__(cert_[A-Za-z0-9_]+)")
 XML_TAG_RE = re.compile(r"<[A-Za-z/][^>]*>")
@@ -368,38 +369,56 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
     return errors
 
 
+def skill_file_link_errors(skill_file: pathlib.Path, require_reference_usage_cue: bool = False) -> list[str]:
+    errors = []
+    text = skill_file.read_text(encoding="utf-8")
+    linked_targets = set()
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        for match in LINK_RE.finditer(line):
+            raw_target = match.group(1).strip()
+            target = raw_target.split("#", 1)[0]
+            if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("/"):
+                continue
+            decoded_target = unquote(target)
+            linked_targets.add(decoded_target)
+            if require_reference_usage_cue and decoded_target.startswith("references/") and REFERENCE_USAGE_CUE not in line:
+                errors.append(
+                    f"{skill_file}:{line_no}: references link should explain when to read it "
+                    f"with a {REFERENCE_USAGE_CUE!r} cue: {raw_target}"
+                )
+            resolved = (skill_file.parent / decoded_target).resolve()
+            skill_root = skill_file.parent.resolve()
+            try:
+                resolved.relative_to(skill_root)
+            except ValueError:
+                errors.append(f"{skill_file}: link escapes skill package: {raw_target}")
+                continue
+            if not resolved.exists():
+                errors.append(f"{skill_file}: missing linked resource: {raw_target}")
+
+    references_dir = skill_file.parent / "references"
+    if references_dir.is_dir():
+        for reference_file in sorted(references_dir.iterdir()):
+            if reference_file.is_file():
+                target = f"references/{reference_file.name}"
+                if target not in linked_targets:
+                    errors.append(f"{skill_file}: reference file is not linked from SKILL.md: {target}")
+    return errors
+
+
 def skill_link_errors(repo_root: pathlib.Path) -> list[str]:
     errors = []
+    portable_root = repo_root / "skills"
     for root in (repo_root / ".claude" / "skills", repo_root / "skills"):
         if not root.is_dir():
             continue
         for skill_file in sorted(root.glob("*/SKILL.md")):
-            text = skill_file.read_text(encoding="utf-8")
-            linked_targets = set()
-            for match in LINK_RE.finditer(text):
-                raw_target = match.group(1).strip()
-                target = raw_target.split("#", 1)[0]
-                if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("/"):
-                    continue
-                decoded_target = unquote(target)
-                linked_targets.add(decoded_target)
-                resolved = (skill_file.parent / decoded_target).resolve()
-                skill_root = skill_file.parent.resolve()
-                try:
-                    resolved.relative_to(skill_root)
-                except ValueError:
-                    errors.append(f"{skill_file}: link escapes skill package: {raw_target}")
-                    continue
-                if not resolved.exists():
-                    errors.append(f"{skill_file}: missing linked resource: {raw_target}")
-
-            references_dir = skill_file.parent / "references"
-            if references_dir.is_dir():
-                for reference_file in sorted(references_dir.iterdir()):
-                    if reference_file.is_file():
-                        target = f"references/{reference_file.name}"
-                        if target not in linked_targets:
-                            errors.append(f"{skill_file}: reference file is not linked from SKILL.md: {target}")
+            errors.extend(
+                skill_file_link_errors(
+                    skill_file,
+                    require_reference_usage_cue=root == portable_root,
+                )
+            )
     return errors
 
 
@@ -555,6 +574,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
     errors = []
     errors.extend(package_layout_errors(skill_dir))
     errors.extend(frontmatter_errors(skill_dir, "portable"))
+    errors.extend(skill_file_link_errors(skill_dir / "SKILL.md", require_reference_usage_cue=True))
 
     evals_file = skill_dir / "evals" / "evals.json"
     skill_evals, skill_errors = read_json(evals_file)
