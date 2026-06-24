@@ -20,6 +20,8 @@ CLAUDE_REQUIRED_SECTIONS = (
     "## Anti-Patterns",
 )
 EVAL_WORKSPACE_SUFFIX = "-workspace"
+EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
+EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GENERATED_ARTIFACT_IGNORE_PATTERNS = ("*.skill", "*-workspace/", "/dist/")
 PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS = ("## When to Use", "## When NOT to Use")
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
@@ -220,8 +222,14 @@ def validate_skill_creator_evals(
     require_expected_skill_ref: bool = True,
 ) -> list[str]:
     errors = []
+    unknown_manifest_keys = sorted(set(evals) - EVAL_MANIFEST_KEYS)
+    if unknown_manifest_keys:
+        errors.append(f"{label} contains unknown top-level key(s): {', '.join(unknown_manifest_keys)}")
+
     if evals.get("skill_name") != expected_skill_name:
         errors.append(f"{label} skill_name must be {expected_skill_name}")
+    if not isinstance(evals.get("skill_name"), str):
+        errors.append(f"{label} skill_name must be a string")
 
     eval_cases = evals.get("evals")
     if not isinstance(eval_cases, list) or len(eval_cases) < min_cases:
@@ -234,20 +242,26 @@ def validate_skill_creator_evals(
             errors.append(f"{label} evals[{idx}] must be an object")
             continue
 
+        unknown_case_keys = sorted(set(case) - EVAL_CASE_KEYS)
+        if unknown_case_keys:
+            errors.append(f"{label} evals[{idx}] contains unknown key(s): {', '.join(unknown_case_keys)}")
+
         case_id = case.get("id")
-        if not isinstance(case_id, int):
+        if not isinstance(case_id, int) or isinstance(case_id, bool):
             errors.append(f"{label} evals[{idx}].id must be an integer")
         elif case_id in seen_ids:
             errors.append(f"{label} duplicate eval case id: {case_id}")
         else:
             seen_ids.add(case_id)
 
-        if not case.get("prompt"):
+        prompt = case.get("prompt")
+        if not isinstance(prompt, str) or not prompt:
             errors.append(f"{label} evals[{idx}].prompt is required")
 
-        expected_output = str(case.get("expected_output", ""))
-        if not expected_output:
+        expected_output = case.get("expected_output")
+        if not isinstance(expected_output, str) or not expected_output:
             errors.append(f"{label} evals[{idx}].expected_output is required")
+            expected_output = ""
 
         files = case.get("files", [])
         if not isinstance(files, list):
