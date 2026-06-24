@@ -28,7 +28,9 @@
       "assertions": [
         "SKILL.md files remain lightweight.",
         "Reusable detailed material lives in references/ when present.",
-        "Skill directory and frontmatter names are lowercase hyphenated."
+        "Skill directory and frontmatter names are lowercase hyphenated.",
+        "Portable skills do not duplicate repository installation instructions.",
+        "Portable skill descriptions match the trigger-oriented Claude Code skill descriptions."
       ]
     }
   ]

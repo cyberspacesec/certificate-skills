@@ -1,6 +1,6 @@
 ---
 name: certificate-fingerprint
-description: Generate certificate fingerprints (SHA-256, SHA-1, MD5, SPKI) for pinning and verification
+description: Use when generating certificate fingerprints (SHA-256, SHA-1, MD5, public key SHA-256) for SSL pinning, verification, or tracking. Triggers on mentions of cert fingerprint, SSL pin, SPKI hash, certificate hash, or fingerprint generation.
 tools:
   - cert_fingerprint_domain
   - cert_fingerprint_file
@@ -44,55 +44,12 @@ cert_fingerprint_file target="example.com"
 3. Use `cert_validate_fingerprint` to verify format
 4. Use `cert_compare` to compare across domains
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills fingerprint example.com                    # Text output
 cert-skills fingerprint example.com -o json           # JSON output for AI parsing
 ```

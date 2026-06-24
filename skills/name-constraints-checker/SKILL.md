@@ -1,6 +1,6 @@
 ---
 name: name-constraints-checker
-description: Check CA name constraints and detect trust boundary violations
+description: Use when checking CA certificate Name Constraints and verifying leaf certificate names comply with parent CA constraints. Triggers on mentions of name constraints, trust boundary, CA namespace restriction, or name constraint violation.
 tools:
   - cert_check_name_constraints
 ---
@@ -42,55 +42,12 @@ cert_check_name_constraints target="example.com"
 3. Check for violations
 4. Violations indicate trust boundary breaches
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills check-name-constraints example.com                    # Text output
 cert-skills check-name-constraints example.com -o json           # JSON output for AI parsing
 ```

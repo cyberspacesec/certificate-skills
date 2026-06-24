@@ -1,6 +1,6 @@
 ---
 name: certificate-parse
-description: Parse local certificate files (PEM/DER) and display detailed information
+description: Use when parsing a local certificate file (PEM or DER format) to display detailed information including subject, issuer, validity, SANs, key usage, and fingerprints. Triggers on mentions of parse cert file, read PEM, inspect certificate file, or decode DER.
 tools:
   - cert_parse
 ---
@@ -43,55 +43,12 @@ cert_parse target="example.com"
 3. Review certificate details
 4. Use `cert_fingerprint_file` for fingerprint extraction
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills parse example.com                    # Text output
 cert-skills parse example.com -o json           # JSON output for AI parsing
 ```

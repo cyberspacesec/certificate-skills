@@ -1,6 +1,6 @@
 ---
 name: certificate-analysis
-description: Perform comprehensive SSL/TLS security analysis with 0-100 scoring
+description: Use when performing SSL/TLS security analysis on a domain, checking certificate security scoring (0-100), auditing TLS configuration, or identifying certificate vulnerabilities. Triggers on mentions of SSL audit, TLS security score, certificate analysis, security assessment, or cert security review.
 tools:
   - cert_analyze_security
 ---
@@ -46,55 +46,12 @@ cert_analyze_security target="example.com"
 3. Review individual issues by severity
 4. Follow recommendations for remediation
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills analyze example.com                    # Text output
 cert-skills analyze example.com -o json           # JSON output for AI parsing
 ```

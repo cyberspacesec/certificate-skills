@@ -1,6 +1,6 @@
 ---
 name: ocsp-must-staple-checker
-description: Check OCSP Must-Staple (RFC 7633) compliance — Must-Staple without staple causes client hard-fail
+description: Use when checking OCSP Must-Staple (RFC 7633) compliance. A certificate with Must-Staple that fails to provide an OCSP staple causes hard-failures in compliant clients. Triggers on mentions of OCSP Must-Staple, RFC 7633, OCSP stapling, or must-staple violation.
 tools:
   - cert_check_ocsp_must_staple
 ---
@@ -42,55 +42,12 @@ cert_check_ocsp_must_staple target="example.com"
 3. If present, verify staple is provided
 4. Non-compliance causes client hard-fail
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills check-ocsp-must-staple example.com                    # Text output
 cert-skills check-ocsp-must-staple example.com -o json           # JSON output for AI parsing
 ```

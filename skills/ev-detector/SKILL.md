@@ -1,6 +1,6 @@
 ---
 name: ev-detector
-description: Detect Extended Validation (EV) certificates through policy OID analysis
+description: Use when detecting Extended Validation (EV) certificates through policy OID analysis. Triggers on mentions of EV certificate, Extended Validation, EV detection, certificate validation level, or EV check.
 tools:
   - cert_detect_ev
 ---
@@ -41,55 +41,12 @@ cert_detect_ev target="example.com"
 2. If EV, verify issuer organization
 3. If not EV, check `cert_check_policy` for DV/OV classification
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills detect-ev example.com                    # Text output
 cert-skills detect-ev example.com -o json           # JSON output for AI parsing
 ```

@@ -114,6 +114,32 @@ check_frontmatter() {
   fi
 }
 
+get_description() {
+  awk 'NR > 1 && $0 == "---" { exit } /^description:[[:space:]]*/ { sub(/^description:[[:space:]]*/, ""); print; exit }' "$1"
+}
+
+check_portable_skill_prompt() {
+  local dir=$1
+  local dir_name=$2
+  local file="$dir/SKILL.md"
+  local claude_file=".claude/skills/$dir_name/SKILL.md"
+  local portable_description claude_description
+
+  if grep -nE '^(## Installation|### (Download Binary|Build from Source|Install Globally|Verify Installation|Install as Go Module))$|see Installation section above' "$file" >/tmp/certificate-skills-installation-check.$$; then
+    fail "$file: portable SKILL.md should not duplicate repository installation instructions:"
+    cat /tmp/certificate-skills-installation-check.$$ >&2
+  fi
+  rm -f /tmp/certificate-skills-installation-check.$$
+
+  if [[ -f "$claude_file" ]]; then
+    portable_description=$(get_description "$file")
+    claude_description=$(get_description "$claude_file")
+    if [[ "$portable_description" != "$claude_description" ]]; then
+      fail "$file: portable description should match Claude Code skill trigger description"
+    fi
+  fi
+}
+
 for root in "${roots[@]}"; do
   if [[ ! -d "$root" ]]; then
     fail "missing skills root: $root"
@@ -122,6 +148,9 @@ for root in "${roots[@]}"; do
 
   while IFS= read -r dir; do
     check_frontmatter "$dir/SKILL.md" "$(basename "$dir")"
+    if [[ "$root" == "skills" ]]; then
+      check_portable_skill_prompt "$dir" "$(basename "$dir")"
+    fi
   done < <(find "$root" -mindepth 1 -maxdepth 1 -type d | sort)
 done
 

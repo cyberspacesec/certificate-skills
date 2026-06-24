@@ -1,6 +1,6 @@
 ---
 name: certificate-info
-description: Retrieve and display detailed SSL/TLS certificate and connection information
+description: Use when retrieving SSL/TLS certificate and connection information from a domain, checking certificate chain details, TLS version, cipher suite, or handshake timing. Triggers on mentions of cert info, SSL certificate details, TLS connection info, or certificate chain inspection.
 tools:
   - cert_info
 ---
@@ -44,55 +44,12 @@ cert_info target="example.com"
 3. Check certificate chain for completeness
 4. Use `cert_analyze_security` for deeper analysis
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills info example.com                    # Text output
 cert-skills info example.com -o json           # JSON output for AI parsing
 ```

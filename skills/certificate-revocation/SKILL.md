@@ -1,6 +1,6 @@
 ---
 name: certificate-revocation
-description: Check certificate revocation status via OCSP and CRL
+description: Use when checking certificate revocation status via OCSP (Online Certificate Status Protocol) and CRL (Certificate Revocation List). Triggers on mentions of cert revocation, OCSP check, CRL check, revoked certificate, or certificate revoked.
 tools:
   - cert_check_revocation
 ---
@@ -43,55 +43,12 @@ cert_check_revocation target="example.com"
 3. If Unknown, check CRL status
 4. Review revocation reason if revoked
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills check-revocation example.com                    # Text output
 cert-skills check-revocation example.com -o json           # JSON output for AI parsing
 ```

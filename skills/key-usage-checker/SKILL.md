@@ -1,6 +1,6 @@
 ---
 name: key-usage-checker
-description: Validate certificate key usage compliance with RFC 5280 and CA/B BR requirements
+description: Use when validating certificate key usage compliance with RFC 5280 and CA/Browser Forum Baseline Requirements. Triggers on mentions of key usage, EKU, key usage compliance, RFC 5280, or CA/B BR key usage.
 tools:
   - cert_check_key_usage
 ---
@@ -43,55 +43,12 @@ cert_check_key_usage target="example.com"
 3. Check compliance issues
 4. Focus on High severity issues
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills check-key-usage example.com                    # Text output
 cert-skills check-key-usage example.com -o json           # JSON output for AI parsing
 ```

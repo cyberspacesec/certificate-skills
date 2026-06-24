@@ -1,6 +1,6 @@
 ---
 name: cert-security-scanner
-description: Scan certificate-specific security issues (18 checks from weak signatures to name constraints)
+description: Use when scanning for certificate-specific security issues (18 checks from CERT-001 to CERT-018), checking for weak signatures, short keys, hostname mismatches, distrusted CAs, or compliance violations. Triggers on mentions of cert security scan, CERT checks, certificate compliance, or PKI audit.
 tools:
   - cert_scan_cert_security
 ---
@@ -42,55 +42,12 @@ cert_scan_cert_security target="example.com"
 3. Focus on Critical and High severity failures
 4. Use specific check tools for deeper analysis (cert_check_distrusted_ca, cert_check_key_usage, etc.)
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills scan-cert-security example.com                    # Text output
 cert-skills scan-cert-security example.com -o json           # JSON output for AI parsing
 ```

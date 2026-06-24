@@ -1,6 +1,6 @@
 ---
 name: crl-parser
-description: Parse and analyze Certificate Revocation List (CRL) files
+description: Parse and analyze Certificate Revocation List (CRL) files. Display revoked certificates and verify CRL signatures.
 tools:
   - cert_parse_crl
   - cert_verify_crl_signature

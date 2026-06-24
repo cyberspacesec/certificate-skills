@@ -1,6 +1,6 @@
 ---
 name: ja3-fingerprint
-description: Generate JA3/JA3S TLS fingerprints for client and server identification
+description: Use when generating JA3/JA3S TLS fingerprints for client and server identification, malware C2 detection, and cyberspace mapping. Triggers on mentions of JA3, JA3S, JA3 fingerprint, client fingerprint, or TLS client hello analysis.
 tools:
   - cert_ja3
 ---
@@ -41,55 +41,12 @@ cert_ja3 target="example.com"
 3. Compare against known JA3 databases
 4. Use for C2 detection or service identification
 
-## Installation
-
-### Download Binary
-
-```bash
-# Linux x86_64
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_linux_x86_64.tar.gz | tar xz
-
-# macOS Apple Silicon
-curl -sL https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_darwin_aarch64.tar.gz | tar xz
-
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/cyberspacesec/certificate-skills/releases/latest/download/certificate-skills_0.1.0_windows_x86_64.zip" -OutFile "cert-skills.zip"
-Expand-Archive cert-skills.zip
-```
-
-### Build from Source
-
-```bash
-git clone https://github.com/cyberspacesec/certificate-skills.git
-cd certificate-skills
-go build -trimpath -ldflags "-s -w" -o cert-skills ./cmd/
-```
-
-### Install Globally
-
-```bash
-sudo mv cert-skills /usr/local/bin/
-```
-
-### Verify Installation
-
-```bash
-cert-skills --version
-```
-
-### Install as Go Module
-
-```bash
-go get github.com/cyberspacesec/certificate-skills/pkg
-```
-
-
 ## AI Integration
 
 ### CLI (For AI Agents)
 
 ```bash
-# Install first: see Installation section above
+# Install cert-skills first; see the repository README for installation options
 cert-skills ja3 example.com                    # Text output
 cert-skills ja3 example.com -o json           # JSON output for AI parsing
 ```

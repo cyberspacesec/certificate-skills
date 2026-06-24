@@ -1,6 +1,6 @@
 ---
 name: ca-signer
-description: Sign terminal/leaf certificates using a CA certificate and private key
+description: Sign terminal/leaf certificates using a CA certificate and private key. Creates server, client, or dual-purpose certificates.
 tools:
   - cert_sign_certificate
 ---

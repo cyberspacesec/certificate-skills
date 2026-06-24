@@ -1,6 +1,6 @@
 ---
 name: certificate-change-detection
-description: Detect certificate changes over time, including renewal, key rotation, issuer changes, expiry, or unexpected replacement in monitored infrastructure.
+description: Use when detecting certificate changes over time — renewal, key rotation, issuer change, or expiry. Triggers on mentions of certificate monitoring, cert change, cert rotation, certificate diff, or continuous monitoring.
 tools:
   - cert_detect_change
 ---
