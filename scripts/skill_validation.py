@@ -1176,6 +1176,104 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
     return errors
 
 
+def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
+    comparison, errors = read_json(path)
+    if errors:
+        return errors
+    if not comparison:
+        return []
+
+    errors = []
+    if not isinstance(comparison.get("winner"), str) or not comparison["winner"]:
+        errors.append(f"{path}: comparison winner must be a non-empty string")
+    if not isinstance(comparison.get("reasoning"), str) or not comparison["reasoning"]:
+        errors.append(f"{path}: comparison reasoning must be a non-empty string")
+    for field in ("rubric", "output_quality", "expectation_results"):
+        if not isinstance(comparison.get(field), dict):
+            errors.append(f"{path}: comparison {field} must be an object")
+
+    expectation_results = comparison.get("expectation_results")
+    if isinstance(expectation_results, dict):
+        for label, result in sorted(expectation_results.items()):
+            if not isinstance(label, str):
+                errors.append(f"{path}: comparison expectation_results keys must be strings")
+                continue
+            if not isinstance(result, dict):
+                errors.append(f"{path}: expectation_results.{label} must be an object")
+                continue
+            for int_field in ("passed", "total"):
+                if int_field in result and (
+                    not isinstance(result.get(int_field), int) or isinstance(result.get(int_field), bool)
+                ):
+                    errors.append(f"{path}: expectation_results.{label}.{int_field} must be an integer")
+            if "pass_rate" in result and (
+                not isinstance(result.get("pass_rate"), (int, float)) or isinstance(result.get("pass_rate"), bool)
+            ):
+                errors.append(f"{path}: expectation_results.{label}.pass_rate must be a number")
+            details = result.get("details")
+            if details is not None:
+                if not isinstance(details, list):
+                    errors.append(f"{path}: expectation_results.{label}.details must be a list")
+                else:
+                    for idx, detail in enumerate(details):
+                        if not isinstance(detail, dict):
+                            errors.append(f"{path}: expectation_results.{label}.details[{idx}] must be an object")
+                            continue
+                        if not isinstance(detail.get("text"), str) or not detail["text"]:
+                            errors.append(
+                                f"{path}: expectation_results.{label}.details[{idx}].text "
+                                "must be a non-empty string"
+                            )
+                        if not isinstance(detail.get("passed"), bool):
+                            errors.append(f"{path}: expectation_results.{label}.details[{idx}].passed must be a boolean")
+    return errors
+
+
+def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
+    analysis, errors = read_json(path)
+    if errors:
+        return errors
+    if not analysis:
+        return []
+
+    errors = []
+    comparison_summary = analysis.get("comparison_summary")
+    if not isinstance(comparison_summary, dict):
+        errors.append(f"{path}: analysis comparison_summary must be an object")
+    else:
+        for field in ("winner", "winner_skill", "loser_skill", "comparator_reasoning"):
+            if not isinstance(comparison_summary.get(field), str):
+                errors.append(f"{path}: comparison_summary.{field} must be a string")
+
+    for field in ("winner_strengths", "loser_weaknesses"):
+        values = analysis.get(field)
+        if not isinstance(values, list):
+            errors.append(f"{path}: analysis {field} must be a list")
+        elif not all(isinstance(item, str) for item in values):
+            errors.append(f"{path}: analysis {field} entries must be strings")
+
+    instruction_following = analysis.get("instruction_following")
+    if not isinstance(instruction_following, dict):
+        errors.append(f"{path}: analysis instruction_following must be an object")
+
+    suggestions = analysis.get("improvement_suggestions")
+    if not isinstance(suggestions, list):
+        errors.append(f"{path}: analysis improvement_suggestions must be a list")
+    else:
+        for idx, suggestion in enumerate(suggestions):
+            if not isinstance(suggestion, dict):
+                errors.append(f"{path}: improvement_suggestions[{idx}] must be an object")
+                continue
+            for field in ("priority", "category", "suggestion", "expected_impact"):
+                if not isinstance(suggestion.get(field), str):
+                    errors.append(f"{path}: improvement_suggestions[{idx}].{field} must be a string")
+
+    transcript_insights = analysis.get("transcript_insights")
+    if not isinstance(transcript_insights, dict):
+        errors.append(f"{path}: analysis transcript_insights must be an object")
+    return errors
+
+
 def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
     errors = []
     workspaces = sorted(
@@ -1197,6 +1295,10 @@ def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
             errors.extend(validate_timing_output_schema(path))
         for path in sorted(workspace.rglob("feedback.json")):
             errors.extend(validate_feedback_output_schema(path))
+        for path in sorted(workspace.rglob("comparison-*.json")):
+            errors.extend(validate_comparison_output_schema(path))
+        for path in sorted(workspace.rglob("analysis.json")):
+            errors.extend(validate_analysis_output_schema(path))
     benchmarks_dir = repo_root / "benchmarks"
     if benchmarks_dir.is_dir():
         for path in sorted(benchmarks_dir.rglob("benchmark.json")):
