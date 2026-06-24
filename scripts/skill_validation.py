@@ -1630,9 +1630,9 @@ def validate_eval_workspace_file_layout(workspace: pathlib.Path, path: pathlib.P
             )
         return errors
 
-    if name == "benchmark.json":
+    if name in {"benchmark.json", "benchmark.md"}:
         if len(relative_parts) != 2 or not is_eval_iteration_dirname(relative_parts[0]):
-            errors.append(f"{path}: benchmark.json should be located at <workspace>/iteration-N/benchmark.json")
+            errors.append(f"{path}: {name} should be located at <workspace>/iteration-N/{name}")
         return errors
 
     return errors
