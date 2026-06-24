@@ -979,8 +979,13 @@ def validate_metrics_object_schema(
     tool_calls = metrics.get("tool_calls")
     if not isinstance(tool_calls, dict):
         errors.append(f"{path}: {label} tool_calls must be an object")
-    elif not all(isinstance(key, str) and is_json_int(value) for key, value in tool_calls.items()):
-        errors.append(f"{path}: {label} tool_calls entries must map tool names to integer counts")
+    else:
+        for tool_name, count in tool_calls.items():
+            if not isinstance(tool_name, str) or not is_json_int(count):
+                errors.append(f"{path}: {label} tool_calls entries must map tool names to integer counts")
+                break
+            if count < 0:
+                errors.append(f"{path}: {label} tool_calls.{tool_name} must be non-negative")
 
     int_fields = (
         "total_tool_calls",
@@ -992,6 +997,17 @@ def validate_metrics_object_schema(
     for field in int_fields:
         if not is_json_int(metrics.get(field)):
             errors.append(f"{path}: {label} {field} must be an integer")
+        elif metrics[field] < 0:
+            errors.append(f"{path}: {label} {field} must be non-negative")
+    if isinstance(tool_calls, dict) and all(
+        isinstance(key, str) and is_json_int(value) for key, value in tool_calls.items()
+    ):
+        expected_total_tool_calls = sum(tool_calls.values())
+        if (
+            is_json_int(metrics.get("total_tool_calls"))
+            and metrics["total_tool_calls"] != expected_total_tool_calls
+        ):
+            errors.append(f"{path}: {label} total_tool_calls must equal sum(tool_calls) {expected_total_tool_calls}")
 
     files_created = metrics.get("files_created")
     if files_created is None and not require_files_created:
