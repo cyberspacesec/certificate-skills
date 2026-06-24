@@ -38,6 +38,7 @@
         "Eval files entries are relative paths that resolve to existing files inside the skill root.",
         "evals/skills-structure.json contains repository structure checks.",
         "scripts/package-skills.py can package portable skill directories into .skill archives.",
+        "scripts/package-skills.py validates per-skill eval manifests before writing archives.",
         "SKILL.md files remain lightweight.",
         "Bundled resources live in supported skill-creator directories: references/, scripts/, assets/, or evals/.",
         "Reusable detailed material lives in references/ when present.",

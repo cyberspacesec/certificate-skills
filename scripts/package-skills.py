@@ -8,6 +8,7 @@ SKILL.md and optional bundled resource directories such as references/ and evals
 from __future__ import annotations
 
 import argparse
+import json
 import pathlib
 import re
 import sys
@@ -117,6 +118,76 @@ def validate_frontmatter(skill_dir: pathlib.Path) -> None:
         raise SystemExit(f"{skill_file}: invalid skill metadata:\n  - {details}")
 
 
+def validate_evals_manifest(skill_dir: pathlib.Path) -> None:
+    evals_file = skill_dir / "evals" / "evals.json"
+    if not evals_file.is_file():
+        raise SystemExit(f"{skill_dir}: missing per-skill eval manifest: evals/evals.json")
+
+    with evals_file.open("r", encoding="utf-8") as fh:
+        data = json.load(fh)
+
+    errors = []
+    if data.get("skill_name") != skill_dir.name:
+        errors.append(f"skill_name must be {skill_dir.name}")
+
+    eval_cases = data.get("evals")
+    if not isinstance(eval_cases, list) or len(eval_cases) < 2:
+        errors.append("evals must contain at least 2 cases")
+    else:
+        seen_ids = set()
+        for idx, case in enumerate(eval_cases):
+            case_id = case.get("id")
+            if not isinstance(case_id, int):
+                errors.append(f"evals[{idx}].id must be an integer")
+            elif case_id in seen_ids:
+                errors.append(f"duplicate eval case id: {case_id}")
+            else:
+                seen_ids.add(case_id)
+
+            if not case.get("prompt"):
+                errors.append(f"evals[{idx}].prompt is required")
+            expected_output = str(case.get("expected_output", ""))
+            if not expected_output:
+                errors.append(f"evals[{idx}].expected_output is required")
+
+            files = case.get("files")
+            if not isinstance(files, list):
+                errors.append(f"evals[{idx}].files must be a list")
+            elif not all(isinstance(item, str) for item in files):
+                errors.append(f"evals[{idx}].files entries must be strings")
+            else:
+                for item in files:
+                    if not item:
+                        errors.append(f"evals[{idx}].files entries must be non-empty strings")
+                        continue
+                    file_path = pathlib.PurePosixPath(item)
+                    if file_path.is_absolute() or ".." in file_path.parts:
+                        errors.append(f"evals[{idx}].files entry must stay inside the skill root: {item}")
+                        continue
+                    resolved = (skill_dir / pathlib.Path(item)).resolve()
+                    try:
+                        resolved.relative_to(skill_dir.resolve())
+                    except ValueError:
+                        errors.append(f"evals[{idx}].files entry escapes the skill root: {item}")
+                        continue
+                    if not resolved.is_file():
+                        errors.append(f"evals[{idx}].files entry does not exist: {item}")
+
+            expectations = case.get("expectations")
+            if not isinstance(expectations, list) or not expectations:
+                errors.append(f"evals[{idx}].expectations must be a non-empty list")
+            elif not all(isinstance(item, str) and item for item in expectations):
+                errors.append(f"evals[{idx}].expectations entries must be non-empty strings")
+            else:
+                expected_text = " ".join(expectations)
+                if skill_dir.name not in expected_text and skill_dir.name not in expected_output:
+                    errors.append(f"evals[{idx}] should reference {skill_dir.name}")
+
+    if errors:
+        details = "\n  - ".join(errors)
+        raise SystemExit(f"{evals_file}: invalid eval manifest:\n  - {details}")
+
+
 def archive_members(skill_dir: pathlib.Path) -> list[pathlib.Path]:
     members = []
     for path in sorted(skill_dir.rglob("*")):
@@ -128,6 +199,7 @@ def archive_members(skill_dir: pathlib.Path) -> list[pathlib.Path]:
 def package_skill(skill_dir: pathlib.Path, output_dir: pathlib.Path, check: bool) -> pathlib.Path:
     validate_package_layout(skill_dir)
     validate_frontmatter(skill_dir)
+    validate_evals_manifest(skill_dir)
     output_path = output_dir / f"{skill_dir.name}.skill"
 
     if check:
