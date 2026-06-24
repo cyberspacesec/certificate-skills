@@ -33,6 +33,7 @@ BENCHMARK_RUN_RESULT_KEYS = {
     "tool_calls",
     "errors",
 }
+HISTORY_GRADING_RESULTS = {"baseline", "won", "lost", "tie"}
 EVAL_PROMPT_CONTROL_PHRASES = (
     "Handle a focused",
     "do not switch to a broader certificate audit",
@@ -1050,18 +1051,156 @@ def validate_feedback_output_schema(path: pathlib.Path) -> list[str]:
     return errors
 
 
+def validate_eval_metadata_output_schema(path: pathlib.Path) -> list[str]:
+    metadata, errors = read_json(path)
+    if errors:
+        return errors
+    if not metadata:
+        return []
+
+    errors = []
+    if not isinstance(metadata.get("eval_id"), int) or isinstance(metadata.get("eval_id"), bool):
+        errors.append(f"{path}: eval_metadata eval_id must be an integer")
+    if not isinstance(metadata.get("eval_name"), str) or not metadata["eval_name"]:
+        errors.append(f"{path}: eval_metadata eval_name must be a non-empty string")
+    if not isinstance(metadata.get("prompt"), str) or not metadata["prompt"]:
+        errors.append(f"{path}: eval_metadata prompt must be a non-empty string")
+    assertions = metadata.get("assertions")
+    if not isinstance(assertions, list):
+        errors.append(f"{path}: eval_metadata assertions must be a list")
+    elif not all(isinstance(item, str) for item in assertions):
+        errors.append(f"{path}: eval_metadata assertions entries must be strings")
+    return errors
+
+
+def validate_metrics_output_schema(path: pathlib.Path) -> list[str]:
+    metrics, errors = read_json(path)
+    if errors:
+        return errors
+    if not metrics:
+        return []
+
+    errors = []
+    tool_calls = metrics.get("tool_calls")
+    if not isinstance(tool_calls, dict):
+        errors.append(f"{path}: metrics tool_calls must be an object")
+    elif not all(isinstance(key, str) and isinstance(value, int) for key, value in tool_calls.items()):
+        errors.append(f"{path}: metrics tool_calls entries must map tool names to integer counts")
+
+    int_fields = (
+        "total_tool_calls",
+        "total_steps",
+        "errors_encountered",
+        "output_chars",
+        "transcript_chars",
+    )
+    for field in int_fields:
+        if not isinstance(metrics.get(field), int) or isinstance(metrics.get(field), bool):
+            errors.append(f"{path}: metrics {field} must be an integer")
+
+    files_created = metrics.get("files_created")
+    if not isinstance(files_created, list):
+        errors.append(f"{path}: metrics files_created must be a list")
+    elif not all(isinstance(item, str) for item in files_created):
+        errors.append(f"{path}: metrics files_created entries must be strings")
+    return errors
+
+
+def validate_timing_output_schema(path: pathlib.Path) -> list[str]:
+    timing, errors = read_json(path)
+    if errors:
+        return errors
+    if not timing:
+        return []
+
+    errors = []
+    if not isinstance(timing.get("total_tokens"), int) or isinstance(timing.get("total_tokens"), bool):
+        errors.append(f"{path}: timing total_tokens must be an integer")
+    if not isinstance(timing.get("duration_ms"), int) or isinstance(timing.get("duration_ms"), bool):
+        errors.append(f"{path}: timing duration_ms must be an integer")
+    if not isinstance(timing.get("total_duration_seconds"), (int, float)) or isinstance(
+        timing.get("total_duration_seconds"), bool
+    ):
+        errors.append(f"{path}: timing total_duration_seconds must be a number")
+
+    timestamp_fields = ("executor_start", "executor_end", "grader_start", "grader_end")
+    for field in timestamp_fields:
+        if field in timing and not isinstance(timing.get(field), str):
+            errors.append(f"{path}: timing {field} must be a string when present")
+
+    duration_fields = ("executor_duration_seconds", "grader_duration_seconds")
+    for field in duration_fields:
+        if field in timing and (
+            not isinstance(timing.get(field), (int, float)) or isinstance(timing.get(field), bool)
+        ):
+            errors.append(f"{path}: timing {field} must be a number when present")
+    return errors
+
+
+def validate_history_output_schema(path: pathlib.Path) -> list[str]:
+    history, errors = read_json(path)
+    if errors:
+        return errors
+    if not history:
+        return []
+
+    errors = []
+    if not isinstance(history.get("started_at"), str) or not history["started_at"]:
+        errors.append(f"{path}: history started_at must be a non-empty string")
+    if not isinstance(history.get("skill_name"), str) or not history["skill_name"]:
+        errors.append(f"{path}: history skill_name must be a non-empty string")
+    if not isinstance(history.get("current_best"), str) or not history["current_best"]:
+        errors.append(f"{path}: history current_best must be a non-empty string")
+
+    iterations = history.get("iterations")
+    if not isinstance(iterations, list):
+        errors.append(f"{path}: history iterations must be a list")
+    else:
+        for idx, iteration in enumerate(iterations):
+            if not isinstance(iteration, dict):
+                errors.append(f"{path}: iterations[{idx}] must be an object")
+                continue
+            if not isinstance(iteration.get("version"), str) or not iteration["version"]:
+                errors.append(f"{path}: iterations[{idx}].version must be a non-empty string")
+            parent = iteration.get("parent")
+            if parent is not None and not isinstance(parent, str):
+                errors.append(f"{path}: iterations[{idx}].parent must be a string or null")
+            if not isinstance(iteration.get("expectation_pass_rate"), (int, float)) or isinstance(
+                iteration.get("expectation_pass_rate"), bool
+            ):
+                errors.append(f"{path}: iterations[{idx}].expectation_pass_rate must be a number")
+            if iteration.get("grading_result") not in HISTORY_GRADING_RESULTS:
+                errors.append(f"{path}: iterations[{idx}].grading_result must be baseline, won, lost, or tie")
+            if not isinstance(iteration.get("is_current_best"), bool):
+                errors.append(f"{path}: iterations[{idx}].is_current_best must be a boolean")
+    return errors
+
+
 def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
     errors = []
-    for path in sorted(repo_root.rglob("grading.json")):
-        if ".git" not in path.parts:
+    workspaces = sorted(
+        path
+        for path in repo_root.rglob(f"*{EVAL_WORKSPACE_SUFFIX}")
+        if path.is_dir() and ".git" not in path.parts
+    )
+    for workspace in workspaces:
+        history_path = workspace / "history.json"
+        if history_path.is_file():
+            errors.extend(validate_history_output_schema(history_path))
+        for path in sorted(workspace.rglob("eval_metadata.json")):
+            errors.extend(validate_eval_metadata_output_schema(path))
+        for path in sorted(workspace.rglob("grading.json")):
             errors.extend(validate_grading_output_schema(path))
+        for path in sorted(workspace.rglob("metrics.json")):
+            errors.extend(validate_metrics_output_schema(path))
+        for path in sorted(workspace.rglob("timing.json")):
+            errors.extend(validate_timing_output_schema(path))
+        for path in sorted(workspace.rglob("feedback.json")):
+            errors.extend(validate_feedback_output_schema(path))
     benchmarks_dir = repo_root / "benchmarks"
     if benchmarks_dir.is_dir():
         for path in sorted(benchmarks_dir.rglob("benchmark.json")):
             errors.extend(validate_benchmark_output_schema(path))
-    for path in sorted(repo_root.rglob("feedback.json")):
-        if ".git" not in path.parts:
-            errors.extend(validate_feedback_output_schema(path))
     return errors
 
 
