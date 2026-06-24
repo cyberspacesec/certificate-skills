@@ -29,6 +29,9 @@ jobs:
             exit 1
           fi
 
+      - name: Validate Skills structure
+        run: make validate-skills
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:

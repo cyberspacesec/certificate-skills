@@ -1,0 +1,35 @@
+{
+  "suite": "certificate-skills-structure",
+  "version": 1,
+  "description": "Repository-level checks for Anthropic-style skill packaging and Claude Code-ready skill metadata.",
+  "cases": [
+    {
+      "id": "portable-skills-have-required-frontmatter",
+      "prompt": "Audit the portable skills directory for valid Anthropic-style skill packages.",
+      "assertions": [
+        "Every immediate child directory under skills/ contains SKILL.md.",
+        "Each SKILL.md begins with YAML frontmatter.",
+        "Each frontmatter block contains name and description.",
+        "The frontmatter name matches the skill directory name."
+      ]
+    },
+    {
+      "id": "claude-skills-match-portable-skills",
+      "prompt": "Audit the Claude Code skill directory against the portable skills directory.",
+      "assertions": [
+        ".claude/skills and skills contain the same immediate skill directory names.",
+        "Claude Code skill metadata uses the current certificate-skills MCP server prefix.",
+        "No legacy MCP server-name references remain."
+      ]
+    },
+    {
+      "id": "skills-use-progressive-disclosure-layout",
+      "prompt": "Audit skill package layout for progressive disclosure.",
+      "assertions": [
+        "SKILL.md files remain lightweight.",
+        "Reusable detailed material lives in references/ when present.",
+        "Skill directory and frontmatter names are lowercase hyphenated."
+      ]
+    }
+  ]
+}
