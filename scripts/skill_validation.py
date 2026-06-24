@@ -30,6 +30,7 @@ GENERATED_ARTIFACT_IGNORE_PATTERNS = (
     "*.skill",
     "*.test",
     "*-workspace/",
+    "/benchmarks/",
     "/bin/",
     "/dist/",
     "coverage.html",
@@ -898,6 +899,8 @@ def tracked_repository_artifact_errors(repo_root: pathlib.Path) -> list[str]:
             errors.append(f"{relative_path}: generated Go test binary should not be tracked")
         if path.parts and path.parts[0] == "bin":
             errors.append(f"{relative_path}: generated binary output should not be tracked")
+        if path.parts and path.parts[0] == "benchmarks":
+            errors.append(f"{relative_path}: generated skill benchmark output should not be tracked")
         if path.name in {"coverage.html", "coverage.out"}:
             errors.append(f"{relative_path}: generated coverage report should not be tracked")
         if any(part.endswith(EVAL_WORKSPACE_SUFFIX) for part in path.parts):

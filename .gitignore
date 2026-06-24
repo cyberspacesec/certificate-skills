@@ -96,6 +96,7 @@ $RECYCLE.BIN/
 *.zip
 *~
 *-workspace/
+/benchmarks/
 .DS_Store
 .DS_Store?
 .Spotlight-V100
