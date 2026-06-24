@@ -27,6 +27,7 @@ NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REFERENCE_TOC_RE = re.compile(r"^#{1,3} (Table of Contents|Contents)$", re.MULTILINE)
 REFERENCE_TOC_MIN_LINES = 300
 REFERENCE_USAGE_CUE = "Read when"
+LINKED_BUNDLED_RESOURCE_DIRS = ("scripts", "assets")
 TOOLS_RE = re.compile(r"\bcert_[A-Za-z0-9_]+\b")
 CLAUDE_TOOLS_RE = re.compile(r"mcp__certificate-skills__(cert_[A-Za-z0-9_]+)")
 XML_TAG_RE = re.compile(r"<[A-Za-z/][^>]*>")
@@ -373,6 +374,17 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
     return errors
 
 
+def skill_relative_files(skill_root: pathlib.Path, resource_dir: str) -> list[tuple[str, pathlib.Path]]:
+    directory = skill_root / resource_dir
+    if not directory.is_dir():
+        return []
+    files = []
+    for resource_file in sorted(path for path in directory.rglob("*") if path.is_file()):
+        target = resource_file.relative_to(skill_root).as_posix()
+        files.append((target, resource_file))
+    return files
+
+
 def skill_file_link_errors(skill_file: pathlib.Path, require_reference_usage_cue: bool = False) -> list[str]:
     errors = []
     text = skill_file.read_text(encoding="utf-8")
@@ -384,8 +396,9 @@ def skill_file_link_errors(skill_file: pathlib.Path, require_reference_usage_cue
             if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("/"):
                 continue
             decoded_target = unquote(target)
-            linked_targets.add(decoded_target)
-            if require_reference_usage_cue and decoded_target.startswith("references/") and REFERENCE_USAGE_CUE not in line:
+            normalized_target = pathlib.PurePosixPath(decoded_target).as_posix()
+            linked_targets.add(normalized_target)
+            if require_reference_usage_cue and normalized_target.startswith("references/") and REFERENCE_USAGE_CUE not in line:
                 errors.append(
                     f"{skill_file}:{line_no}: references link should explain when to read it "
                     f"with a {REFERENCE_USAGE_CUE!r} cue: {raw_target}"
@@ -402,19 +415,24 @@ def skill_file_link_errors(skill_file: pathlib.Path, require_reference_usage_cue
 
     references_dir = skill_file.parent / "references"
     if references_dir.is_dir():
-        for reference_file in sorted(references_dir.iterdir()):
-            if reference_file.is_file():
-                target = f"references/{reference_file.name}"
-                if target not in linked_targets:
-                    errors.append(f"{skill_file}: reference file is not linked from SKILL.md: {target}")
-                reference_text = reference_file.read_text(encoding="utf-8")
-                reference_lines = reference_text.splitlines()
-                if len(reference_lines) > REFERENCE_TOC_MIN_LINES and not REFERENCE_TOC_RE.search(reference_text):
-                    errors.append(
-                        f"{reference_file}: large reference files should include a table of contents "
-                        f"(found {len(reference_lines)} lines, expected <= {REFERENCE_TOC_MIN_LINES} "
-                        "without a Contents or Table of Contents heading)"
-                    )
+        for target, reference_file in skill_relative_files(skill_file.parent, "references"):
+            if target not in linked_targets:
+                errors.append(f"{skill_file}: reference file is not linked from SKILL.md: {target}")
+            reference_text = reference_file.read_text(encoding="utf-8")
+            reference_lines = reference_text.splitlines()
+            if len(reference_lines) > REFERENCE_TOC_MIN_LINES and not REFERENCE_TOC_RE.search(reference_text):
+                errors.append(
+                    f"{reference_file}: large reference files should include a table of contents "
+                    f"(found {len(reference_lines)} lines, expected <= {REFERENCE_TOC_MIN_LINES} "
+                    "without a Contents or Table of Contents heading)"
+                )
+
+    for resource_dir in LINKED_BUNDLED_RESOURCE_DIRS:
+        for target, resource_file in skill_relative_files(skill_file.parent, resource_dir):
+            if target not in linked_targets:
+                errors.append(f"{skill_file}: bundled {resource_dir} file is not linked from SKILL.md: {target}")
+            if resource_dir == "scripts" and not resource_file.stat().st_mode & 0o111:
+                errors.append(f"{resource_file}: bundled script files should be executable")
     return errors
 
 
