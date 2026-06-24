@@ -19,6 +19,7 @@ CLAUDE_REQUIRED_SECTIONS = (
     "## Instructions",
     "## Anti-Patterns",
 )
+EVAL_WORKSPACE_SUFFIX = "-workspace"
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -548,6 +549,28 @@ def packaging_script_errors(repo_root: pathlib.Path) -> list[str]:
     return errors
 
 
+def tracked_repository_artifact_errors(repo_root: pathlib.Path) -> list[str]:
+    result = subprocess.run(
+        ["git", "ls-files"],
+        cwd=repo_root,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode != 0:
+        return []
+
+    errors = []
+    for relative_path in result.stdout.splitlines():
+        path = pathlib.PurePosixPath(relative_path)
+        if path.suffix == ".skill":
+            errors.append(f"{relative_path}: generated .skill archive should not be tracked")
+        if any(part.endswith(EVAL_WORKSPACE_SUFFIX) for part in path.parts):
+            errors.append(f"{relative_path}: skill eval workspaces should not be tracked")
+    return errors
+
+
 def validate_repository(repo_root: pathlib.Path, run_package_check: bool = True) -> list[str]:
     repo_root = repo_root.resolve()
     errors = []
@@ -572,6 +595,7 @@ def validate_repository(repo_root: pathlib.Path, run_package_check: bool = True)
         errors.extend(tool_metadata_parity_errors(repo_root))
 
     errors.extend(legacy_reference_errors(repo_root))
+    errors.extend(tracked_repository_artifact_errors(repo_root))
     errors.extend(repository_eval_errors(repo_root))
     errors.extend(skill_link_errors(repo_root))
     if run_package_check:

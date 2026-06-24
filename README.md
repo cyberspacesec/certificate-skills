@@ -309,6 +309,7 @@ Repository layout:
 - [`evals/skills-structure.json`](evals/skills-structure.json) contains repository structure checks used by `make validate-skills`.
 - `make validate-skills` uses [`scripts/skill_validation.py`](scripts/skill_validation.py) to enforce Anthropic-style metadata, eval, link, layout, and tool-parity constraints.
 - [`scripts/package-skills.py`](scripts/package-skills.py) reuses the same validator before writing `.skill` archives.
+- Generated `.skill` archives and skill eval workspaces are ignored and must not be tracked as source files.
 
 Build portable `.skill` archives:
 
@@ -370,6 +371,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - [`evals/skills-structure.json`](evals/skills-structure.json) 保存仓库结构检查，由 `make validate-skills` 校验。
 - `make validate-skills` 使用 [`scripts/skill_validation.py`](scripts/skill_validation.py) 校验 Anthropic-style 元数据、eval、链接、目录布局和工具元数据一致性。
 - [`scripts/package-skills.py`](scripts/package-skills.py) 在写入 `.skill` archives 前复用同一套校验器。
+- 生成的 `.skill` archives 和 skill eval workspaces 会被忽略，不能作为源码跟踪。
 
 打包 portable `.skill` archives：
 

@@ -95,6 +95,7 @@ $RECYCLE.BIN/
 *.yaml.bak
 *.zip
 *~
+*-workspace/
 .DS_Store
 .DS_Store?
 .Spotlight-V100

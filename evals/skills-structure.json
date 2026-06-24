@@ -41,6 +41,7 @@
         "scripts/validate-skills.sh delegates to the shared Python validator.",
         "scripts/package-skills.py can package portable skill directories into .skill archives.",
         "scripts/package-skills.py reuses the shared validator before writing archives.",
+        "Generated .skill archives and skill eval workspaces are not tracked as source files.",
         "SKILL.md files remain lightweight.",
         "Bundled resources live in supported skill-creator directories: references/, scripts/, assets/, or evals/.",
         "Reusable detailed material lives in references/ when present.",
