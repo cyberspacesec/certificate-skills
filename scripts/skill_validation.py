@@ -44,6 +44,7 @@ BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev")
 COMPARISON_LABELS = ("A", "B")
 COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
 COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
+COMPARISON_OUTPUT_FILE_RE = re.compile(r"^comparison-\d+\.json$")
 ANALYSIS_INSTRUCTION_LABELS = ("winner", "loser")
 ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS = ("winner_execution_pattern", "loser_execution_pattern")
 HISTORY_GRADING_RESULTS = {"baseline", "won", "lost", "tie"}
@@ -1395,8 +1396,11 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
         return []
 
     errors = []
-    if not isinstance(comparison.get("winner"), str) or not comparison["winner"]:
-        errors.append(f"{path}: comparison winner must be a non-empty string")
+    if not COMPARISON_OUTPUT_FILE_RE.fullmatch(path.name):
+        errors.append(f"{path}: blind comparison output files should be named comparison-N.json")
+    winner = comparison.get("winner")
+    if winner not in COMPARISON_LABELS:
+        errors.append(f"{path}: comparison winner must be A or B")
     if not isinstance(comparison.get("reasoning"), str) or not comparison["reasoning"]:
         errors.append(f"{path}: comparison reasoning must be a non-empty string")
 
@@ -1420,6 +1424,9 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
         for label, result in sorted(expectation_results.items()):
             if not isinstance(label, str):
                 errors.append(f"{path}: comparison expectation_results keys must be strings")
+                continue
+            if label not in COMPARISON_LABELS:
+                errors.append(f"{path}: comparison expectation_results keys must be A or B")
                 continue
             if not isinstance(result, dict):
                 errors.append(f"{path}: expectation_results.{label} must be an object")
@@ -1467,6 +1474,8 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
         for field in ("winner", "winner_skill", "loser_skill", "comparator_reasoning"):
             if not isinstance(comparison_summary.get(field), str):
                 errors.append(f"{path}: comparison_summary.{field} must be a string")
+        if isinstance(comparison_summary.get("winner"), str) and comparison_summary["winner"] not in COMPARISON_LABELS:
+            errors.append(f"{path}: comparison_summary.winner must be A or B")
 
     for field in ("winner_strengths", "loser_weaknesses"):
         values = analysis.get(field)
