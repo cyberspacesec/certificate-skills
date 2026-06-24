@@ -229,6 +229,7 @@ check_frontmatter() {
   local file=$1
   local dir_name=$2
   local name description close_line line_count
+  local xml_tag_re='<[[:alpha:]/][^>]*>'
 
   if [[ ! -f "$file" ]]; then
     fail "missing SKILL.md: $file"
@@ -260,17 +261,33 @@ check_frontmatter() {
 
   if [[ -z "$name" ]]; then
     fail "$file: missing frontmatter name"
-  elif [[ "$name" != "$dir_name" ]]; then
+  fi
+  if [[ -n "$name" && "$name" != "$dir_name" ]]; then
     fail "$file: frontmatter name '$name' does not match directory '$dir_name'"
-  elif [[ ! "$name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
-    fail "$file: frontmatter name should be lowercase hyphenated"
+  fi
+  if [[ -n "$name" && "${#name}" -gt 64 ]]; then
+    fail "$file: frontmatter name is too long (${#name} characters, expected <= 64)"
+  fi
+  if [[ -n "$name" && ! "$name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+    fail "$file: frontmatter name should use lowercase letters, numbers, and hyphens"
+  fi
+  if [[ -n "$name" && "$name" =~ $xml_tag_re ]]; then
+    fail "$file: frontmatter name must not contain XML tags"
+  fi
+  if [[ -n "$name" && ( "$name" == *anthropic* || "$name" == *claude* ) ]]; then
+    fail "$file: frontmatter name must not contain reserved words: anthropic, claude"
   fi
 
   if [[ -z "$description" ]]; then
     fail "$file: missing frontmatter description"
-  elif [[ "${#description}" -gt 1024 ]]; then
+  fi
+  if [[ -n "$description" && "${#description}" -gt 1024 ]]; then
     fail "$file: frontmatter description is too long (${#description} characters, expected <= 1024)"
-  elif [[ "$description" != *"Use when"* || "$description" != *"Triggers on mentions"* ]]; then
+  fi
+  if [[ -n "$description" && "$description" =~ $xml_tag_re ]]; then
+    fail "$file: frontmatter description must not contain XML tags"
+  fi
+  if [[ -n "$description" && ( "$description" != *"Use when"* || "$description" != *"Triggers on mentions"* ) ]]; then
     fail "$file: frontmatter description should explain when the skill triggers"
   fi
 }

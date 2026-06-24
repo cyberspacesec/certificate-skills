@@ -305,6 +305,7 @@ Repository layout:
 - [`.claude/skills/`](.claude/skills/) contains Claude Code-ready executable prompts with MCP `allowed-tools` metadata.
 - [`evals/evals.json`](evals/evals.json) contains repository-level skill-selection smoke evals.
 - [`evals/skills-structure.json`](evals/skills-structure.json) contains repository structure checks used by `make validate-skills`.
+- `make validate-skills` enforces Anthropic-style skill metadata constraints for `name` and `description`.
 
 Build portable `.skill` archives:
 
@@ -362,6 +363,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
 - [`evals/evals.json`](evals/evals.json) 保存仓库级技能选择 smoke eval。
 - [`evals/skills-structure.json`](evals/skills-structure.json) 保存仓库结构检查，由 `make validate-skills` 校验。
+- `make validate-skills` 会校验 Anthropic-style skill 的 `name` 和 `description` 元数据约束。
 
 打包 portable `.skill` archives：
 

@@ -9,11 +9,15 @@ from __future__ import annotations
 
 import argparse
 import pathlib
+import re
 import sys
 import zipfile
 
 
 ALLOWED_RESOURCE_DIRS = {"references", "scripts", "assets", "evals"}
+NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+XML_TAG_RE = re.compile(r"<[A-Za-z/][^>]*>")
+RESERVED_NAME_PARTS = ("anthropic", "claude")
 
 
 def iter_skill_dirs(skills_root: pathlib.Path, requested: list[str]) -> list[pathlib.Path]:
@@ -40,6 +44,70 @@ def validate_package_layout(skill_dir: pathlib.Path) -> None:
         )
 
 
+def unquote_scalar(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    return value
+
+
+def read_frontmatter(skill_file: pathlib.Path) -> dict[str, str]:
+    lines = skill_file.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != "---":
+        raise SystemExit(f"{skill_file}: missing opening YAML frontmatter delimiter")
+
+    try:
+        close_index = lines[1:].index("---") + 1
+    except ValueError as exc:
+        raise SystemExit(f"{skill_file}: missing closing YAML frontmatter delimiter") from exc
+
+    fields = {}
+    for line in lines[1:close_index]:
+        if line.startswith("name:"):
+            fields["name"] = unquote_scalar(line.split(":", 1)[1])
+        elif line.startswith("description:"):
+            fields["description"] = unquote_scalar(line.split(":", 1)[1])
+    return fields
+
+
+def validate_frontmatter(skill_dir: pathlib.Path) -> None:
+    skill_file = skill_dir / "SKILL.md"
+    fields = read_frontmatter(skill_file)
+    name = fields.get("name", "")
+    description = fields.get("description", "")
+    errors = []
+
+    if not name:
+        errors.append("missing frontmatter name")
+    else:
+        if name != skill_dir.name:
+            errors.append(f"frontmatter name {name!r} does not match directory {skill_dir.name!r}")
+        if len(name) > 64:
+            errors.append(f"frontmatter name is too long ({len(name)} characters, expected <= 64)")
+        if not NAME_RE.fullmatch(name):
+            errors.append("frontmatter name should use lowercase letters, numbers, and hyphens")
+        if XML_TAG_RE.search(name):
+            errors.append("frontmatter name must not contain XML tags")
+        if any(part in name for part in RESERVED_NAME_PARTS):
+            errors.append("frontmatter name must not contain reserved words: anthropic, claude")
+
+    if not description:
+        errors.append("missing frontmatter description")
+    else:
+        if len(description) > 1024:
+            errors.append(
+                f"frontmatter description is too long ({len(description)} characters, expected <= 1024)"
+            )
+        if XML_TAG_RE.search(description):
+            errors.append("frontmatter description must not contain XML tags")
+        if "Use when" not in description or "Triggers on mentions" not in description:
+            errors.append("frontmatter description should explain when the skill triggers")
+
+    if errors:
+        details = "\n  - ".join(errors)
+        raise SystemExit(f"{skill_file}: invalid skill metadata:\n  - {details}")
+
+
 def archive_members(skill_dir: pathlib.Path) -> list[pathlib.Path]:
     members = []
     for path in sorted(skill_dir.rglob("*")):
@@ -50,6 +118,7 @@ def archive_members(skill_dir: pathlib.Path) -> list[pathlib.Path]:
 
 def package_skill(skill_dir: pathlib.Path, output_dir: pathlib.Path, check: bool) -> pathlib.Path:
     validate_package_layout(skill_dir)
+    validate_frontmatter(skill_dir)
     output_path = output_dir / f"{skill_dir.name}.skill"
 
     if check:
