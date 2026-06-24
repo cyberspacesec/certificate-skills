@@ -20,6 +20,7 @@ CLAUDE_REQUIRED_SECTIONS = (
     "## Anti-Patterns",
 )
 EVAL_WORKSPACE_SUFFIX = "-workspace"
+EVAL_WORKSPACE_RUN_DIRS = {"with_skill", "without_skill", "old_skill"}
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GRADING_EXPECTATION_KEYS = {"text", "passed", "evidence"}
@@ -85,6 +86,7 @@ LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 MARKDOWN_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+EVAL_WORKSPACE_ITERATION_RE = re.compile(r"^iteration-\d+$")
 REFERENCE_TOC_RE = re.compile(r"^#{1,3} (Table of Contents|Contents)$", re.MULTILINE)
 REFERENCE_TOC_MIN_LINES = 300
 REFERENCE_USAGE_CUE = "Read when"
@@ -1541,6 +1543,78 @@ def validate_trigger_eval_set_schema(path: pathlib.Path) -> list[str]:
     return errors
 
 
+def is_eval_iteration_dirname(name: str) -> bool:
+    return bool(EVAL_WORKSPACE_ITERATION_RE.fullmatch(name))
+
+
+def is_eval_run_dir_parts(parts: tuple[str, ...]) -> bool:
+    return len(parts) == 3 and is_eval_iteration_dirname(parts[0]) and parts[2] in EVAL_WORKSPACE_RUN_DIRS
+
+
+def validate_eval_workspace_file_layout(workspace: pathlib.Path, path: pathlib.Path) -> list[str]:
+    relative_parts = path.relative_to(workspace).parts
+    name = path.name
+    errors = []
+
+    if name == "history.json":
+        if len(relative_parts) != 1:
+            errors.append(f"{path}: history.json should be located at the eval workspace root")
+        return errors
+
+    if name == "eval_metadata.json":
+        if len(relative_parts) != 3 or not is_eval_iteration_dirname(relative_parts[0]):
+            errors.append(
+                f"{path}: eval_metadata.json should be located at "
+                "<workspace>/iteration-N/<eval-name>/eval_metadata.json"
+            )
+        return errors
+
+    if name in {"grading.json", "timing.json"}:
+        parent_parts = relative_parts[:-1]
+        if not is_eval_run_dir_parts(parent_parts):
+            errors.append(
+                f"{path}: {name} should be located at "
+                f"<workspace>/iteration-N/<eval-name>/<with_skill|without_skill|old_skill>/{name}"
+            )
+        return errors
+
+    if name == "metrics.json":
+        if (
+            len(relative_parts) != 5
+            or relative_parts[-2] != "outputs"
+            or not is_eval_run_dir_parts(relative_parts[:-2])
+        ):
+            errors.append(
+                f"{path}: metrics.json should be located at "
+                "<workspace>/iteration-N/<eval-name>/<with_skill|without_skill|old_skill>/outputs/metrics.json"
+            )
+        return errors
+
+    return errors
+
+
+def eval_workspace_layout_errors(workspace: pathlib.Path) -> list[str]:
+    errors = []
+    for path in sorted(workspace.rglob("*")):
+        if ".git" in path.parts:
+            continue
+
+        if path.is_dir():
+            relative_parts = path.relative_to(workspace).parts
+            if len(relative_parts) == 1 and relative_parts[0].startswith("iteration-"):
+                if not is_eval_iteration_dirname(relative_parts[0]):
+                    errors.append(f"{path}: eval workspace iteration directories should be named iteration-N")
+            if path.name == "outputs" and not is_eval_run_dir_parts(relative_parts[:-1]):
+                errors.append(
+                    f"{path}: outputs directories should be located under "
+                    "<workspace>/iteration-N/<eval-name>/<with_skill|without_skill|old_skill>/"
+                )
+            continue
+
+        errors.extend(validate_eval_workspace_file_layout(workspace, path))
+    return errors
+
+
 def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
     errors = []
     workspaces = sorted(
@@ -1549,6 +1623,7 @@ def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
         if path.is_dir() and ".git" not in path.parts
     )
     for workspace in workspaces:
+        errors.extend(eval_workspace_layout_errors(workspace))
         history_path = workspace / "history.json"
         if history_path.is_file():
             errors.extend(validate_history_output_schema(history_path))
