@@ -99,6 +99,14 @@ ANALYSIS_IMPROVEMENT_SUGGESTION_KEYS = (
     "expected_impact",
 )
 ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS = ("winner_execution_pattern", "loser_execution_pattern")
+HISTORY_KEYS = ("started_at", "skill_name", "current_best", "iterations")
+HISTORY_ITERATION_KEYS = (
+    "version",
+    "parent",
+    "expectation_pass_rate",
+    "grading_result",
+    "is_current_best",
+)
 HISTORY_GRADING_RESULTS = {"baseline", "won", "lost", "tie"}
 TRIGGER_EVAL_COUNT = 20
 TRIGGER_EVAL_LABEL_MIN = 8
@@ -1732,6 +1740,14 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
         return []
 
     errors = []
+    expected_keys = set(HISTORY_KEYS)
+    missing = sorted(expected_keys - set(history))
+    unknown = sorted(set(history) - expected_keys)
+    if missing:
+        errors.append(f"{path}: history missing key(s): {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{path}: history contains unknown key(s): {', '.join(unknown)}")
+
     if not isinstance(history.get("started_at"), str) or not history["started_at"]:
         errors.append(f"{path}: history started_at must be a non-empty string")
     if not isinstance(history.get("skill_name"), str) or not history["skill_name"]:
@@ -1750,6 +1766,13 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
             if not isinstance(iteration, dict):
                 errors.append(f"{path}: iterations[{idx}] must be an object")
                 continue
+            expected_keys = set(HISTORY_ITERATION_KEYS)
+            missing = sorted(expected_keys - set(iteration))
+            unknown = sorted(set(iteration) - expected_keys)
+            if missing:
+                errors.append(f"{path}: iterations[{idx}] missing key(s): {', '.join(missing)}")
+            if unknown:
+                errors.append(f"{path}: iterations[{idx}] contains unknown key(s): {', '.join(unknown)}")
             version = None
             if not isinstance(iteration.get("version"), str) or not iteration["version"]:
                 errors.append(f"{path}: iterations[{idx}].version must be a non-empty string")
