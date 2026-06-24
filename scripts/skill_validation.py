@@ -23,6 +23,9 @@ CLAUDE_REQUIRED_SECTIONS = (
 EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_WORKSPACE_RUN_DIRS = {"with_skill", "without_skill", "old_skill"}
 FEEDBACK_RUN_ID_RE = re.compile(r"^.+-(?:with_skill|without_skill|old_skill)$")
+FEEDBACK_KEYS = ("status", "reviews")
+FEEDBACK_REVIEW_KEYS = ("run_id", "feedback", "timestamp")
+EVAL_METADATA_KEYS = ("eval_id", "eval_name", "prompt", "assertions")
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GRADING_EXPECTATION_KEYS = {"text", "passed", "evidence"}
@@ -1502,6 +1505,13 @@ def validate_feedback_output_schema(path: pathlib.Path) -> list[str]:
         return []
 
     errors = []
+    expected_keys = set(FEEDBACK_KEYS)
+    missing = sorted(expected_keys - set(feedback))
+    unknown = sorted(set(feedback) - expected_keys)
+    if missing:
+        errors.append(f"{path}: feedback missing key(s): {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{path}: feedback contains unknown key(s): {', '.join(unknown)}")
     if feedback.get("status") != "complete":
         errors.append(f"{path}: feedback status must be complete")
     reviews = feedback.get("reviews")
@@ -1512,6 +1522,13 @@ def validate_feedback_output_schema(path: pathlib.Path) -> list[str]:
             if not isinstance(review, dict):
                 errors.append(f"{path}: reviews[{idx}] must be an object")
                 continue
+            expected_keys = set(FEEDBACK_REVIEW_KEYS)
+            missing = sorted(expected_keys - set(review))
+            unknown = sorted(set(review) - expected_keys)
+            if missing:
+                errors.append(f"{path}: reviews[{idx}] missing key(s): {', '.join(missing)}")
+            if unknown:
+                errors.append(f"{path}: reviews[{idx}] contains unknown key(s): {', '.join(unknown)}")
             for key in ("run_id", "feedback", "timestamp"):
                 if not isinstance(review.get(key), str):
                     errors.append(f"{path}: reviews[{idx}].{key} must be a string")
@@ -1532,6 +1549,13 @@ def validate_eval_metadata_output_schema(path: pathlib.Path) -> list[str]:
         return []
 
     errors = []
+    expected_keys = set(EVAL_METADATA_KEYS)
+    missing = sorted(expected_keys - set(metadata))
+    unknown = sorted(set(metadata) - expected_keys)
+    if missing:
+        errors.append(f"{path}: eval_metadata missing key(s): {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{path}: eval_metadata contains unknown key(s): {', '.join(unknown)}")
     if not isinstance(metadata.get("eval_id"), int) or isinstance(metadata.get("eval_id"), bool):
         errors.append(f"{path}: eval_metadata eval_id must be an integer")
     eval_name = metadata.get("eval_name")
