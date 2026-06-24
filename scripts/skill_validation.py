@@ -43,6 +43,7 @@ BENCHMARK_RUN_SUMMARY_CONFIGS = ("with_skill", "without_skill")
 BENCHMARK_RUN_SUMMARY_METRICS = ("pass_rate", "time_seconds", "tokens")
 BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev", "min", "max")
 PASS_RATE_TOLERANCE = 0.01
+DURATION_SECONDS_TOLERANCE = 0.001
 COMPARISON_LABELS = ("A", "B")
 COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
 COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
@@ -1102,6 +1103,8 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
         for field in ("executor_duration_seconds", "grader_duration_seconds", "total_duration_seconds"):
             if not is_json_number(timing.get(field)):
                 errors.append(f"{path}: timing.{field} must be a number")
+            elif timing[field] < 0:
+                errors.append(f"{path}: timing.{field} must be non-negative")
 
     claims = grading.get("claims")
     if not isinstance(claims, list):
@@ -1454,12 +1457,26 @@ def validate_timing_output_schema(path: pathlib.Path) -> list[str]:
     errors = []
     if not isinstance(timing.get("total_tokens"), int) or isinstance(timing.get("total_tokens"), bool):
         errors.append(f"{path}: timing total_tokens must be an integer")
+    elif timing["total_tokens"] < 0:
+        errors.append(f"{path}: timing total_tokens must be non-negative")
     if not isinstance(timing.get("duration_ms"), int) or isinstance(timing.get("duration_ms"), bool):
         errors.append(f"{path}: timing duration_ms must be an integer")
+    elif timing["duration_ms"] < 0:
+        errors.append(f"{path}: timing duration_ms must be non-negative")
     if not isinstance(timing.get("total_duration_seconds"), (int, float)) or isinstance(
         timing.get("total_duration_seconds"), bool
     ):
         errors.append(f"{path}: timing total_duration_seconds must be a number")
+    elif timing["total_duration_seconds"] < 0:
+        errors.append(f"{path}: timing total_duration_seconds must be non-negative")
+    if (
+        isinstance(timing.get("duration_ms"), int)
+        and not isinstance(timing.get("duration_ms"), bool)
+        and is_json_number(timing.get("total_duration_seconds"))
+    ):
+        expected_total_duration_seconds = timing["duration_ms"] / 1000
+        if abs(timing["total_duration_seconds"] - expected_total_duration_seconds) > DURATION_SECONDS_TOLERANCE:
+            errors.append(f"{path}: timing total_duration_seconds must match duration_ms / 1000")
 
     timestamp_fields = ("executor_start", "executor_end", "grader_start", "grader_end")
     for field in timestamp_fields:
@@ -1472,6 +1489,8 @@ def validate_timing_output_schema(path: pathlib.Path) -> list[str]:
             not isinstance(timing.get(field), (int, float)) or isinstance(timing.get(field), bool)
         ):
             errors.append(f"{path}: timing {field} must be a number when present")
+        elif field in timing and timing[field] < 0:
+            errors.append(f"{path}: timing {field} must be non-negative when present")
     return errors
 
 
