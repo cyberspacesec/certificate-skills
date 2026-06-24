@@ -23,6 +23,10 @@ EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GRADING_EXPECTATION_KEYS = {"text", "passed", "evidence"}
+GRADING_SUMMARY_KEYS = {"passed", "failed", "total", "pass_rate"}
+GRADING_CLAIM_KEYS = {"claim", "type", "verified", "evidence"}
+GRADING_USER_NOTES_KEYS = {"uncertainties", "needs_review", "workarounds"}
+GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS = {"assertion", "reason"}
 BENCHMARK_RUN_RESULT_KEYS = {
     "pass_rate",
     "passed",
@@ -33,6 +37,9 @@ BENCHMARK_RUN_RESULT_KEYS = {
     "tool_calls",
     "errors",
 }
+BENCHMARK_RUN_SUMMARY_CONFIGS = ("with_skill", "without_skill")
+BENCHMARK_RUN_SUMMARY_METRICS = ("pass_rate", "time_seconds", "tokens")
+BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev")
 HISTORY_GRADING_RESULTS = {"baseline", "won", "lost", "tie"}
 EVAL_PROMPT_CONTROL_PHRASES = (
     "Handle a focused",
@@ -101,6 +108,14 @@ def format_errors(label: str, errors: list[str]) -> str:
 def raise_for_errors(label: str, errors: list[str]) -> None:
     if errors:
         raise ValidationFailure(format_errors(label, errors))
+
+
+def is_json_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def is_json_number(value: object) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 def unquote_scalar(value: str) -> str:
@@ -933,6 +948,40 @@ def tracked_repository_artifact_errors(repo_root: pathlib.Path) -> list[str]:
     return errors
 
 
+def validate_metrics_object_schema(
+    path: pathlib.Path,
+    metrics: dict,
+    label: str,
+    require_files_created: bool = True,
+) -> list[str]:
+    errors = []
+    tool_calls = metrics.get("tool_calls")
+    if not isinstance(tool_calls, dict):
+        errors.append(f"{path}: {label} tool_calls must be an object")
+    elif not all(isinstance(key, str) and is_json_int(value) for key, value in tool_calls.items()):
+        errors.append(f"{path}: {label} tool_calls entries must map tool names to integer counts")
+
+    int_fields = (
+        "total_tool_calls",
+        "total_steps",
+        "errors_encountered",
+        "output_chars",
+        "transcript_chars",
+    )
+    for field in int_fields:
+        if not is_json_int(metrics.get(field)):
+            errors.append(f"{path}: {label} {field} must be an integer")
+
+    files_created = metrics.get("files_created")
+    if files_created is None and not require_files_created:
+        return errors
+    if not isinstance(files_created, list):
+        errors.append(f"{path}: {label} files_created must be a list")
+    elif not all(isinstance(item, str) for item in files_created):
+        errors.append(f"{path}: {label} files_created entries must be strings")
+    return errors
+
+
 def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
     grading, errors = read_json(path)
     if errors:
@@ -961,6 +1010,95 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
             errors.append(f"{path}: expectations[{idx}].passed must be a boolean")
         if not isinstance(expectation.get("evidence"), str):
             errors.append(f"{path}: expectations[{idx}].evidence must be a string")
+
+    summary = grading.get("summary")
+    if not isinstance(summary, dict):
+        errors.append(f"{path}: grading.json summary must be an object")
+    else:
+        missing = sorted(GRADING_SUMMARY_KEYS - set(summary))
+        if missing:
+            errors.append(f"{path}: summary missing key(s): {', '.join(missing)}")
+        for field in ("passed", "failed", "total"):
+            if field in summary and not is_json_int(summary.get(field)):
+                errors.append(f"{path}: summary.{field} must be an integer")
+        if "pass_rate" in summary and not is_json_number(summary.get("pass_rate")):
+            errors.append(f"{path}: summary.pass_rate must be a number")
+
+    execution_metrics = grading.get("execution_metrics")
+    if not isinstance(execution_metrics, dict):
+        errors.append(f"{path}: grading.json execution_metrics must be an object")
+    else:
+        errors.extend(
+            validate_metrics_object_schema(
+                path,
+                execution_metrics,
+                "execution_metrics",
+                require_files_created=False,
+            )
+        )
+
+    timing = grading.get("timing")
+    if not isinstance(timing, dict):
+        errors.append(f"{path}: grading.json timing must be an object")
+    else:
+        for field in ("executor_duration_seconds", "grader_duration_seconds", "total_duration_seconds"):
+            if not is_json_number(timing.get(field)):
+                errors.append(f"{path}: timing.{field} must be a number")
+
+    claims = grading.get("claims")
+    if not isinstance(claims, list):
+        errors.append(f"{path}: grading.json claims must be a list")
+    else:
+        for idx, claim in enumerate(claims):
+            if not isinstance(claim, dict):
+                errors.append(f"{path}: claims[{idx}] must be an object")
+                continue
+            missing = sorted(GRADING_CLAIM_KEYS - set(claim))
+            if missing:
+                errors.append(f"{path}: claims[{idx}] missing key(s): {', '.join(missing)}")
+            for field in ("claim", "type", "evidence"):
+                if field in claim and not isinstance(claim.get(field), str):
+                    errors.append(f"{path}: claims[{idx}].{field} must be a string")
+            if "verified" in claim and not isinstance(claim.get("verified"), bool):
+                errors.append(f"{path}: claims[{idx}].verified must be a boolean")
+
+    user_notes_summary = grading.get("user_notes_summary")
+    if not isinstance(user_notes_summary, dict):
+        errors.append(f"{path}: grading.json user_notes_summary must be an object")
+    else:
+        missing = sorted(GRADING_USER_NOTES_KEYS - set(user_notes_summary))
+        if missing:
+            errors.append(f"{path}: user_notes_summary missing key(s): {', '.join(missing)}")
+        for field in GRADING_USER_NOTES_KEYS:
+            values = user_notes_summary.get(field)
+            if not isinstance(values, list):
+                errors.append(f"{path}: user_notes_summary.{field} must be a list")
+            elif not all(isinstance(item, str) for item in values):
+                errors.append(f"{path}: user_notes_summary.{field} entries must be strings")
+
+    eval_feedback = grading.get("eval_feedback")
+    if eval_feedback is not None:
+        if not isinstance(eval_feedback, dict):
+            errors.append(f"{path}: grading.json eval_feedback must be an object when present")
+        else:
+            suggestions = eval_feedback.get("suggestions")
+            if not isinstance(suggestions, list):
+                errors.append(f"{path}: eval_feedback.suggestions must be a list")
+            else:
+                for idx, suggestion in enumerate(suggestions):
+                    if not isinstance(suggestion, dict):
+                        errors.append(f"{path}: eval_feedback.suggestions[{idx}] must be an object")
+                        continue
+                    missing = sorted(GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS - set(suggestion))
+                    if missing:
+                        errors.append(
+                            f"{path}: eval_feedback.suggestions[{idx}] missing key(s): {', '.join(missing)}"
+                        )
+                    for field in GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS:
+                        if field in suggestion and not isinstance(suggestion.get(field), str):
+                            errors.append(f"{path}: eval_feedback.suggestions[{idx}].{field} must be a string")
+            if not isinstance(eval_feedback.get("overall"), str):
+                errors.append(f"{path}: eval_feedback.overall must be a string")
     return errors
 
 
@@ -978,12 +1116,19 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
     else:
         if not isinstance(metadata.get("skill_name"), str) or not metadata["skill_name"]:
             errors.append(f"{path}: metadata.skill_name must be a non-empty string")
+        if not isinstance(metadata.get("timestamp"), str) or not metadata["timestamp"]:
+            errors.append(f"{path}: metadata.timestamp must be a non-empty string")
         if not isinstance(metadata.get("evals_run"), list):
             errors.append(f"{path}: metadata.evals_run must be a list")
+        elif not all(isinstance(item, (int, str)) and not isinstance(item, bool) for item in metadata["evals_run"]):
+            errors.append(f"{path}: metadata.evals_run entries must be strings or integers")
         if not isinstance(metadata.get("runs_per_configuration"), int) or isinstance(
             metadata.get("runs_per_configuration"), bool
         ):
             errors.append(f"{path}: metadata.runs_per_configuration must be an integer")
+        for optional_string_field in ("skill_path", "executor_model", "analyzer_model"):
+            if optional_string_field in metadata and not isinstance(metadata.get(optional_string_field), str):
+                errors.append(f"{path}: metadata.{optional_string_field} must be a string when present")
 
     runs = benchmark.get("runs")
     if not isinstance(runs, list):
@@ -1037,6 +1182,28 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
     run_summary = benchmark.get("run_summary")
     if not isinstance(run_summary, dict):
         errors.append(f"{path}: benchmark.json run_summary must be an object")
+    else:
+        for configuration in BENCHMARK_RUN_SUMMARY_CONFIGS:
+            summary = run_summary.get(configuration)
+            if not isinstance(summary, dict):
+                errors.append(f"{path}: run_summary.{configuration} must be an object")
+                continue
+            for metric in BENCHMARK_RUN_SUMMARY_METRICS:
+                stats = summary.get(metric)
+                if not isinstance(stats, dict):
+                    errors.append(f"{path}: run_summary.{configuration}.{metric} must be an object")
+                    continue
+                for field in BENCHMARK_RUN_SUMMARY_STAT_FIELDS:
+                    if not is_json_number(stats.get(field)):
+                        errors.append(f"{path}: run_summary.{configuration}.{metric}.{field} must be a number")
+
+        delta = run_summary.get("delta")
+        if not isinstance(delta, dict):
+            errors.append(f"{path}: run_summary.delta must be an object")
+        else:
+            for metric in BENCHMARK_RUN_SUMMARY_METRICS:
+                if not isinstance(delta.get(metric), str):
+                    errors.append(f"{path}: run_summary.delta.{metric} must be a string")
     return errors
 
 
@@ -1092,31 +1259,7 @@ def validate_metrics_output_schema(path: pathlib.Path) -> list[str]:
         return errors
     if not metrics:
         return []
-
-    errors = []
-    tool_calls = metrics.get("tool_calls")
-    if not isinstance(tool_calls, dict):
-        errors.append(f"{path}: metrics tool_calls must be an object")
-    elif not all(isinstance(key, str) and isinstance(value, int) for key, value in tool_calls.items()):
-        errors.append(f"{path}: metrics tool_calls entries must map tool names to integer counts")
-
-    int_fields = (
-        "total_tool_calls",
-        "total_steps",
-        "errors_encountered",
-        "output_chars",
-        "transcript_chars",
-    )
-    for field in int_fields:
-        if not isinstance(metrics.get(field), int) or isinstance(metrics.get(field), bool):
-            errors.append(f"{path}: metrics {field} must be an integer")
-
-    files_created = metrics.get("files_created")
-    if not isinstance(files_created, list):
-        errors.append(f"{path}: metrics files_created must be a list")
-    elif not all(isinstance(item, str) for item in files_created):
-        errors.append(f"{path}: metrics files_created entries must be strings")
-    return errors
+    return validate_metrics_object_schema(path, metrics, "metrics")
 
 
 def validate_timing_output_schema(path: pathlib.Path) -> list[str]:
