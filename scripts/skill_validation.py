@@ -21,6 +21,7 @@ CLAUDE_REQUIRED_SECTIONS = (
 )
 EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_WORKSPACE_RUN_DIRS = {"with_skill", "without_skill", "old_skill"}
+FEEDBACK_RUN_ID_RE = re.compile(r"^.+-(?:with_skill|without_skill|old_skill)$")
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GRADING_EXPECTATION_KEYS = {"text", "passed", "evidence"}
@@ -1262,6 +1263,12 @@ def validate_feedback_output_schema(path: pathlib.Path) -> list[str]:
             for key in ("run_id", "feedback", "timestamp"):
                 if not isinstance(review.get(key), str):
                     errors.append(f"{path}: reviews[{idx}].{key} must be a string")
+            run_id = review.get("run_id")
+            if isinstance(run_id, str) and not FEEDBACK_RUN_ID_RE.fullmatch(run_id):
+                errors.append(
+                    f"{path}: reviews[{idx}].run_id should end with "
+                    "-with_skill, -without_skill, or -old_skill"
+                )
     return errors
 
 
