@@ -1596,6 +1596,11 @@ def validate_eval_workspace_file_layout(workspace: pathlib.Path, path: pathlib.P
             errors.append(f"{path}: history.json should be located at the eval workspace root")
         return errors
 
+    if name == "feedback.json":
+        if len(relative_parts) != 1:
+            errors.append(f"{path}: feedback.json should be located at the eval workspace root")
+        return errors
+
     if name == "eval_metadata.json":
         if len(relative_parts) != 3 or not is_eval_iteration_dirname(relative_parts[0]):
             errors.append(
