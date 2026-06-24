@@ -49,8 +49,7 @@ REFERENCE_TOC_RE = re.compile(r"^#{1,3} (Table of Contents|Contents)$", re.MULTI
 REFERENCE_TOC_MIN_LINES = 300
 REFERENCE_USAGE_CUE = "Read when"
 LINKED_BUNDLED_RESOURCE_DIRS = ("scripts", "assets")
-TOOLS_RE = re.compile(r"\bcert_[A-Za-z0-9_]+\b")
-CLAUDE_TOOLS_RE = re.compile(r"mcp__certificate-skills__(cert_[A-Za-z0-9_]+)")
+FRONTMATTER_KEY_RE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):")
 XML_TAG_RE = re.compile(r"<[A-Za-z/][^>]*>")
 RESERVED_NAME_PARTS = ("anthropic", "claude")
 INSTALLATION_RE = re.compile(
@@ -128,6 +127,50 @@ def read_frontmatter(skill_file: pathlib.Path) -> tuple[dict[str, str], list[str
         elif line.startswith("allowed-tools:"):
             fields["allowed-tools"] = line
     return fields, []
+
+
+def frontmatter_list_values(lines: list[str], key: str) -> tuple[list[str], list[str]]:
+    values = []
+    errors = []
+    in_list = False
+    key_seen = False
+    for line in lines:
+        key_match = FRONTMATTER_KEY_RE.match(line)
+        if key_match:
+            if key_match.group(1) == key:
+                key_seen = True
+                inline_value = line.split(":", 1)[1].strip()
+                if inline_value:
+                    try:
+                        parsed = json.loads(inline_value)
+                    except json.JSONDecodeError:
+                        errors.append(f"{key}: inline frontmatter list should use JSON-style string list syntax")
+                    else:
+                        if isinstance(parsed, list) and all(isinstance(item, str) for item in parsed):
+                            values.extend(parsed)
+                        else:
+                            errors.append(f"{key}: inline frontmatter list should contain only strings")
+                    break
+                in_list = True
+            elif in_list:
+                break
+            continue
+        if not in_list:
+            continue
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line.startswith(" "):
+            errors.append(f"{key}: frontmatter list item should be indented: {line}")
+            continue
+        list_match = re.match(r"^\s*-\s+(.+)$", line)
+        if not list_match:
+            errors.append(f"{key}: frontmatter list item should use '- value' syntax: {line}")
+            continue
+        values.append(unquote_scalar(list_match.group(1)))
+    if key_seen and not values:
+        errors.append(f"{key}: frontmatter list should contain at least one item")
+    return values, errors
 
 
 def iter_skill_dirs(skills_root: pathlib.Path, requested: list[str] | None = None) -> list[pathlib.Path]:
@@ -212,7 +255,7 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
         allowed_keys = set()
     seen_keys: set[str] = set()
     for line in lines:
-        match = re.match(r"^([A-Za-z][A-Za-z0-9_-]*):", line)
+        match = FRONTMATTER_KEY_RE.match(line)
         if not match:
             continue
         key = match.group(1)
@@ -273,14 +316,30 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
     if mode == "portable":
         if "tools" not in fields:
             errors.append(f"{skill_file}: portable skill frontmatter should declare tools")
+        else:
+            tools, tool_errors = frontmatter_list_values(lines, "tools")
+            for error in tool_errors:
+                errors.append(f"{skill_file}: {error}")
+            for tool in tools:
+                if not re.fullmatch(r"cert_[A-Za-z0-9_]+", tool):
+                    errors.append(f"{skill_file}: portable tools entry should be an unprefixed cert_* tool: {tool}")
         if "allowed-tools" in fields:
             errors.append(f"{skill_file}: portable skill frontmatter should use tools, not allowed-tools")
     elif mode == "claude":
         frontmatter_text = "\n".join(frontmatter_lines(skill_file)[0])
         if "allowed-tools" not in fields:
             errors.append(f"{skill_file}: Claude Code skill frontmatter should declare allowed-tools")
-        elif "mcp__certificate-skills__" not in frontmatter_text:
-            errors.append(f"{skill_file}: allowed-tools should use the certificate-skills MCP server prefix")
+        else:
+            tools, tool_errors = frontmatter_list_values(lines, "allowed-tools")
+            for error in tool_errors:
+                errors.append(f"{skill_file}: {error}")
+            for tool in tools:
+                if not re.fullmatch(r"mcp__certificate-skills__cert_[A-Za-z0-9_]+", tool):
+                    errors.append(
+                        f"{skill_file}: allowed-tools entry should use the certificate-skills MCP prefix: {tool}"
+                    )
+            if "mcp__certificate-skills__" not in frontmatter_text:
+                errors.append(f"{skill_file}: allowed-tools should use the certificate-skills MCP server prefix")
         if "tools" in fields:
             errors.append(f"{skill_file}: Claude Code skill frontmatter should use allowed-tools, not tools")
     else:
@@ -602,10 +661,12 @@ def metadata_tools(skill_file: pathlib.Path, claude: bool = False) -> set[str]:
     if errors:
         return set()
 
-    frontmatter = "\n".join(lines)
     if claude:
-        return set(CLAUDE_TOOLS_RE.findall(frontmatter))
-    return set(TOOLS_RE.findall(frontmatter))
+        return {
+            value.removeprefix("mcp__certificate-skills__")
+            for value in frontmatter_list_values(lines, "allowed-tools")[0]
+        }
+    return set(frontmatter_list_values(lines, "tools")[0])
 
 
 def tool_metadata_parity_errors(repo_root: pathlib.Path) -> list[str]:
