@@ -1262,9 +1262,26 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                 for field in ("pass_rate", "time_seconds"):
                     if field in result and not is_json_number(result.get(field)):
                         errors.append(f"{path}: runs[{idx}].result.{field} must be a number")
+                    elif field in result and result[field] < 0:
+                        errors.append(f"{path}: runs[{idx}].result.{field} must be non-negative")
                 for field in ("passed", "failed", "total", "tokens", "tool_calls", "errors"):
                     if field in result and not is_json_int(result.get(field)):
                         errors.append(f"{path}: runs[{idx}].result.{field} must be an integer")
+                    elif field in result and result[field] < 0:
+                        errors.append(f"{path}: runs[{idx}].result.{field} must be non-negative")
+                if (
+                    is_json_int(result.get("passed"))
+                    and is_json_int(result.get("failed"))
+                    and is_json_int(result.get("total"))
+                    and result["passed"] + result["failed"] != result["total"]
+                ):
+                    errors.append(f"{path}: runs[{idx}].result passed + failed must equal total")
+                if is_json_int(result.get("passed")) and is_json_int(result.get("total")) and is_json_number(
+                    result.get("pass_rate")
+                ):
+                    expected_pass_rate = result["passed"] / result["total"] if result["total"] else 0.0
+                    if abs(result["pass_rate"] - expected_pass_rate) > PASS_RATE_TOLERANCE:
+                        errors.append(f"{path}: runs[{idx}].result.pass_rate must match passed / total")
 
             expectations = run.get("expectations", [])
             if expectations is not None:
