@@ -32,6 +32,7 @@ validate_evals_manifest() {
 
   if ! python3 - "$manifest" "$evals_file" <<'PY'
 import json
+import pathlib
 import sys
 
 manifest_path = sys.argv[1]
@@ -42,6 +43,11 @@ with open(evals_path, "r", encoding="utf-8") as fh:
     evals_data = json.load(fh)
 
 errors = []
+skill_names = {
+    path.name
+    for path in pathlib.Path("skills").iterdir()
+    if path.is_dir() and (path / "SKILL.md").is_file()
+}
 if data.get("suite") != "certificate-skills-structure":
     errors.append("suite must be certificate-skills-structure")
 if not isinstance(data.get("version"), int):
@@ -90,6 +96,10 @@ else:
         expected_skills = case.get("expected_skills")
         if not isinstance(expected_skills, list) or not expected_skills:
             errors.append(f"evals/evals.json cases[{idx}].expected_skills must be a non-empty list")
+        else:
+            for skill_name in expected_skills:
+                if skill_name not in skill_names:
+                    errors.append(f"evals/evals.json cases[{idx}].expected_skills references unknown skill: {skill_name}")
 
 if errors:
     for error in errors:
