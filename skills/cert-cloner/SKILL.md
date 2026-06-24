@@ -1,6 +1,6 @@
 ---
 name: cert-cloner
-description: Clone certificates by copying subject info and generating new keys. For authorized security testing only.
+description: Use when cloning certificate subject information and extensions into a new test certificate for authorized security testing. Triggers on mentions of clone certificate, certificate copy, mimic cert subject, test certificate clone, or certificate validation research.
 tools:
   - cert_clone_certificate
 ---

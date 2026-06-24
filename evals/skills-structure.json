@@ -10,7 +10,8 @@
         "Every immediate child directory under skills/ contains SKILL.md.",
         "Each SKILL.md begins with YAML frontmatter.",
         "Each frontmatter block contains name and description.",
-        "The frontmatter name matches the skill directory name."
+        "The frontmatter name matches the skill directory name.",
+        "Descriptions explain when the skill triggers."
       ]
     },
     {
@@ -26,6 +27,8 @@
       "id": "skills-use-progressive-disclosure-layout",
       "prompt": "Audit skill package layout for progressive disclosure.",
       "assertions": [
+        "evals/evals.json contains skill-selection test prompts.",
+        "evals/skills-structure.json contains repository structure checks.",
         "SKILL.md files remain lightweight.",
         "Reusable detailed material lives in references/ when present.",
         "Relative links from SKILL.md resolve to files inside the same skill package.",

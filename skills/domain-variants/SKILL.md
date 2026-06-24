@@ -1,6 +1,6 @@
 ---
 name: domain-variants
-description: Generate certificates for domain variants (homoglyphs, subdomains, TLD changes, etc.) for phishing detection research.
+description: Use when generating certificate test cases for domain variants such as homoglyphs, subdomains, TLD changes, hyphenation, or inserted characters for authorized phishing detection research. Triggers on mentions of domain variants, homoglyph cert, typosquatting certificate, lookalike domain, or phishing research.
 tools:
   - cert_generate_domain_variants
 ---

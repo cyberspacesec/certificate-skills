@@ -1,6 +1,6 @@
 ---
 name: intermediate-ca-generator
-description: Generate intermediate CA certificates signed by a parent/root CA. Creates multi-tier PKI hierarchies.
+description: Use when generating intermediate CA certificates signed by a parent or root CA to build multi-tier PKI hierarchies. Triggers on mentions of intermediate CA, subordinate CA, PKI hierarchy, path length constraint, or CA chain generation.
 tools:
   - cert_generate_intermediate_ca
 ---

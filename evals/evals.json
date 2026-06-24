@@ -1,0 +1,62 @@
+{
+  "suite": "certificate-skills",
+  "version": 1,
+  "description": "Skill-selection eval prompts for certificate-skills Anthropic-style skill packages.",
+  "cases": [
+    {
+      "id": "select-certificate-info",
+      "prompt": "Show the SSL certificate chain, TLS version, cipher suite, OCSP stapling status, and handshake timing for example.com.",
+      "expected_skills": [
+        "certificate-info"
+      ],
+      "assertions": [
+        "Selects certificate-info for raw certificate and TLS connection details.",
+        "Does not select certificate-analysis unless the user asks for scoring or a security assessment."
+      ]
+    },
+    {
+      "id": "select-tls-vulnerability-scanner",
+      "prompt": "Check whether a host is vulnerable to Heartbleed, POODLE, ROBOT, FREAK, Logjam, Sweet32, BEAST, CRIME, DROWN, or insecure renegotiation.",
+      "expected_skills": [
+        "tls-vulnerability-scanner"
+      ],
+      "assertions": [
+        "Selects tls-vulnerability-scanner for named TLS vulnerability checks.",
+        "Does not substitute generic certificate security scanning for TLS exploit probes."
+      ]
+    },
+    {
+      "id": "select-crl-generator",
+      "prompt": "Create a CRL signed by my CA that revokes serial numbers 01A3 and 01A4 with key-compromise reason codes.",
+      "expected_skills": [
+        "crl-generator"
+      ],
+      "assertions": [
+        "Selects crl-generator for creating a signed Certificate Revocation List.",
+        "Uses revocation reason codes when requested."
+      ]
+    },
+    {
+      "id": "select-ca-signer",
+      "prompt": "Use my private CA certificate and key to issue a server authentication certificate for api.internal.example.",
+      "expected_skills": [
+        "ca-signer"
+      ],
+      "assertions": [
+        "Selects ca-signer for issuing a leaf certificate from an existing CA.",
+        "Does not select certificate-generator unless the user asks for a self-signed certificate or CA creation."
+      ]
+    },
+    {
+      "id": "select-domain-variants",
+      "prompt": "Generate authorized phishing detection test certificates for homoglyph and typosquatting variants of example.com.",
+      "expected_skills": [
+        "domain-variants"
+      ],
+      "assertions": [
+        "Selects domain-variants for lookalike domain certificate test cases.",
+        "Keeps the workflow scoped to authorized security research."
+      ]
+    }
+  ]
+}

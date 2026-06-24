@@ -13,24 +13,33 @@ fail() {
 
 validate_evals_manifest() {
   local manifest="evals/skills-structure.json"
+  local evals_file="evals/evals.json"
 
   if [[ ! -f "$manifest" ]]; then
     fail "missing skills eval manifest: $manifest"
     return
   fi
 
-  if ! command -v python3 >/dev/null 2>&1; then
-    fail "python3 is required to validate $manifest"
+  if [[ ! -f "$evals_file" ]]; then
+    fail "missing skill eval cases: $evals_file"
     return
   fi
 
-  if ! python3 - "$manifest" <<'PY'
+  if ! command -v python3 >/dev/null 2>&1; then
+    fail "python3 is required to validate eval manifests"
+    return
+  fi
+
+  if ! python3 - "$manifest" "$evals_file" <<'PY'
 import json
 import sys
 
-path = sys.argv[1]
-with open(path, "r", encoding="utf-8") as fh:
+manifest_path = sys.argv[1]
+evals_path = sys.argv[2]
+with open(manifest_path, "r", encoding="utf-8") as fh:
     data = json.load(fh)
+with open(evals_path, "r", encoding="utf-8") as fh:
+    evals_data = json.load(fh)
 
 errors = []
 if data.get("suite") != "certificate-skills-structure":
@@ -56,9 +65,35 @@ else:
         if not isinstance(assertions, list) or not assertions:
             errors.append(f"cases[{idx}].assertions must be a non-empty list")
 
+if evals_data.get("suite") != "certificate-skills":
+    errors.append("evals/evals.json suite must be certificate-skills")
+if not isinstance(evals_data.get("version"), int):
+    errors.append("evals/evals.json version must be an integer")
+eval_cases = evals_data.get("cases")
+if not isinstance(eval_cases, list) or not eval_cases:
+    errors.append("evals/evals.json cases must be a non-empty list")
+else:
+    seen = set()
+    for idx, case in enumerate(eval_cases):
+        case_id = case.get("id")
+        if not case_id:
+            errors.append(f"evals/evals.json cases[{idx}].id is required")
+        elif case_id in seen:
+            errors.append(f"duplicate eval case id: {case_id}")
+        else:
+            seen.add(case_id)
+        if not case.get("prompt"):
+            errors.append(f"evals/evals.json cases[{idx}].prompt is required")
+        assertions = case.get("assertions")
+        if not isinstance(assertions, list) or not assertions:
+            errors.append(f"evals/evals.json cases[{idx}].assertions must be a non-empty list")
+        expected_skills = case.get("expected_skills")
+        if not isinstance(expected_skills, list) or not expected_skills:
+            errors.append(f"evals/evals.json cases[{idx}].expected_skills must be a non-empty list")
+
 if errors:
     for error in errors:
-        print(f"ERROR: {path}: {error}", file=sys.stderr)
+        print(f"ERROR: {error}", file=sys.stderr)
     sys.exit(1)
 PY
   then
@@ -157,6 +192,8 @@ check_frontmatter() {
     fail "$file: missing frontmatter description"
   elif [[ "${#description}" -gt 1024 ]]; then
     fail "$file: frontmatter description is too long (${#description} characters, expected <= 1024)"
+  elif [[ "$description" != *"Use when"* || "$description" != *"Triggers on mentions"* ]]; then
+    fail "$file: frontmatter description should explain when the skill triggers"
   fi
 }
 

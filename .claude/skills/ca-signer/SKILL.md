@@ -1,6 +1,6 @@
 ---
 name: ca-signer
-description: Sign terminal/leaf certificates using a CA certificate and private key. Creates server, client, or dual-purpose certificates.
+description: Use when signing terminal or leaf certificates with a CA certificate and private key for server, client, or dual-purpose usage. Triggers on mentions of sign certificate, CA-signed cert, leaf certificate, server auth certificate, or client auth certificate.
 allowed-tools:
   - mcp__certificate-skills__cert_sign_certificate
 ---

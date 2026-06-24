@@ -1,6 +1,6 @@
 ---
 name: crl-generator
-description: Generate Certificate Revocation Lists (CRLs) signed by a CA. Lists revoked certificates with RFC 5280 reason codes.
+description: Use when generating Certificate Revocation Lists (CRLs), listing revoked certificate serials, or assigning RFC 5280 revocation reason codes. Triggers on mentions of generate CRL, create revocation list, revoke certificate by serial, CRL signing, or revocation reason.
 allowed-tools:
   - mcp__certificate-skills__cert_generate_crl
   - mcp__certificate-skills__cert_parse_crl
