@@ -1651,15 +1651,20 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
                     not isinstance(result.get(int_field), int) or isinstance(result.get(int_field), bool)
                 ):
                     errors.append(f"{path}: expectation_results.{label}.{int_field} must be an integer")
+                elif int_field in result and result[int_field] < 0:
+                    errors.append(f"{path}: expectation_results.{label}.{int_field} must be non-negative")
             if "pass_rate" in result and (
                 not isinstance(result.get("pass_rate"), (int, float)) or isinstance(result.get("pass_rate"), bool)
             ):
                 errors.append(f"{path}: expectation_results.{label}.pass_rate must be a number")
+            elif "pass_rate" in result and not 0 <= result["pass_rate"] <= 1:
+                errors.append(f"{path}: expectation_results.{label}.pass_rate must be between 0 and 1")
             details = result.get("details")
             if details is not None:
                 if not isinstance(details, list):
                     errors.append(f"{path}: expectation_results.{label}.details must be a list")
                 else:
+                    detail_passed_values: list[bool] = []
                     for idx, detail in enumerate(details):
                         if not isinstance(detail, dict):
                             errors.append(f"{path}: expectation_results.{label}.details[{idx}] must be an object")
@@ -1671,6 +1676,28 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
                             )
                         if not isinstance(detail.get("passed"), bool):
                             errors.append(f"{path}: expectation_results.{label}.details[{idx}].passed must be a boolean")
+                        else:
+                            detail_passed_values.append(detail["passed"])
+                    if len(detail_passed_values) == len(details):
+                        expected_passed = sum(detail_passed_values)
+                        expected_total = len(detail_passed_values)
+                        expected_pass_rate = expected_passed / expected_total if expected_total else 0.0
+                        if is_json_int(result.get("passed")) and result["passed"] != expected_passed:
+                            errors.append(
+                                f"{path}: expectation_results.{label}.passed must equal passed details count "
+                                f"{expected_passed}"
+                            )
+                        if is_json_int(result.get("total")) and result["total"] != expected_total:
+                            errors.append(
+                                f"{path}: expectation_results.{label}.total must equal details count {expected_total}"
+                            )
+                        if (
+                            is_json_number(result.get("pass_rate"))
+                            and abs(result["pass_rate"] - expected_pass_rate) > PASS_RATE_TOLERANCE
+                        ):
+                            errors.append(
+                                f"{path}: expectation_results.{label}.pass_rate must match passed / total"
+                            )
     return errors
 
 
