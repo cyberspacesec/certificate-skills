@@ -1146,6 +1146,7 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
     if not isinstance(runs, list):
         errors.append(f"{path}: benchmark.json runs must be a list")
     else:
+        run_positions: dict[tuple[int, int], dict[str, int]] = {}
         for idx, run in enumerate(runs):
             if not isinstance(run, dict):
                 errors.append(f"{path}: runs[{idx}] must be an object")
@@ -1163,6 +1164,15 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                 errors.append(f"{path}: runs[{idx}].configuration must be with_skill or without_skill")
             if not isinstance(run.get("run_number"), int) or isinstance(run.get("run_number"), bool):
                 errors.append(f"{path}: runs[{idx}].run_number must be an integer")
+            if (
+                isinstance(run.get("eval_id"), int)
+                and not isinstance(run.get("eval_id"), bool)
+                and isinstance(run.get("run_number"), int)
+                and not isinstance(run.get("run_number"), bool)
+                and run.get("configuration") in {"with_skill", "without_skill"}
+            ):
+                group = (run["eval_id"], run["run_number"])
+                run_positions.setdefault(group, {}).setdefault(run["configuration"], idx)
 
             result = run.get("result")
             if not isinstance(result, dict):
@@ -1214,6 +1224,14 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                             )
             if "notes" in run:
                 errors.extend(validate_string_list_field(path, run, f"runs[{idx}]", "notes"))
+        for (eval_id, run_number), positions in sorted(run_positions.items()):
+            with_skill_idx = positions.get("with_skill")
+            without_skill_idx = positions.get("without_skill")
+            if with_skill_idx is not None and without_skill_idx is not None and without_skill_idx < with_skill_idx:
+                errors.append(
+                    f"{path}: runs for eval_id {eval_id} run_number {run_number} should place "
+                    "with_skill before without_skill"
+                )
 
     run_summary = benchmark.get("run_summary")
     if not isinstance(run_summary, dict):
