@@ -1370,6 +1370,15 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                 for field in BENCHMARK_RUN_SUMMARY_STAT_FIELDS:
                     if not is_json_number(stats.get(field)):
                         errors.append(f"{path}: run_summary.{configuration}.{metric}.{field} must be a number")
+                    elif stats[field] < 0:
+                        errors.append(f"{path}: run_summary.{configuration}.{metric}.{field} must be non-negative")
+                    elif metric == "pass_rate" and stats[field] > 1:
+                        errors.append(f"{path}: run_summary.{configuration}.{metric}.{field} must be between 0 and 1")
+                if all(is_json_number(stats.get(field)) for field in BENCHMARK_RUN_SUMMARY_STAT_FIELDS):
+                    if stats["min"] > stats["max"]:
+                        errors.append(f"{path}: run_summary.{configuration}.{metric}.min must be <= max")
+                    if stats["mean"] < stats["min"] or stats["mean"] > stats["max"]:
+                        errors.append(f"{path}: run_summary.{configuration}.{metric}.mean must be between min and max")
 
         delta = run_summary.get("delta")
         if not isinstance(delta, dict):
