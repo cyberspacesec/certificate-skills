@@ -28,6 +28,7 @@
         "Claude Code skill metadata uses the current certificate-skills MCP server prefix.",
         "Claude Code skill frontmatter uses allowed-tools and portable skill frontmatter uses tools.",
         "Tool metadata fields are non-empty YAML lists with the expected portable or Claude Code tool-name format.",
+        "Declared skill tools are referenced from the skill Markdown instructions.",
         "Claude Code skill frontmatter uses only name, description, allowed-tools, and optional compatibility fields.",
         "Portable skill tools match the corresponding Claude Code allowed-tools after removing the MCP prefix.",
         "Claude Code skill prompts include When to Use, When NOT to Use, Instructions, and Anti-Patterns sections.",

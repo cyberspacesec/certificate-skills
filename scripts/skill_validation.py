@@ -50,6 +50,7 @@ REFERENCE_TOC_MIN_LINES = 300
 REFERENCE_USAGE_CUE = "Read when"
 LINKED_BUNDLED_RESOURCE_DIRS = ("scripts", "assets")
 FRONTMATTER_KEY_RE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):")
+MCP_TOOL_PREFIX = "mcp__certificate-skills__"
 XML_TAG_RE = re.compile(r"<[A-Za-z/][^>]*>")
 RESERVED_NAME_PARTS = ("anthropic", "claude")
 INSTALLATION_RE = re.compile(
@@ -243,6 +244,7 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
         return errors
 
     lines = frontmatter_lines(skill_file)[0]
+    body_text = "\n".join(body_lines(skill_file)[0])
     line_count = len(skill_file.read_text(encoding="utf-8").splitlines())
     name = fields.get("name", "")
     description = fields.get("description", "")
@@ -323,6 +325,8 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
             for tool in tools:
                 if not re.fullmatch(r"cert_[A-Za-z0-9_]+", tool):
                     errors.append(f"{skill_file}: portable tools entry should be an unprefixed cert_* tool: {tool}")
+                elif tool not in body_text:
+                    errors.append(f"{skill_file}: portable tools entry should be referenced in Markdown instructions: {tool}")
         if "allowed-tools" in fields:
             errors.append(f"{skill_file}: portable skill frontmatter should use tools, not allowed-tools")
     elif mode == "claude":
@@ -334,11 +338,15 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
             for error in tool_errors:
                 errors.append(f"{skill_file}: {error}")
             for tool in tools:
-                if not re.fullmatch(r"mcp__certificate-skills__cert_[A-Za-z0-9_]+", tool):
+                if not re.fullmatch(rf"{MCP_TOOL_PREFIX}cert_[A-Za-z0-9_]+", tool):
                     errors.append(
                         f"{skill_file}: allowed-tools entry should use the certificate-skills MCP prefix: {tool}"
                     )
-            if "mcp__certificate-skills__" not in frontmatter_text:
+                elif tool.removeprefix(MCP_TOOL_PREFIX) not in body_text:
+                    errors.append(
+                        f"{skill_file}: allowed-tools entry should be referenced in Markdown instructions: {tool}"
+                    )
+            if MCP_TOOL_PREFIX not in frontmatter_text:
                 errors.append(f"{skill_file}: allowed-tools should use the certificate-skills MCP server prefix")
         if "tools" in fields:
             errors.append(f"{skill_file}: Claude Code skill frontmatter should use allowed-tools, not tools")
@@ -668,7 +676,7 @@ def metadata_tools(skill_file: pathlib.Path, claude: bool = False) -> set[str]:
 
     if claude:
         return {
-            value.removeprefix("mcp__certificate-skills__")
+            value.removeprefix(MCP_TOOL_PREFIX)
             for value in frontmatter_list_values(lines, "allowed-tools")[0]
         }
     return set(frontmatter_list_values(lines, "tools")[0])
