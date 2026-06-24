@@ -57,6 +57,19 @@ COMPARISON_RUBRIC_SCORE_RANGES = {
 COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
 COMPARISON_OUTPUT_FILE_RE = re.compile(r"^comparison-\d+\.json$")
 ANALYSIS_INSTRUCTION_LABELS = ("winner", "loser")
+ANALYSIS_COMPARISON_SUMMARY_KEYS = (
+    "winner",
+    "winner_skill",
+    "loser_skill",
+    "comparator_reasoning",
+)
+ANALYSIS_INSTRUCTION_FOLLOWING_KEYS = ("score", "issues")
+ANALYSIS_IMPROVEMENT_SUGGESTION_KEYS = (
+    "priority",
+    "category",
+    "suggestion",
+    "expected_impact",
+)
 ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS = ("winner_execution_pattern", "loser_execution_pattern")
 HISTORY_GRADING_RESULTS = {"baseline", "won", "lost", "tie"}
 TRIGGER_EVAL_COUNT = 20
@@ -1845,7 +1858,14 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
     if not isinstance(comparison_summary, dict):
         errors.append(f"{path}: analysis comparison_summary must be an object")
     else:
-        for field in ("winner", "winner_skill", "loser_skill", "comparator_reasoning"):
+        expected_keys = set(ANALYSIS_COMPARISON_SUMMARY_KEYS)
+        missing = sorted(expected_keys - set(comparison_summary))
+        unknown = sorted(set(comparison_summary) - expected_keys)
+        if missing:
+            errors.append(f"{path}: comparison_summary missing key(s): {', '.join(missing)}")
+        if unknown:
+            errors.append(f"{path}: comparison_summary contains unknown key(s): {', '.join(unknown)}")
+        for field in ANALYSIS_COMPARISON_SUMMARY_KEYS:
             if not isinstance(comparison_summary.get(field), str):
                 errors.append(f"{path}: comparison_summary.{field} must be a string")
         if isinstance(comparison_summary.get("winner"), str) and comparison_summary["winner"] not in COMPARISON_LABELS:
@@ -1867,6 +1887,13 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
             if not isinstance(entry, dict):
                 errors.append(f"{path}: instruction_following.{label} must be an object")
                 continue
+            expected_keys = set(ANALYSIS_INSTRUCTION_FOLLOWING_KEYS)
+            missing = sorted(expected_keys - set(entry))
+            unknown = sorted(set(entry) - expected_keys)
+            if missing:
+                errors.append(f"{path}: instruction_following.{label} missing key(s): {', '.join(missing)}")
+            if unknown:
+                errors.append(f"{path}: instruction_following.{label} contains unknown key(s): {', '.join(unknown)}")
             errors.extend(validate_number_range(path, f"instruction_following.{label}.score", entry.get("score"), 0, 10))
             errors.extend(validate_string_list_field(path, entry, f"instruction_following.{label}", "issues"))
 
@@ -1878,7 +1905,14 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
             if not isinstance(suggestion, dict):
                 errors.append(f"{path}: improvement_suggestions[{idx}] must be an object")
                 continue
-            for field in ("priority", "category", "suggestion", "expected_impact"):
+            expected_keys = set(ANALYSIS_IMPROVEMENT_SUGGESTION_KEYS)
+            missing = sorted(expected_keys - set(suggestion))
+            unknown = sorted(set(suggestion) - expected_keys)
+            if missing:
+                errors.append(f"{path}: improvement_suggestions[{idx}] missing key(s): {', '.join(missing)}")
+            if unknown:
+                errors.append(f"{path}: improvement_suggestions[{idx}] contains unknown key(s): {', '.join(unknown)}")
+            for field in ANALYSIS_IMPROVEMENT_SUGGESTION_KEYS:
                 if not isinstance(suggestion.get(field), str):
                     errors.append(f"{path}: improvement_suggestions[{idx}].{field} must be a string")
 
@@ -1886,6 +1920,13 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
     if not isinstance(transcript_insights, dict):
         errors.append(f"{path}: analysis transcript_insights must be an object")
     else:
+        expected_fields = set(ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS)
+        missing = sorted(expected_fields - set(transcript_insights))
+        unknown = sorted(set(transcript_insights) - expected_fields)
+        if missing:
+            errors.append(f"{path}: transcript_insights missing key(s): {', '.join(missing)}")
+        if unknown:
+            errors.append(f"{path}: transcript_insights contains unknown key(s): {', '.join(unknown)}")
         for field in ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS:
             if not isinstance(transcript_insights.get(field), str):
                 errors.append(f"{path}: transcript_insights.{field} must be a string")
