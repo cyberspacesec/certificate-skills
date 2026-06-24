@@ -311,6 +311,7 @@ Repository layout:
 - Portable skill reference links include a `Read when` cue so detailed material is loaded only when relevant.
 - Reference files over 300 lines must include a `Contents` or `Table of Contents` heading.
 - Bundled `scripts/` and `assets/` files are linked from `SKILL.md`; bundled scripts must be executable.
+- Skill packages reject generated cache or backup artifacts that should not be distributed.
 - Skill package content rejects high-risk shell patterns that could compromise the user's system.
 - Each portable skill includes `evals/evals.json` with 2-3 test prompts using only the skill-creator eval schema fields and consecutive case ids.
 - Skill `evals/` directories contain only `evals.json` and optional `files/` fixtures.
@@ -385,6 +386,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - 可移植 skill 的 reference 链接包含 `Read when` 提示，用于说明何时读取详细材料。
 - 超过 300 行的 reference 文件必须包含 `Contents` 或 `Table of Contents` 标题。
 - 打包的 `scripts/` 和 `assets/` 文件必须从 `SKILL.md` 链接；打包脚本必须可执行。
+- skill package 会拒绝不应分发的生成缓存或备份产物。
 - skill package 内容会拒绝可能破坏用户系统的高风险 shell 模式。
 - 每个可移植 skill 都包含 `evals/evals.json`，内含 2-3 个测试提示词，只使用 skill-creator eval schema 字段，并使用连续 case id。
 - skill `evals/` 目录只包含 `evals.json` 和可选的 `files/` fixture。

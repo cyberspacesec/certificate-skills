@@ -23,6 +23,8 @@ EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GENERATED_ARTIFACT_IGNORE_PATTERNS = ("*.skill", "*-workspace/", "/dist/")
+DISALLOWED_PACKAGED_ARTIFACT_NAMES = {".DS_Store", "Thumbs.db", "__pycache__"}
+DISALLOWED_PACKAGED_ARTIFACT_SUFFIXES = {".pyc", ".pyo"}
 DESCRIPTION_MAX_WORDS = 100
 PORTABLE_FRONTMATTER_KEYS = {"name", "description", "tools", "compatibility"}
 CLAUDE_FRONTMATTER_KEYS = {"name", "description", "allowed-tools", "compatibility"}
@@ -789,6 +791,23 @@ def skill_package_safety_errors(skill_dir: pathlib.Path) -> list[str]:
     return errors
 
 
+def packaged_artifact_errors(skill_dir: pathlib.Path) -> list[str]:
+    errors = []
+    if not skill_dir.is_dir():
+        return errors
+
+    for path in sorted(skill_dir.rglob("*")):
+        relative = path.relative_to(skill_dir)
+        relative_path = relative.as_posix()
+        if any(part in DISALLOWED_PACKAGED_ARTIFACT_NAMES for part in relative.parts):
+            errors.append(f"{skill_dir}: generated/cache artifact should not be bundled: {relative_path}")
+        elif path.is_file() and path.suffix in DISALLOWED_PACKAGED_ARTIFACT_SUFFIXES:
+            errors.append(f"{skill_dir}: generated/cache artifact should not be bundled: {relative_path}")
+        elif path.is_file() and path.name.endswith("~"):
+            errors.append(f"{skill_dir}: backup artifact should not be bundled: {relative_path}")
+    return errors
+
+
 def packaging_script_errors(repo_root: pathlib.Path) -> list[str]:
     script = repo_root / "scripts" / "package-skills.py"
     errors = []
@@ -861,6 +880,7 @@ def validate_repository(repo_root: pathlib.Path, run_package_check: bool = True)
             errors.extend(frontmatter_errors(skill_dir, mode))
             errors.extend(package_layout_errors(skill_dir))
             errors.extend(skill_package_safety_errors(skill_dir))
+            errors.extend(packaged_artifact_errors(skill_dir))
             if mode == "claude":
                 errors.extend(claude_prompt_section_errors(skill_dir / "SKILL.md"))
             else:
@@ -886,6 +906,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
     errors.extend(package_layout_errors(skill_dir))
     errors.extend(frontmatter_errors(skill_dir, "portable"))
     errors.extend(skill_package_safety_errors(skill_dir))
+    errors.extend(packaged_artifact_errors(skill_dir))
     errors.extend(skill_file_link_errors(skill_dir / "SKILL.md", require_reference_usage_cue=True))
 
     evals_file = skill_dir / "evals" / "evals.json"
