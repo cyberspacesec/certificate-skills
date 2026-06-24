@@ -1531,6 +1531,8 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
                 iteration.get("expectation_pass_rate"), bool
             ):
                 errors.append(f"{path}: iterations[{idx}].expectation_pass_rate must be a number")
+            elif not 0 <= iteration["expectation_pass_rate"] <= 1:
+                errors.append(f"{path}: iterations[{idx}].expectation_pass_rate must be between 0 and 1")
             if iteration.get("grading_result") not in HISTORY_GRADING_RESULTS:
                 errors.append(f"{path}: iterations[{idx}].grading_result must be baseline, won, lost, or tie")
             if not isinstance(iteration.get("is_current_best"), bool):
