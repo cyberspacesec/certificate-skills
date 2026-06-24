@@ -1679,7 +1679,7 @@ def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
             errors.extend(validate_benchmark_output_schema(path))
         for path in sorted(workspace.rglob("feedback.json")):
             errors.extend(validate_feedback_output_schema(path))
-        for path in sorted(workspace.rglob("comparison-*.json")):
+        for path in sorted(workspace.rglob("comparison*.json")):
             errors.extend(validate_comparison_output_schema(path))
         for path in sorted(workspace.rglob("analysis.json")):
             errors.extend(validate_analysis_output_schema(path))
