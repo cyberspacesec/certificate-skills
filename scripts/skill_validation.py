@@ -277,6 +277,13 @@ def skill_names(skills_root: pathlib.Path) -> set[str]:
     }
 
 
+def frontmatter_name(skill_dir: pathlib.Path) -> str:
+    fields, errors = read_frontmatter(skill_dir / "SKILL.md")
+    if errors:
+        return skill_dir.name
+    return fields.get("name") or skill_dir.name
+
+
 def package_layout_errors(skill_dir: pathlib.Path) -> list[str]:
     errors = []
     for child in sorted(skill_dir.iterdir()):
@@ -666,6 +673,7 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
     for skill_name in sorted(known_skill_names):
         skill_dir = skills_root / skill_name
         skill_evals_path = skill_dir / "evals" / "evals.json"
+        expected_skill_name = frontmatter_name(skill_dir)
         skill_evals, skill_errors = read_json(skill_evals_path)
         if skill_errors:
             errors.extend(skill_errors)
@@ -675,7 +683,7 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
                 validate_skill_creator_evals(
                     skill_evals,
                     str(skill_evals_path),
-                    skill_name,
+                    expected_skill_name,
                     min_cases=2,
                     max_cases=3,
                     files_root=skill_dir,
@@ -1815,7 +1823,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
             validate_skill_creator_evals(
                 skill_evals,
                 str(evals_file),
-                skill_dir.name,
+                frontmatter_name(skill_dir),
                 min_cases=2,
                 max_cases=3,
                 files_root=skill_dir,
