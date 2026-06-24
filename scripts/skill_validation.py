@@ -28,10 +28,21 @@ FEEDBACK_REVIEW_KEYS = ("run_id", "feedback", "timestamp")
 EVAL_METADATA_KEYS = ("eval_id", "eval_name", "prompt", "assertions")
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
+GRADING_REQUIRED_TOP_LEVEL_KEYS = (
+    "expectations",
+    "summary",
+    "execution_metrics",
+    "timing",
+    "claims",
+    "user_notes_summary",
+)
+GRADING_ALLOWED_TOP_LEVEL_KEYS = (*GRADING_REQUIRED_TOP_LEVEL_KEYS, "eval_feedback")
 GRADING_EXPECTATION_KEYS = {"text", "passed", "evidence"}
 GRADING_SUMMARY_KEYS = {"passed", "failed", "total", "pass_rate"}
+GRADING_TIMING_KEYS = ("executor_duration_seconds", "grader_duration_seconds", "total_duration_seconds")
 GRADING_CLAIM_KEYS = {"claim", "type", "verified", "evidence"}
 GRADING_USER_NOTES_KEYS = {"uncertainties", "needs_review", "workarounds"}
+GRADING_EVAL_FEEDBACK_KEYS = ("suggestions", "overall")
 GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS = {"assertion", "reason"}
 BENCHMARK_RUN_RESULT_KEYS = {
     "pass_rate",
@@ -1091,11 +1102,21 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
     if not grading:
         return []
 
+    errors = []
+    required_keys = set(GRADING_REQUIRED_TOP_LEVEL_KEYS)
+    allowed_keys = set(GRADING_ALLOWED_TOP_LEVEL_KEYS)
+    missing = sorted(required_keys - set(grading))
+    unknown = sorted(set(grading) - allowed_keys)
+    if missing:
+        errors.append(f"{path}: grading.json missing key(s): {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{path}: grading.json contains unknown key(s): {', '.join(unknown)}")
+
     expectations = grading.get("expectations")
     if not isinstance(expectations, list):
-        return [f"{path}: grading.json expectations must be a list"]
+        errors.append(f"{path}: grading.json expectations must be a list")
+        expectations = []
 
-    errors = []
     expectation_passed_values: list[bool] = []
     for idx, expectation in enumerate(expectations):
         if not isinstance(expectation, dict):
@@ -1121,8 +1142,11 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
         errors.append(f"{path}: grading.json summary must be an object")
     else:
         missing = sorted(GRADING_SUMMARY_KEYS - set(summary))
+        unknown = sorted(set(summary) - GRADING_SUMMARY_KEYS)
         if missing:
             errors.append(f"{path}: summary missing key(s): {', '.join(missing)}")
+        if unknown:
+            errors.append(f"{path}: summary contains unknown key(s): {', '.join(unknown)}")
         for field in ("passed", "failed", "total"):
             if field in summary and not is_json_int(summary.get(field)):
                 errors.append(f"{path}: summary.{field} must be an integer")
@@ -1164,7 +1188,14 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
     if not isinstance(timing, dict):
         errors.append(f"{path}: grading.json timing must be an object")
     else:
-        for field in ("executor_duration_seconds", "grader_duration_seconds", "total_duration_seconds"):
+        expected_keys = set(GRADING_TIMING_KEYS)
+        missing = sorted(expected_keys - set(timing))
+        unknown = sorted(set(timing) - expected_keys)
+        if missing:
+            errors.append(f"{path}: timing missing key(s): {', '.join(missing)}")
+        if unknown:
+            errors.append(f"{path}: timing contains unknown key(s): {', '.join(unknown)}")
+        for field in GRADING_TIMING_KEYS:
             if not is_json_number(timing.get(field)):
                 errors.append(f"{path}: timing.{field} must be a number")
             elif timing[field] < 0:
@@ -1179,8 +1210,11 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
                 errors.append(f"{path}: claims[{idx}] must be an object")
                 continue
             missing = sorted(GRADING_CLAIM_KEYS - set(claim))
+            unknown = sorted(set(claim) - GRADING_CLAIM_KEYS)
             if missing:
                 errors.append(f"{path}: claims[{idx}] missing key(s): {', '.join(missing)}")
+            if unknown:
+                errors.append(f"{path}: claims[{idx}] contains unknown key(s): {', '.join(unknown)}")
             for field in ("claim", "type", "evidence"):
                 if field in claim and not isinstance(claim.get(field), str):
                     errors.append(f"{path}: claims[{idx}].{field} must be a string")
@@ -1192,8 +1226,11 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
         errors.append(f"{path}: grading.json user_notes_summary must be an object")
     else:
         missing = sorted(GRADING_USER_NOTES_KEYS - set(user_notes_summary))
+        unknown = sorted(set(user_notes_summary) - GRADING_USER_NOTES_KEYS)
         if missing:
             errors.append(f"{path}: user_notes_summary missing key(s): {', '.join(missing)}")
+        if unknown:
+            errors.append(f"{path}: user_notes_summary contains unknown key(s): {', '.join(unknown)}")
         for field in GRADING_USER_NOTES_KEYS:
             values = user_notes_summary.get(field)
             if not isinstance(values, list):
@@ -1206,6 +1243,13 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
         if not isinstance(eval_feedback, dict):
             errors.append(f"{path}: grading.json eval_feedback must be an object when present")
         else:
+            expected_keys = set(GRADING_EVAL_FEEDBACK_KEYS)
+            missing = sorted(expected_keys - set(eval_feedback))
+            unknown = sorted(set(eval_feedback) - expected_keys)
+            if missing:
+                errors.append(f"{path}: eval_feedback missing key(s): {', '.join(missing)}")
+            if unknown:
+                errors.append(f"{path}: eval_feedback contains unknown key(s): {', '.join(unknown)}")
             suggestions = eval_feedback.get("suggestions")
             if not isinstance(suggestions, list):
                 errors.append(f"{path}: eval_feedback.suggestions must be a list")
@@ -1215,9 +1259,14 @@ def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
                         errors.append(f"{path}: eval_feedback.suggestions[{idx}] must be an object")
                         continue
                     missing = sorted(GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS - set(suggestion))
+                    unknown = sorted(set(suggestion) - GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS)
                     if missing:
                         errors.append(
                             f"{path}: eval_feedback.suggestions[{idx}] missing key(s): {', '.join(missing)}"
+                        )
+                    if unknown:
+                        errors.append(
+                            f"{path}: eval_feedback.suggestions[{idx}] contains unknown key(s): {', '.join(unknown)}"
                         )
                     for field in GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS:
                         if field in suggestion and not isinstance(suggestion.get(field), str):
