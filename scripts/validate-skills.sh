@@ -225,6 +225,77 @@ validate_packaging_script() {
   rm -f /tmp/certificate-skills-package-check.$$
 }
 
+validate_tool_metadata_parity() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    fail "python3 is required to validate skill tool metadata parity"
+    return
+  fi
+
+  if ! python3 - <<'PY'
+import pathlib
+import re
+import sys
+
+errors = []
+portable_root = pathlib.Path("skills")
+claude_root = pathlib.Path(".claude/skills")
+
+
+def frontmatter_lines(path):
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != "---":
+        return []
+    try:
+        close_index = lines[1:].index("---") + 1
+    except ValueError:
+        return []
+    return lines[1:close_index]
+
+
+def portable_tools(path):
+    tools = set()
+    in_tools = False
+    for line in frontmatter_lines(path):
+        if line.startswith("tools:"):
+            in_tools = True
+            tools.update(re.findall(r"\bcert_[A-Za-z0-9_]+\b", line))
+            continue
+        if in_tools:
+            if re.match(r"^[A-Za-z0-9_-]+:", line):
+                in_tools = False
+                continue
+            tools.update(re.findall(r"\bcert_[A-Za-z0-9_]+\b", line))
+    return tools
+
+
+def claude_tools(path):
+    text = "\n".join(frontmatter_lines(path))
+    return set(re.findall(r"mcp__certificate-skills__(cert_[A-Za-z0-9_]+)", text))
+
+
+for skill_dir in sorted(path for path in portable_root.iterdir() if path.is_dir()):
+    claude_file = claude_root / skill_dir.name / "SKILL.md"
+    portable_file = skill_dir / "SKILL.md"
+    if not claude_file.is_file() or not portable_file.is_file():
+        continue
+    portable = portable_tools(portable_file)
+    claude = claude_tools(claude_file)
+    if portable != claude:
+        errors.append(
+            f"{skill_dir.name}: portable tools {sorted(portable)} "
+            f"do not match Claude Code allowed-tools {sorted(claude)}"
+        )
+
+if errors:
+    for error in errors:
+        print(f"ERROR: {error}", file=sys.stderr)
+    sys.exit(1)
+PY
+  then
+    failures=$((failures + 1))
+  fi
+}
+
 check_frontmatter() {
   local file=$1
   local dir_name=$2
@@ -417,6 +488,7 @@ fi
 validate_evals_manifest
 validate_skill_links
 validate_packaging_script
+validate_tool_metadata_parity
 
 if [[ "$failures" -gt 0 ]]; then
   exit 1

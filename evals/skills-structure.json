@@ -24,6 +24,7 @@
         ".claude/skills and skills contain the same immediate skill directory names.",
         "Claude Code skill metadata uses the current certificate-skills MCP server prefix.",
         "Claude Code skill frontmatter uses allowed-tools and portable skill frontmatter uses tools.",
+        "Portable skill tools match the corresponding Claude Code allowed-tools after removing the MCP prefix.",
         "Claude Code skill prompts include When to Use, When NOT to Use, Instructions, and Anti-Patterns sections.",
         "No legacy MCP server-name references remain."
       ]
