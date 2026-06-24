@@ -22,6 +22,17 @@ CLAUDE_REQUIRED_SECTIONS = (
 EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
+GRADING_EXPECTATION_KEYS = {"text", "passed", "evidence"}
+BENCHMARK_RUN_RESULT_KEYS = {
+    "pass_rate",
+    "passed",
+    "failed",
+    "total",
+    "time_seconds",
+    "tokens",
+    "tool_calls",
+    "errors",
+}
 EVAL_PROMPT_CONTROL_PHRASES = (
     "Handle a focused",
     "do not switch to a broader certificate audit",
@@ -908,6 +919,152 @@ def tracked_repository_artifact_errors(repo_root: pathlib.Path) -> list[str]:
     return errors
 
 
+def validate_grading_output_schema(path: pathlib.Path) -> list[str]:
+    grading, errors = read_json(path)
+    if errors:
+        return errors
+    if not grading:
+        return []
+
+    expectations = grading.get("expectations")
+    if not isinstance(expectations, list):
+        return [f"{path}: grading.json expectations must be a list"]
+
+    errors = []
+    for idx, expectation in enumerate(expectations):
+        if not isinstance(expectation, dict):
+            errors.append(f"{path}: expectations[{idx}] must be an object")
+            continue
+        keys = set(expectation)
+        if keys != GRADING_EXPECTATION_KEYS:
+            expected = ", ".join(sorted(GRADING_EXPECTATION_KEYS))
+            found = ", ".join(sorted(keys))
+            errors.append(f"{path}: expectations[{idx}] must use exactly {expected} fields, found {found}")
+            continue
+        if not isinstance(expectation.get("text"), str) or not expectation["text"]:
+            errors.append(f"{path}: expectations[{idx}].text must be a non-empty string")
+        if not isinstance(expectation.get("passed"), bool):
+            errors.append(f"{path}: expectations[{idx}].passed must be a boolean")
+        if not isinstance(expectation.get("evidence"), str):
+            errors.append(f"{path}: expectations[{idx}].evidence must be a string")
+    return errors
+
+
+def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
+    benchmark, errors = read_json(path)
+    if errors:
+        return errors
+    if not benchmark:
+        return []
+
+    errors = []
+    metadata = benchmark.get("metadata")
+    if not isinstance(metadata, dict):
+        errors.append(f"{path}: benchmark.json metadata must be an object")
+    else:
+        if not isinstance(metadata.get("skill_name"), str) or not metadata["skill_name"]:
+            errors.append(f"{path}: metadata.skill_name must be a non-empty string")
+        if not isinstance(metadata.get("evals_run"), list):
+            errors.append(f"{path}: metadata.evals_run must be a list")
+        if not isinstance(metadata.get("runs_per_configuration"), int) or isinstance(
+            metadata.get("runs_per_configuration"), bool
+        ):
+            errors.append(f"{path}: metadata.runs_per_configuration must be an integer")
+
+    runs = benchmark.get("runs")
+    if not isinstance(runs, list):
+        errors.append(f"{path}: benchmark.json runs must be a list")
+    else:
+        for idx, run in enumerate(runs):
+            if not isinstance(run, dict):
+                errors.append(f"{path}: runs[{idx}] must be an object")
+                continue
+            if "config" in run:
+                errors.append(f"{path}: runs[{idx}] must use configuration, not config")
+            for misplaced_key in ("pass_rate", "time_seconds", "tokens"):
+                if misplaced_key in run:
+                    errors.append(f"{path}: runs[{idx}].{misplaced_key} must be nested under result")
+            if not isinstance(run.get("eval_id"), int) or isinstance(run.get("eval_id"), bool):
+                errors.append(f"{path}: runs[{idx}].eval_id must be an integer")
+            if not isinstance(run.get("eval_name"), str) or not run["eval_name"]:
+                errors.append(f"{path}: runs[{idx}].eval_name must be a non-empty string")
+            if run.get("configuration") not in {"with_skill", "without_skill"}:
+                errors.append(f"{path}: runs[{idx}].configuration must be with_skill or without_skill")
+            if not isinstance(run.get("run_number"), int) or isinstance(run.get("run_number"), bool):
+                errors.append(f"{path}: runs[{idx}].run_number must be an integer")
+
+            result = run.get("result")
+            if not isinstance(result, dict):
+                errors.append(f"{path}: runs[{idx}].result must be an object")
+            else:
+                missing = sorted({"pass_rate", "passed", "total", "time_seconds", "tokens", "errors"} - set(result))
+                if missing:
+                    errors.append(f"{path}: runs[{idx}].result missing key(s): {', '.join(missing)}")
+                unknown = sorted(set(result) - BENCHMARK_RUN_RESULT_KEYS)
+                if unknown:
+                    errors.append(f"{path}: runs[{idx}].result contains unknown key(s): {', '.join(unknown)}")
+
+            expectations = run.get("expectations", [])
+            if expectations is not None:
+                if not isinstance(expectations, list):
+                    errors.append(f"{path}: runs[{idx}].expectations must be a list")
+                else:
+                    for expectation_idx, expectation in enumerate(expectations):
+                        if not isinstance(expectation, dict):
+                            errors.append(f"{path}: runs[{idx}].expectations[{expectation_idx}] must be an object")
+                            continue
+                        missing = sorted(GRADING_EXPECTATION_KEYS - set(expectation))
+                        if missing:
+                            errors.append(
+                                f"{path}: runs[{idx}].expectations[{expectation_idx}] missing key(s): "
+                                f"{', '.join(missing)}"
+                            )
+
+    run_summary = benchmark.get("run_summary")
+    if not isinstance(run_summary, dict):
+        errors.append(f"{path}: benchmark.json run_summary must be an object")
+    return errors
+
+
+def validate_feedback_output_schema(path: pathlib.Path) -> list[str]:
+    feedback, errors = read_json(path)
+    if errors:
+        return errors
+    if not feedback:
+        return []
+
+    errors = []
+    if feedback.get("status") != "complete":
+        errors.append(f"{path}: feedback status must be complete")
+    reviews = feedback.get("reviews")
+    if not isinstance(reviews, list):
+        errors.append(f"{path}: feedback reviews must be a list")
+    else:
+        for idx, review in enumerate(reviews):
+            if not isinstance(review, dict):
+                errors.append(f"{path}: reviews[{idx}] must be an object")
+                continue
+            for key in ("run_id", "feedback", "timestamp"):
+                if not isinstance(review.get(key), str):
+                    errors.append(f"{path}: reviews[{idx}].{key} must be a string")
+    return errors
+
+
+def generated_output_schema_errors(repo_root: pathlib.Path) -> list[str]:
+    errors = []
+    for path in sorted(repo_root.rglob("grading.json")):
+        if ".git" not in path.parts:
+            errors.extend(validate_grading_output_schema(path))
+    benchmarks_dir = repo_root / "benchmarks"
+    if benchmarks_dir.is_dir():
+        for path in sorted(benchmarks_dir.rglob("benchmark.json")):
+            errors.extend(validate_benchmark_output_schema(path))
+    for path in sorted(repo_root.rglob("feedback.json")):
+        if ".git" not in path.parts:
+            errors.extend(validate_feedback_output_schema(path))
+    return errors
+
+
 def gitignore_policy_errors(repo_root: pathlib.Path) -> list[str]:
     gitignore = repo_root / ".gitignore"
     if not gitignore.is_file():
@@ -949,6 +1106,7 @@ def validate_repository(repo_root: pathlib.Path, run_package_check: bool = True)
     errors.extend(legacy_reference_errors(repo_root))
     errors.extend(gitignore_policy_errors(repo_root))
     errors.extend(tracked_repository_artifact_errors(repo_root))
+    errors.extend(generated_output_schema_errors(repo_root))
     errors.extend(repository_eval_errors(repo_root))
     errors.extend(skill_link_errors(repo_root))
     if run_package_check:
