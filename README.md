@@ -305,7 +305,8 @@ Repository layout:
 - [`.claude/skills/`](.claude/skills/) contains Claude Code-ready executable prompts with MCP `allowed-tools` metadata.
 - [`evals/evals.json`](evals/evals.json) contains repository-level skill-selection smoke evals.
 - [`evals/skills-structure.json`](evals/skills-structure.json) contains repository structure checks used by `make validate-skills`.
-- `make validate-skills` enforces Anthropic-style skill metadata constraints for `name` and `description`.
+- `make validate-skills` uses [`scripts/skill_validation.py`](scripts/skill_validation.py) to enforce Anthropic-style metadata, eval, link, layout, and tool-parity constraints.
+- [`scripts/package-skills.py`](scripts/package-skills.py) reuses the same validator before writing `.skill` archives.
 
 Build portable `.skill` archives:
 
@@ -363,7 +364,8 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
 - [`evals/evals.json`](evals/evals.json) 保存仓库级技能选择 smoke eval。
 - [`evals/skills-structure.json`](evals/skills-structure.json) 保存仓库结构检查，由 `make validate-skills` 校验。
-- `make validate-skills` 会校验 Anthropic-style skill 的 `name` 和 `description` 元数据约束。
+- `make validate-skills` 使用 [`scripts/skill_validation.py`](scripts/skill_validation.py) 校验 Anthropic-style 元数据、eval、链接、目录布局和工具元数据一致性。
+- [`scripts/package-skills.py`](scripts/package-skills.py) 在写入 `.skill` archives 前复用同一套校验器。
 
 打包 portable `.skill` archives：
 
