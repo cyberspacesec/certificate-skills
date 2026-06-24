@@ -41,6 +41,10 @@ cert_generate_csr target="example.com"
 3. Copy the CSR output
 4. Submit CSR to your Certificate Authority
 
+## References
+
+- [CSR parameters](references/csr-parameters.md) - Read when choosing subject fields, SANs, key algorithms, or CSR options.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

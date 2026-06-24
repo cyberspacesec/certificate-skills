@@ -45,6 +45,10 @@ cert_scan_ciphers target="example.com"
 3. Focus on weak and export-grade ciphers
 4. Verify TLS 1.3 support
 
+## References
+
+- [Scan output](references/scan-output.md) - Read when interpreting protocol support, cipher findings, or JSON scan fields.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

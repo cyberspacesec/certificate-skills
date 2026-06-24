@@ -44,6 +44,10 @@ cert_search_ct target="example.com"
 4. Identify subdomains from SANs
 5. Use `cert_ct_enumerate` for focused subdomain enumeration
 
+## References
+
+- [CT log guide](references/ct-log-guide.md) - Read when explaining CT log sources, query behavior, or certificate discovery limits.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

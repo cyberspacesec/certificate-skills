@@ -43,6 +43,10 @@ cert_check_hsts target="example.com"
 3. Check includeSubDomains for broad protection
 4. If disabled, assess SSL stripping risk
 
+## References
+
+- [HSTS policy guide](references/hsts-policy-guide.md) - Read when assessing max-age, includeSubDomains, preload readiness, or SSL stripping risk.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

@@ -302,7 +302,7 @@ Frontmatter (name + trigger description + tools/allowed-tools)
 Repository layout:
 - [`skills/`](skills/) contains portable Anthropic-style skill packages (`SKILL.md` plus optional `references/`).
 - [`.claude/skills/`](.claude/skills/) contains Claude Code-ready executable prompts with MCP `allowed-tools` metadata.
-- [`evals/evals.json`](evals/evals.json) contains skill-selection eval prompts.
+- [`evals/evals.json`](evals/evals.json) contains skill-creator-style skill-selection eval prompts.
 - [`evals/skills-structure.json`](evals/skills-structure.json) contains repository structure checks used by `make validate-skills`.
 
 **Categories:** Security Analysis (6) · Certificate Operations (7) · PKI (5) · CRL (2) · Cyberspace Mapping (10) · Protocol Analysis (4) · Compliance Checks (8) · Revocation & HSTS (2) · Chain Verification (1)
@@ -352,7 +352,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 仓库结构：
 - [`skills/`](skills/) 保存可移植的 Anthropic-style skill packages（`SKILL.md` 和可选 `references/`）。
 - [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
-- [`evals/evals.json`](evals/evals.json) 保存技能选择测试提示词。
+- [`evals/evals.json`](evals/evals.json) 保存 skill-creator 风格的技能选择测试提示词。
 - [`evals/skills-structure.json`](evals/skills-structure.json) 保存仓库结构检查，由 `make validate-skills` 校验。
 
 **MCP 接入（Claude Code）：**

@@ -43,6 +43,10 @@ cert_validate_files target="example.com"
 3. Check PEM format validity
 4. Verify key pair matches
 
+## References
+
+- [Validation details](references/validation-details.md) - Read when explaining certificate-key matching, PEM parsing, or validation failures.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

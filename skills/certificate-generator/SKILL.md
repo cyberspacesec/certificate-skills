@@ -45,6 +45,10 @@ cert_generate target="example.com"
 3. Use `cert_parse` to verify generated certificate
 4. Deploy certificate to test server
 
+## References
+
+- [Generation options](references/generation-options.md) - Read when choosing key algorithms, SANs, CA mode, validity, or output options.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

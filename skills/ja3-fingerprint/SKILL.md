@@ -41,6 +41,10 @@ cert_ja3 target="example.com"
 3. Compare against known JA3 databases
 4. Use for C2 detection or service identification
 
+## References
+
+- [JA3 format](references/ja3-format.md) - Read when explaining JA3 string construction, hash fields, or matching behavior.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

@@ -46,6 +46,10 @@ cert_analyze_security target="example.com"
 3. Review individual issues by severity
 4. Follow recommendations for remediation
 
+## References
+
+- [Scoring system](references/scoring-system.md) - Read when explaining score components, severity weighting, or remediation priority.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

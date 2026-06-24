@@ -42,6 +42,10 @@ cert_compare target="example.com"
 3. Review fingerprint match results
 4. Check specific differences if certificates differ
 
+## References
+
+- [Comparison output](references/comparison-output.md) - Read when interpreting field-by-field certificate differences or JSON comparison output.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

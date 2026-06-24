@@ -27,11 +27,13 @@
       "id": "skills-use-progressive-disclosure-layout",
       "prompt": "Audit skill package layout for progressive disclosure.",
       "assertions": [
-        "evals/evals.json contains skill-selection test prompts.",
+        "evals/evals.json uses the skill-creator eval shape with skill_name and evals.",
         "evals/skills-structure.json contains repository structure checks.",
         "SKILL.md files remain lightweight.",
+        "Bundled resources live in supported skill-creator directories: references/, scripts/, assets/, or evals/.",
         "Reusable detailed material lives in references/ when present.",
         "Relative links from SKILL.md resolve to files inside the same skill package.",
+        "Every file under a skill references/ directory is linked from that skill's SKILL.md.",
         "Skill directory and frontmatter names are lowercase hyphenated.",
         "Portable skills do not duplicate repository installation instructions.",
         "Portable skill descriptions match the trigger-oriented Claude Code skill descriptions."

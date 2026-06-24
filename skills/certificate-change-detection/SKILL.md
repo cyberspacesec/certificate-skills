@@ -31,4 +31,4 @@ cert-skills detect-change example.com --save -o json
 
 ## References
 
-- [Change states](references/change-states.md)
+- [Change states](references/change-states.md) - Read when classifying renewal, key rotation, issuer change, expiry, or no-change results.

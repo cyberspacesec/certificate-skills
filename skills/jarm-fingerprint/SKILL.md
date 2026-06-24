@@ -40,6 +40,10 @@ cert_jarm target="example.com"
 3. Compare against known JARM databases (Cobalt Strike, Metasploit)
 4. Combine with `cert_ja3` for comprehensive fingerprinting
 
+## References
+
+- [JARM probes](references/jarm-probes.md) - Read when explaining the 10-probe sequence, hash construction, or fingerprint interpretation.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

@@ -42,6 +42,10 @@ cert_download target="example.com"
 3. Use `cert_parse` to inspect downloaded certificate
 4. Use `cert_fingerprint_file` on the saved file
 
+## References
+
+- [Download output](references/download-output.md) - Read when explaining saved PEM files, chain ordering, or downloaded artifact names.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

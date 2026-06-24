@@ -43,6 +43,10 @@ cert_check_revocation target="example.com"
 3. If Unknown, check CRL status
 4. Review revocation reason if revoked
 
+## References
+
+- [Revocation methods](references/revocation-methods.md) - Read when comparing OCSP and CRL behavior or explaining soft-fail limitations.
+
 ## AI Integration
 
 ### CLI (For AI Agents)

@@ -71,35 +71,36 @@ else:
         if not isinstance(assertions, list) or not assertions:
             errors.append(f"cases[{idx}].assertions must be a non-empty list")
 
-if evals_data.get("suite") != "certificate-skills":
-    errors.append("evals/evals.json suite must be certificate-skills")
-if not isinstance(evals_data.get("version"), int):
-    errors.append("evals/evals.json version must be an integer")
-eval_cases = evals_data.get("cases")
+if evals_data.get("skill_name") != "certificate-skills":
+    errors.append("evals/evals.json skill_name must be certificate-skills")
+eval_cases = evals_data.get("evals")
 if not isinstance(eval_cases, list) or not eval_cases:
-    errors.append("evals/evals.json cases must be a non-empty list")
+    errors.append("evals/evals.json evals must be a non-empty list")
 else:
     seen = set()
     for idx, case in enumerate(eval_cases):
         case_id = case.get("id")
-        if not case_id:
-            errors.append(f"evals/evals.json cases[{idx}].id is required")
+        if not isinstance(case_id, int):
+            errors.append(f"evals/evals.json evals[{idx}].id must be an integer")
         elif case_id in seen:
             errors.append(f"duplicate eval case id: {case_id}")
         else:
             seen.add(case_id)
         if not case.get("prompt"):
-            errors.append(f"evals/evals.json cases[{idx}].prompt is required")
-        assertions = case.get("assertions")
-        if not isinstance(assertions, list) or not assertions:
-            errors.append(f"evals/evals.json cases[{idx}].assertions must be a non-empty list")
-        expected_skills = case.get("expected_skills")
-        if not isinstance(expected_skills, list) or not expected_skills:
-            errors.append(f"evals/evals.json cases[{idx}].expected_skills must be a non-empty list")
+            errors.append(f"evals/evals.json evals[{idx}].prompt is required")
+        if not case.get("expected_output"):
+            errors.append(f"evals/evals.json evals[{idx}].expected_output is required")
+        files = case.get("files")
+        if not isinstance(files, list):
+            errors.append(f"evals/evals.json evals[{idx}].files must be a list")
+        expectations = case.get("expectations")
+        if not isinstance(expectations, list) or not expectations:
+            errors.append(f"evals/evals.json evals[{idx}].expectations must be a non-empty list")
         else:
-            for skill_name in expected_skills:
-                if skill_name not in skill_names:
-                    errors.append(f"evals/evals.json cases[{idx}].expected_skills references unknown skill: {skill_name}")
+            expected_text = " ".join(str(item) for item in expectations)
+            expected_output = str(case.get("expected_output", ""))
+            if not any(skill_name in expected_text or skill_name in expected_output for skill_name in skill_names):
+                errors.append(f"evals/evals.json evals[{idx}] should reference at least one known skill")
 
 if errors:
     for error in errors:
@@ -132,11 +133,13 @@ for root in roots:
         continue
     for skill_file in sorted(root.glob("*/SKILL.md")):
         text = skill_file.read_text(encoding="utf-8")
+        linked_targets = set()
         for match in link_re.finditer(text):
             raw_target = match.group(1).strip()
             target = raw_target.split("#", 1)[0]
             if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("/"):
                 continue
+            linked_targets.add(unquote(target))
             resolved = (skill_file.parent / unquote(target)).resolve()
             skill_root = skill_file.parent.resolve()
             try:
@@ -146,6 +149,13 @@ for root in roots:
                 continue
             if not resolved.exists():
                 errors.append(f"{skill_file}: missing linked resource: {raw_target}")
+        references_dir = skill_file.parent / "references"
+        if references_dir.is_dir():
+            for reference_file in sorted(references_dir.iterdir()):
+                if reference_file.is_file():
+                    target = f"references/{reference_file.name}"
+                    if target not in linked_targets:
+                        errors.append(f"{skill_file}: reference file is not linked from SKILL.md: {target}")
 
 if errors:
     for error in errors:
@@ -207,6 +217,23 @@ check_frontmatter() {
   fi
 }
 
+check_skill_package_layout() {
+  local dir=$1
+  local file base
+  local allowed_resource_dirs=" references scripts assets evals "
+
+  while IFS= read -r file; do
+    base=$(basename "$file")
+    if [[ -d "$file" ]]; then
+      if [[ "$allowed_resource_dirs" != *" $base "* ]]; then
+        fail "$dir: unsupported bundled resource directory '$base' (expected references, scripts, assets, or evals)"
+      fi
+    elif [[ -f "$file" && "$base" != "SKILL.md" ]]; then
+      fail "$dir: unsupported top-level skill package file '$base' (expected SKILL.md or files under bundled resource directories)"
+    fi
+  done < <(find "$dir" -mindepth 1 -maxdepth 1 | sort)
+}
+
 get_description() {
   awk 'NR > 1 && $0 == "---" { exit } /^description:[[:space:]]*/ { sub(/^description:[[:space:]]*/, ""); print; exit }' "$1"
 }
@@ -241,6 +268,7 @@ for root in "${roots[@]}"; do
 
   while IFS= read -r dir; do
     check_frontmatter "$dir/SKILL.md" "$(basename "$dir")"
+    check_skill_package_layout "$dir"
     if [[ "$root" == "skills" ]]; then
       check_portable_skill_prompt "$dir" "$(basename "$dir")"
     fi

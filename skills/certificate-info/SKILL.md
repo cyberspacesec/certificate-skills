@@ -44,6 +44,10 @@ cert_info target="example.com"
 3. Check certificate chain for completeness
 4. Use `cert_analyze_security` for deeper analysis
 
+## References
+
+- [CLI reference](references/cli-reference.md) - Read when mapping `cert_info` output fields to CLI flags or JSON output.
+
 ## AI Integration
 
 ### CLI (For AI Agents)
