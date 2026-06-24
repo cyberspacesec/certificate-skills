@@ -40,6 +40,11 @@ BENCHMARK_RUN_RESULT_KEYS = {
 BENCHMARK_RUN_SUMMARY_CONFIGS = ("with_skill", "without_skill")
 BENCHMARK_RUN_SUMMARY_METRICS = ("pass_rate", "time_seconds", "tokens")
 BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev")
+COMPARISON_LABELS = ("A", "B")
+COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
+COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
+ANALYSIS_INSTRUCTION_LABELS = ("winner", "loser")
+ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS = ("winner_execution_pattern", "loser_execution_pattern")
 HISTORY_GRADING_RESULTS = {"baseline", "won", "lost", "tie"}
 EVAL_PROMPT_CONTROL_PHRASES = (
     "Handle a focused",
@@ -1332,6 +1337,54 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
     return errors
 
 
+def validate_string_list_field(path: pathlib.Path, owner: dict, label: str, field: str) -> list[str]:
+    values = owner.get(field)
+    if not isinstance(values, list):
+        return [f"{path}: {label}.{field} must be a list"]
+    if not all(isinstance(item, str) for item in values):
+        return [f"{path}: {label}.{field} entries must be strings"]
+    return []
+
+
+def validate_comparison_rubric_schema(path: pathlib.Path, rubric: dict) -> list[str]:
+    errors = []
+    for label in COMPARISON_LABELS:
+        entry = rubric.get(label)
+        if not isinstance(entry, dict):
+            errors.append(f"{path}: rubric.{label} must be an object")
+            continue
+        for section in ("content", "structure"):
+            section_values = entry.get(section)
+            if not isinstance(section_values, dict):
+                errors.append(f"{path}: rubric.{label}.{section} must be an object")
+            elif not section_values:
+                errors.append(f"{path}: rubric.{label}.{section} must contain score fields")
+            else:
+                for score_name, score in sorted(section_values.items()):
+                    if not isinstance(score_name, str):
+                        errors.append(f"{path}: rubric.{label}.{section} keys must be strings")
+                    if not is_json_number(score):
+                        errors.append(f"{path}: rubric.{label}.{section}.{score_name} must be a number")
+        for field in COMPARISON_RUBRIC_SCORE_FIELDS:
+            if not is_json_number(entry.get(field)):
+                errors.append(f"{path}: rubric.{label}.{field} must be a number")
+    return errors
+
+
+def validate_comparison_output_quality_schema(path: pathlib.Path, output_quality: dict) -> list[str]:
+    errors = []
+    for label in COMPARISON_LABELS:
+        entry = output_quality.get(label)
+        if not isinstance(entry, dict):
+            errors.append(f"{path}: output_quality.{label} must be an object")
+            continue
+        if not is_json_number(entry.get("score")):
+            errors.append(f"{path}: output_quality.{label}.score must be a number")
+        for field in COMPARISON_OUTPUT_QUALITY_LIST_FIELDS:
+            errors.extend(validate_string_list_field(path, entry, f"output_quality.{label}", field))
+    return errors
+
+
 def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
     comparison, errors = read_json(path)
     if errors:
@@ -1344,9 +1397,21 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
         errors.append(f"{path}: comparison winner must be a non-empty string")
     if not isinstance(comparison.get("reasoning"), str) or not comparison["reasoning"]:
         errors.append(f"{path}: comparison reasoning must be a non-empty string")
-    for field in ("rubric", "output_quality", "expectation_results"):
-        if not isinstance(comparison.get(field), dict):
-            errors.append(f"{path}: comparison {field} must be an object")
+
+    rubric = comparison.get("rubric")
+    if not isinstance(rubric, dict):
+        errors.append(f"{path}: comparison rubric must be an object")
+    else:
+        errors.extend(validate_comparison_rubric_schema(path, rubric))
+
+    output_quality = comparison.get("output_quality")
+    if not isinstance(output_quality, dict):
+        errors.append(f"{path}: comparison output_quality must be an object")
+    else:
+        errors.extend(validate_comparison_output_quality_schema(path, output_quality))
+
+    if not isinstance(comparison.get("expectation_results"), dict):
+        errors.append(f"{path}: comparison expectation_results must be an object")
 
     expectation_results = comparison.get("expectation_results")
     if isinstance(expectation_results, dict):
@@ -1411,6 +1476,15 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
     instruction_following = analysis.get("instruction_following")
     if not isinstance(instruction_following, dict):
         errors.append(f"{path}: analysis instruction_following must be an object")
+    else:
+        for label in ANALYSIS_INSTRUCTION_LABELS:
+            entry = instruction_following.get(label)
+            if not isinstance(entry, dict):
+                errors.append(f"{path}: instruction_following.{label} must be an object")
+                continue
+            if not is_json_number(entry.get("score")):
+                errors.append(f"{path}: instruction_following.{label}.score must be a number")
+            errors.extend(validate_string_list_field(path, entry, f"instruction_following.{label}", "issues"))
 
     suggestions = analysis.get("improvement_suggestions")
     if not isinstance(suggestions, list):
@@ -1427,6 +1501,10 @@ def validate_analysis_output_schema(path: pathlib.Path) -> list[str]:
     transcript_insights = analysis.get("transcript_insights")
     if not isinstance(transcript_insights, dict):
         errors.append(f"{path}: analysis transcript_insights must be an object")
+    else:
+        for field in ANALYSIS_TRANSCRIPT_INSIGHT_FIELDS:
+            if not isinstance(transcript_insights.get(field), str):
+                errors.append(f"{path}: transcript_insights.{field} must be a string")
     return errors
 
 
