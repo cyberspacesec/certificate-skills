@@ -306,6 +306,12 @@ Repository layout:
 - [`evals/evals.json`](evals/evals.json) contains repository-level skill-selection smoke evals.
 - [`evals/skills-structure.json`](evals/skills-structure.json) contains repository structure checks used by `make validate-skills`.
 
+Build portable `.skill` archives:
+
+```bash
+make package-skills
+```
+
 **Categories:** Security Analysis (6) · Certificate Operations (7) · PKI (5) · CRL (2) · Cyberspace Mapping (10) · Protocol Analysis (4) · Compliance Checks (8) · Revocation & HSTS (2) · Chain Verification (1)
 
 See [.claude/skills/](.claude/skills/) for all skills and [CLAUDE.md](CLAUDE.md) for the full index.
@@ -356,6 +362,12 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
 - [`evals/evals.json`](evals/evals.json) 保存仓库级技能选择 smoke eval。
 - [`evals/skills-structure.json`](evals/skills-structure.json) 保存仓库结构检查，由 `make validate-skills` 校验。
+
+打包 portable `.skill` archives：
+
+```bash
+make package-skills
+```
 
 **MCP 接入（Claude Code）：**
 

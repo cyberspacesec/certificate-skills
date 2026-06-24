@@ -99,6 +99,11 @@ validate-skills:
 	echo "  >  Validating Skills repository structure..."
 	./scripts/validate-skills.sh
 
+## package-skills: 打包 portable Skills 为 .skill archives (Package portable Skills)
+package-skills: validate-skills
+	echo "  >  Packaging portable Skills..."
+	./scripts/package-skills.py
+
 ## run: 运行应用程序 (Run the application)
 run: build
 	echo "  >  Running $(BINARY_NAME)..."
@@ -122,4 +127,4 @@ docker-build:
 	echo "  >  Building Docker image..."
 	docker build -t $(BINARY_NAME):$(VERSION) .
 
-.PHONY: help prepare-go-cache build build-mcp build-all-binaries install clean test test-live test-coverage fmt vet lint validate-skills run dev build-all docker-build
+.PHONY: help prepare-go-cache build build-mcp build-all-binaries install clean test test-live test-coverage fmt vet lint validate-skills package-skills run dev build-all docker-build

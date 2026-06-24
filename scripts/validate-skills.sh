@@ -206,6 +206,25 @@ PY
   fi
 }
 
+validate_packaging_script() {
+  local script="scripts/package-skills.py"
+
+  if [[ ! -f "$script" ]]; then
+    fail "missing skill packaging script: $script"
+    return
+  fi
+
+  if [[ ! -x "$script" ]]; then
+    fail "$script should be executable"
+  fi
+
+  if ! python3 "$script" --check >/tmp/certificate-skills-package-check.$$ 2>&1; then
+    fail "$script --check failed:"
+    cat /tmp/certificate-skills-package-check.$$ >&2
+  fi
+  rm -f /tmp/certificate-skills-package-check.$$
+}
+
 check_frontmatter() {
   local file=$1
   local dir_name=$2
@@ -338,6 +357,7 @@ fi
 
 validate_evals_manifest
 validate_skill_links
+validate_packaging_script
 
 if [[ "$failures" -gt 0 ]]; then
   exit 1
