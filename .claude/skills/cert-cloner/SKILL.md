@@ -2,7 +2,7 @@
 name: cert-cloner
 description: Clone certificates by copying subject info and generating new keys. For authorized security testing only.
 allowed-tools:
-  - mcp__certificate-hacker__cert_clone_certificate
+  - mcp__certificate-skills__cert_clone_certificate
 ---
 
 # Certificate Cloner

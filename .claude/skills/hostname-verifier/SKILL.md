@@ -1,7 +1,7 @@
 ---
 name: hostname-verifier
 description: Use when verifying certificate hostname matching and RFC 6125 compliance. Triggers on mentions of hostname mismatch, cert hostname check, SSL name verification, CN SAN match, or hostname validation.
-allowed-tools: ["mcp__certificate-hacker__cert_verify_hostname"]
+allowed-tools: ["mcp__certificate-skills__cert_verify_hostname"]
 ---
 
 # hostname-verifier

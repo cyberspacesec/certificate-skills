@@ -1,7 +1,7 @@
 ---
 name: ocsp-must-staple-checker
 description: Use when checking OCSP Must-Staple (RFC 7633) compliance. A certificate with Must-Staple that fails to provide an OCSP staple causes hard-failures in compliant clients. Triggers on mentions of OCSP Must-Staple, RFC 7633, OCSP stapling, or must-staple violation.
-allowed-tools: ["mcp__certificate-hacker__cert_check_ocsp_must_staple"]
+allowed-tools: ["mcp__certificate-skills__cert_check_ocsp_must_staple"]
 ---
 
 # ocsp-must-staple-checker

@@ -1,7 +1,7 @@
 ---
 name: policy-analyzer
 description: Use when analyzing certificate policy OIDs for DV/OV/EV classification and compliance checking. Triggers on mentions of certificate policy, DV OV EV, validation type, policy OID, or certificate classification.
-allowed-tools: ["mcp__certificate-hacker__cert_check_policy", "mcp__certificate-hacker__cert_detect_ev"]
+allowed-tools: ["mcp__certificate-skills__cert_check_policy", "mcp__certificate-skills__cert_detect_ev"]
 ---
 
 # policy-analyzer

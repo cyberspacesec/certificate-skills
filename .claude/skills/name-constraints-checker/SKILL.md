@@ -1,7 +1,7 @@
 ---
 name: name-constraints-checker
 description: Use when checking CA certificate Name Constraints and verifying leaf certificate names comply with parent CA constraints. Triggers on mentions of name constraints, trust boundary, CA namespace restriction, or name constraint violation.
-allowed-tools: ["mcp__certificate-hacker__cert_check_name_constraints"]
+allowed-tools: ["mcp__certificate-skills__cert_check_name_constraints"]
 ---
 
 # name-constraints-checker

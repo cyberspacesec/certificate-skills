@@ -1,7 +1,7 @@
 ---
 name: certificate-generator
 description: Use when generating self-signed SSL/TLS certificates for testing and development. Triggers on mentions of generate cert, self-signed certificate, create test cert, make SSL cert, or generate CA certificate.
-allowed-tools: ["mcp__certificate-hacker__cert_generate"]
+allowed-tools: ["mcp__certificate-skills__cert_generate"]
 ---
 
 # certificate-generator

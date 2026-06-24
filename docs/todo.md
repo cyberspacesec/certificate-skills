@@ -122,7 +122,7 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
   - [x] MCP tool documentation (54 tools)
   - [x] Usage examples and tutorials
   - [x] All Chinese comments translated to English
-  - [x] All cert-hacker references updated to cert-skills
+  - [x] Legacy MCP server references updated to cert-skills
   - [x] Stale files removed (README_clean.md, PLUGIN_README.md, .claude-plugin/)
 
 - [x] **7.2 Release Preparation**
@@ -281,7 +281,7 @@ Build a comprehensive certificate security toolkit supporting certificate retrie
 17. **51 CLI Commands + 54 MCP Tools**: Complete toolset
 18. **45 Skills**: AI Agent executable prompt definitions
 19. **Unit Tests**: 30+ test files covering all pkg packages, offline tests with -short flag
-20. **Code Quality**: golangci-lint configured, all Chinese comments translated to English, all cert-hacker references updated
+20. **Code Quality**: golangci-lint configured, all Chinese comments translated to English, all legacy MCP server references updated
 21. **CI/CD**: GitHub Actions with lint + coverage reporting, GoReleaser for cross-platform builds
 
 ### 🎯 Next Phase Focus

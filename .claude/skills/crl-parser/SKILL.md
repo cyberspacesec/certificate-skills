@@ -2,9 +2,9 @@
 name: crl-parser
 description: Parse and analyze Certificate Revocation List (CRL) files. Display revoked certificates and verify CRL signatures.
 allowed-tools:
-  - mcp__certificate-hacker__cert_parse_crl
-  - mcp__certificate-hacker__cert_verify_crl_signature
-  - mcp__certificate-hacker__cert_check_revoked_by_crl
+  - mcp__certificate-skills__cert_parse_crl
+  - mcp__certificate-skills__cert_verify_crl_signature
+  - mcp__certificate-skills__cert_check_revoked_by_crl
 ---
 
 # CRL Parser

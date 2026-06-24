@@ -1,7 +1,7 @@
 ---
 name: certificate-transparency
 description: Use when searching Certificate Transparency (CT) logs for certificates associated with a domain. Triggers on mentions of CT log search, certificate transparency, find certificates for domain, or CT lookup.
-allowed-tools: ["mcp__certificate-hacker__cert_search_ct"]
+allowed-tools: ["mcp__certificate-skills__cert_search_ct"]
 ---
 
 # certificate-transparency

@@ -1,7 +1,7 @@
 ---
 name: fingerprint-validator
 description: Use when validating certificate fingerprint format correctness for SHA-256, SHA-1, or MD5. Triggers on mentions of validate fingerprint, check hash format, verify fingerprint, or fingerprint format check.
-allowed-tools: ["mcp__certificate-hacker__cert_validate_fingerprint"]
+allowed-tools: ["mcp__certificate-skills__cert_validate_fingerprint"]
 ---
 
 # fingerprint-validator

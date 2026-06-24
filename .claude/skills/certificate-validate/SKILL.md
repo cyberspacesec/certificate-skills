@@ -1,7 +1,7 @@
 ---
 name: certificate-validate
 description: Use when validating that a certificate and private key file match and are correctly formatted PEM files. Triggers on mentions of validate cert key pair, check PEM format, verify certificate matches key, or cert-key validation.
-allowed-tools: ["mcp__certificate-hacker__cert_validate_files"]
+allowed-tools: ["mcp__certificate-skills__cert_validate_files"]
 ---
 
 # certificate-validate

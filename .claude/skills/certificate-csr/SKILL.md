@@ -1,7 +1,7 @@
 ---
 name: certificate-csr
 description: Use when generating a Certificate Signing Request (CSR) for submitting to a Certificate Authority. Triggers on mentions of generate CSR, create signing request, CSR generation, or certificate request.
-allowed-tools: ["mcp__certificate-hacker__cert_generate_csr"]
+allowed-tools: ["mcp__certificate-skills__cert_generate_csr"]
 ---
 
 # certificate-csr

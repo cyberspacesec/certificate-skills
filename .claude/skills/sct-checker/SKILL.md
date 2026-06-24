@@ -1,7 +1,7 @@
 ---
 name: sct-checker
 description: Use when verifying Signed Certificate Timestamps (SCTs) for Certificate Transparency compliance per CA/Browser Forum requirements. Triggers on mentions of SCT, Signed Certificate Timestamp, CT compliance, SCT count, or certificate transparency proof.
-allowed-tools: ["mcp__certificate-hacker__cert_check_sct"]
+allowed-tools: ["mcp__certificate-skills__cert_check_sct"]
 ---
 
 # sct-checker

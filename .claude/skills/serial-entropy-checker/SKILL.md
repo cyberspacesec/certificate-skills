@@ -1,7 +1,7 @@
 ---
 name: serial-entropy-checker
 description: Use when analyzing certificate serial number entropy for CA/B Browser Forum Baseline Requirements compliance (≥64 bits required). Triggers on mentions of serial entropy, serial number, cert serial, predictable serial, or BR serial compliance.
-allowed-tools: ["mcp__certificate-hacker__cert_check_serial_entropy"]
+allowed-tools: ["mcp__certificate-skills__cert_check_serial_entropy"]
 ---
 
 # serial-entropy-checker

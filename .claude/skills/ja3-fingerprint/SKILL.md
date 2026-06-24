@@ -1,7 +1,7 @@
 ---
 name: ja3-fingerprint
 description: Use when generating JA3/JA3S TLS fingerprints for client and server identification, malware C2 detection, and cyberspace mapping. Triggers on mentions of JA3, JA3S, JA3 fingerprint, client fingerprint, or TLS client hello analysis.
-allowed-tools: ["mcp__certificate-hacker__cert_ja3"]
+allowed-tools: ["mcp__certificate-skills__cert_ja3"]
 ---
 
 # ja3-fingerprint

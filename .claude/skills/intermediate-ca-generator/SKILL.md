@@ -2,7 +2,7 @@
 name: intermediate-ca-generator
 description: Generate intermediate CA certificates signed by a parent/root CA. Creates multi-tier PKI hierarchies.
 allowed-tools:
-  - mcp__certificate-hacker__cert_generate_intermediate_ca
+  - mcp__certificate-skills__cert_generate_intermediate_ca
 ---
 
 # Intermediate CA Generator

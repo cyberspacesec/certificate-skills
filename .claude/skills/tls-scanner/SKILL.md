@@ -1,7 +1,7 @@
 ---
 name: tls-scanner
 description: Use when scanning TLS protocol versions and cipher suites for security assessment. Triggers on mentions of TLS scan, protocol scan, cipher scan, TLS version check, or cipher suite analysis.
-allowed-tools: ["mcp__certificate-hacker__cert_scan_protocols", "mcp__certificate-hacker__cert_scan_ciphers"]
+allowed-tools: ["mcp__certificate-skills__cert_scan_protocols", "mcp__certificate-skills__cert_scan_ciphers"]
 ---
 
 # tls-scanner

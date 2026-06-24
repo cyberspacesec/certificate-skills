@@ -1,7 +1,7 @@
 ---
 name: certificate-change-detection
 description: Use when detecting certificate changes over time — renewal, key rotation, issuer change, or expiry. Triggers on mentions of certificate monitoring, cert change, cert rotation, certificate diff, or continuous monitoring.
-allowed-tools: ["mcp__certificate-hacker__cert_detect_change"]
+allowed-tools: ["mcp__certificate-skills__cert_detect_change"]
 ---
 
 # certificate-change-detection

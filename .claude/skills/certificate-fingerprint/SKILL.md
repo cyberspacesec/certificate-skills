@@ -1,7 +1,7 @@
 ---
 name: certificate-fingerprint
 description: Use when generating certificate fingerprints (SHA-256, SHA-1, MD5, public key SHA-256) for SSL pinning, verification, or tracking. Triggers on mentions of cert fingerprint, SSL pin, SPKI hash, certificate hash, or fingerprint generation.
-allowed-tools: ["mcp__certificate-hacker__cert_fingerprint_domain", "mcp__certificate-hacker__cert_fingerprint_file"]
+allowed-tools: ["mcp__certificate-skills__cert_fingerprint_domain", "mcp__certificate-skills__cert_fingerprint_file"]
 ---
 
 # certificate-fingerprint

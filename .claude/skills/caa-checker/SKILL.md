@@ -1,7 +1,7 @@
 ---
 name: caa-checker
 description: Use when checking DNS CAA (Certification Authority Authorization) records to verify CA authorization for certificate issuance. Triggers on mentions of CAA records, CAA check, certificate authorization, CAA misconfiguration, or unauthorized certificate issuance.
-allowed-tools: ["mcp__certificate-hacker__cert_check_caa"]
+allowed-tools: ["mcp__certificate-skills__cert_check_caa"]
 ---
 
 # caa-checker

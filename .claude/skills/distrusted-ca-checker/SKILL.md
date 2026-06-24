@@ -1,7 +1,7 @@
 ---
 name: distrusted-ca-checker
 description: Use when detecting certificates issued by known distrusted or compromised Certificate Authorities (DigiNotar, WoSign, StartCom, Symantec legacy, CNNIC, TrustCor, DarkMatter). Triggers on mentions of distrusted CA, compromised CA, untrusted certificate authority, or CA distrust check.
-allowed-tools: ["mcp__certificate-hacker__cert_check_distrusted_ca"]
+allowed-tools: ["mcp__certificate-skills__cert_check_distrusted_ca"]
 ---
 
 # distrusted-ca-checker

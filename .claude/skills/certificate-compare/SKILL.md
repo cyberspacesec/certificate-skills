@@ -1,7 +1,7 @@
 ---
 name: certificate-compare
 description: Use when comparing two SSL/TLS certificates to determine if they are identical or different. Triggers on mentions of compare certificates, cert diff, certificate match, or check if two certs are the same.
-allowed-tools: ["mcp__certificate-hacker__cert_compare"]
+allowed-tools: ["mcp__certificate-skills__cert_compare"]
 ---
 
 # certificate-compare

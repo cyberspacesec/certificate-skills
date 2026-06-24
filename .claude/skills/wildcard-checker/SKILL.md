@@ -1,7 +1,7 @@
 ---
 name: wildcard-checker
 description: Use when analyzing wildcard certificate patterns and assessing security risk. Triggers on mentions of wildcard certificate, wildcard cert, wildcard SSL, *.domain, or wildcard risk.
-allowed-tools: ["mcp__certificate-hacker__cert_check_wildcard", "mcp__certificate-hacker__cert_get_trusted_domains"]
+allowed-tools: ["mcp__certificate-skills__cert_check_wildcard", "mcp__certificate-skills__cert_get_trusted_domains"]
 ---
 
 # wildcard-checker

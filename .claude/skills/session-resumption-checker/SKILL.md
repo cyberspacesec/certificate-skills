@@ -1,7 +1,7 @@
 ---
 name: session-resumption-checker
 description: Use when checking TLS session resumption support (Session ID and Session Tickets per RFC 5077). Triggers on mentions of session resumption, session tickets, TLS session reuse, or session caching.
-allowed-tools: ["mcp__certificate-hacker__cert_check_session_resumption"]
+allowed-tools: ["mcp__certificate-skills__cert_check_session_resumption"]
 ---
 
 # session-resumption-checker

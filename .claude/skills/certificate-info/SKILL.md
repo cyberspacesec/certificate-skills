@@ -1,7 +1,7 @@
 ---
 name: certificate-info
 description: Use when retrieving SSL/TLS certificate and connection information from a domain, checking certificate chain details, TLS version, cipher suite, or handshake timing. Triggers on mentions of cert info, SSL certificate details, TLS connection info, or certificate chain inspection.
-allowed-tools: ["mcp__certificate-hacker__cert_info"]
+allowed-tools: ["mcp__certificate-skills__cert_info"]
 ---
 
 # certificate-info

@@ -1,7 +1,7 @@
 ---
 name: bundle-checker
 description: Use when checking certificate bundle completeness and diagnosing missing intermediate certificates via AIA (Authority Information Access). Triggers on mentions of cert bundle, missing intermediate, chain incomplete, AIA fetch, or certificate chain bundle.
-allowed-tools: ["mcp__certificate-hacker__cert_check_bundle"]
+allowed-tools: ["mcp__certificate-skills__cert_check_bundle"]
 ---
 
 # bundle-checker

@@ -1,7 +1,7 @@
 ---
 name: certificate-download
 description: Use when downloading SSL/TLS certificate chain from a remote domain and saving to PEM files. Triggers on mentions of download cert, save certificate, export SSL cert, or get certificate chain files.
-allowed-tools: ["mcp__certificate-hacker__cert_download"]
+allowed-tools: ["mcp__certificate-skills__cert_download"]
 ---
 
 # certificate-download

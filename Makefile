@@ -94,6 +94,11 @@ lint: prepare-go-cache
 	echo "  >  Running linter..."
 	$(GOENV) golangci-lint run ./...
 
+## validate-skills: 校验 Skills 仓库结构 (Validate Skills repository structure)
+validate-skills:
+	echo "  >  Validating Skills repository structure..."
+	./scripts/validate-skills.sh
+
 ## run: 运行应用程序 (Run the application)
 run: build
 	echo "  >  Running $(BINARY_NAME)..."
@@ -117,4 +122,4 @@ docker-build:
 	echo "  >  Building Docker image..."
 	docker build -t $(BINARY_NAME):$(VERSION) .
 
-.PHONY: help prepare-go-cache build build-mcp build-all-binaries install clean test test-live test-coverage fmt vet lint run dev build-all docker-build
+.PHONY: help prepare-go-cache build build-mcp build-all-binaries install clean test test-live test-coverage fmt vet lint validate-skills run dev build-all docker-build

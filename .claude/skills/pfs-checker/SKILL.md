@@ -1,7 +1,7 @@
 ---
 name: pfs-checker
 description: Use when checking Perfect Forward Secrecy (PFS) support through ECDHE/DHE key exchange analysis. Triggers on mentions of PFS, Perfect Forward Secrecy, forward secrecy, ECDHE, DHE, or key exchange check.
-allowed-tools: ["mcp__certificate-hacker__cert_check_pfs"]
+allowed-tools: ["mcp__certificate-skills__cert_check_pfs"]
 ---
 
 # pfs-checker

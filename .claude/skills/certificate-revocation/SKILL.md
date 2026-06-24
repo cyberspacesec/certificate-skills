@@ -1,7 +1,7 @@
 ---
 name: certificate-revocation
 description: Use when checking certificate revocation status via OCSP (Online Certificate Status Protocol) and CRL (Certificate Revocation List). Triggers on mentions of cert revocation, OCSP check, CRL check, revoked certificate, or certificate revoked.
-allowed-tools: ["mcp__certificate-hacker__cert_check_revocation"]
+allowed-tools: ["mcp__certificate-skills__cert_check_revocation"]
 ---
 
 # certificate-revocation

@@ -1,7 +1,7 @@
 ---
 name: chain-verifier
 description: Use when verifying that a certificate chain validates against the system trust store. Triggers on mentions of chain verification, trust chain, certificate trust, chain validation, or root CA verification.
-allowed-tools: ["mcp__certificate-hacker__cert_verify_chain"]
+allowed-tools: ["mcp__certificate-skills__cert_verify_chain"]
 ---
 
 # chain-verifier

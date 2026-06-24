@@ -1,7 +1,7 @@
 ---
 name: trusted-domains-extractor
 description: Use when extracting all domain names trusted by a certificate for cyberspace mapping, including wildcard expansions and base domain identification. Triggers on mentions of trusted domains, cert domains, extract domains, domain extraction, or cert namespace.
-allowed-tools: ["mcp__certificate-hacker__cert_get_trusted_domains", "mcp__certificate-hacker__cert_check_wildcard"]
+allowed-tools: ["mcp__certificate-skills__cert_get_trusted_domains", "mcp__certificate-skills__cert_check_wildcard"]
 ---
 
 # trusted-domains-extractor

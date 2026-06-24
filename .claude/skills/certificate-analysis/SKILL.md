@@ -1,7 +1,7 @@
 ---
 name: certificate-analysis
 description: Use when performing SSL/TLS security analysis on a domain, checking certificate security scoring (0-100), auditing TLS configuration, or identifying certificate vulnerabilities. Triggers on mentions of SSL audit, TLS security score, certificate analysis, security assessment, or cert security review.
-allowed-tools: ["mcp__certificate-hacker__cert_analyze_security"]
+allowed-tools: ["mcp__certificate-skills__cert_analyze_security"]
 ---
 
 # certificate-analysis

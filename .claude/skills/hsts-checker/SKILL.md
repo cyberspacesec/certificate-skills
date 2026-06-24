@@ -1,7 +1,7 @@
 ---
 name: hsts-checker
 description: Use when checking HSTS (HTTP Strict Transport Security) status and policy compliance for a domain. Triggers on mentions of HSTS, HTTP Strict Transport Security, HSTS check, HSTS preload, SSL stripping, or HSTS policy.
-allowed-tools: ["mcp__certificate-hacker__cert_check_hsts"]
+allowed-tools: ["mcp__certificate-skills__cert_check_hsts"]
 ---
 
 # hsts-checker

@@ -1,7 +1,7 @@
 ---
 name: certificate-batch-analysis
 description: Use when analyzing SSL/TLS security for multiple domains at once, batch security scoring, or comparing security posture across organizations. Triggers on mentions of batch cert analysis, multi-domain security, bulk SSL check, or mass certificate assessment.
-allowed-tools: ["mcp__certificate-hacker__cert_batch_analyze"]
+allowed-tools: ["mcp__certificate-skills__cert_batch_analyze"]
 ---
 
 # certificate-batch-analysis

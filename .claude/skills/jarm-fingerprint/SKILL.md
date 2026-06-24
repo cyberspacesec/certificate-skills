@@ -1,7 +1,7 @@
 ---
 name: jarm-fingerprint
 description: Use when generating JARM TLS server fingerprints for server identification, C2 infrastructure detection, and cyberspace mapping. Triggers on mentions of JARM, JARM fingerprint, JARM hash, C2 detection, or server fingerprinting.
-allowed-tools: ["mcp__certificate-hacker__cert_jarm"]
+allowed-tools: ["mcp__certificate-skills__cert_jarm"]
 ---
 
 # jarm-fingerprint

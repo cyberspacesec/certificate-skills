@@ -1,7 +1,7 @@
 ---
 name: ct-subdomain-enumerator
 description: Use when enumerating subdomains through Certificate Transparency logs for reconnaissance and cyberspace mapping. Triggers on mentions of subdomain enum, CT subdomain discovery, find subdomains, domain recon, or subdomain search.
-allowed-tools: ["mcp__certificate-hacker__cert_ct_enumerate"]
+allowed-tools: ["mcp__certificate-skills__cert_ct_enumerate"]
 ---
 
 # ct-subdomain-enumerator

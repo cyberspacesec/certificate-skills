@@ -2,7 +2,7 @@
 name: domain-variants
 description: Generate certificates for domain variants (homoglyphs, subdomains, TLD changes, etc.) for phishing detection research.
 allowed-tools:
-  - mcp__certificate-hacker__cert_generate_domain_variants
+  - mcp__certificate-skills__cert_generate_domain_variants
 ---
 
 # Domain Variant Generator

@@ -1,7 +1,7 @@
 ---
 name: certificate-parse
 description: Use when parsing a local certificate file (PEM or DER format) to display detailed information including subject, issuer, validity, SANs, key usage, and fingerprints. Triggers on mentions of parse cert file, read PEM, inspect certificate file, or decode DER.
-allowed-tools: ["mcp__certificate-hacker__cert_parse"]
+allowed-tools: ["mcp__certificate-skills__cert_parse"]
 ---
 
 # certificate-parse

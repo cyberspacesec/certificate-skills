@@ -1,7 +1,7 @@
 ---
 name: expiry-monitor
 description: Use when monitoring certificate expiration across multiple targets with urgency classification (Expired, Critical ≤7d, Warning ≤30d, Healthy). Triggers on mentions of cert expiry, certificate expiration, expiring certificates, cert monitoring, or expiration alert.
-allowed-tools: ["mcp__certificate-hacker__cert_expiry_monitor"]
+allowed-tools: ["mcp__certificate-skills__cert_expiry_monitor"]
 ---
 
 # expiry-monitor

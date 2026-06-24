@@ -1,7 +1,7 @@
 ---
 name: key-usage-checker
 description: Use when validating certificate key usage compliance with RFC 5280 and CA/Browser Forum Baseline Requirements. Triggers on mentions of key usage, EKU, key usage compliance, RFC 5280, or CA/B BR key usage.
-allowed-tools: ["mcp__certificate-hacker__cert_check_key_usage"]
+allowed-tools: ["mcp__certificate-skills__cert_check_key_usage"]
 ---
 
 # key-usage-checker

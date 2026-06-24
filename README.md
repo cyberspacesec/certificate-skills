@@ -295,9 +295,13 @@ if errors.Is(err, pkg.ErrCertParseFailed) { /* parse error */ }
 Each Skill is an **executable prompt** that tells your AI agent when to trigger, how to use the tool, and what to avoid:
 
 ```
-Frontmatter (name + trigger description + allowed-tools)
+Frontmatter (name + trigger description + tools/allowed-tools)
 → When to Use → When NOT to Use → Instructions → Anti-Patterns
 ```
+
+Repository layout:
+- [`skills/`](skills/) contains portable Anthropic-style skill packages (`SKILL.md` plus optional `references/`).
+- [`.claude/skills/`](.claude/skills/) contains Claude Code-ready executable prompts with MCP `allowed-tools` metadata.
 
 **Categories:** Security Analysis (6) · Certificate Operations (7) · PKI (5) · CRL (2) · Cyberspace Mapping (10) · Protocol Analysis (4) · Compliance Checks (8) · Revocation & HSTS (2) · Chain Verification (1)
 
@@ -342,6 +346,10 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - **何时不使用** — 避免选错工具的边界
 - **操作指令** — 包含 CLI 和 MCP 工具调用的分步工作流
 - **反模式** — 常见错误和需避免的做法
+
+仓库结构：
+- [`skills/`](skills/) 保存可移植的 Anthropic-style skill packages（`SKILL.md` 和可选 `references/`）。
+- [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
 
 **MCP 接入（Claude Code）：**
 

@@ -1,7 +1,7 @@
 ---
 name: ev-detector
 description: Use when detecting Extended Validation (EV) certificates through policy OID analysis. Triggers on mentions of EV certificate, Extended Validation, EV detection, certificate validation level, or EV check.
-allowed-tools: ["mcp__certificate-hacker__cert_detect_ev"]
+allowed-tools: ["mcp__certificate-skills__cert_detect_ev"]
 ---
 
 # ev-detector

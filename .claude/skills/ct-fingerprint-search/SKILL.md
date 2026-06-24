@@ -1,7 +1,7 @@
 ---
 name: ct-fingerprint-search
 description: Use when searching Certificate Transparency logs by SHA-256 certificate fingerprint. Triggers on mentions of CT fingerprint search, find cert by hash, track certificate fingerprint, or fingerprint CT lookup.
-allowed-tools: ["mcp__certificate-hacker__cert_search_ct_fingerprint"]
+allowed-tools: ["mcp__certificate-skills__cert_search_ct_fingerprint"]
 ---
 
 # ct-fingerprint-search

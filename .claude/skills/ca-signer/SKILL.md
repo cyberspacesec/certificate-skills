@@ -2,7 +2,7 @@
 name: ca-signer
 description: Sign terminal/leaf certificates using a CA certificate and private key. Creates server, client, or dual-purpose certificates.
 allowed-tools:
-  - mcp__certificate-hacker__cert_sign_certificate
+  - mcp__certificate-skills__cert_sign_certificate
 ---
 
 # CA Certificate Signer

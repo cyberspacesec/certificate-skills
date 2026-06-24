@@ -1,7 +1,7 @@
 ---
 name: cert-security-scanner
 description: Use when scanning for certificate-specific security issues (18 checks from CERT-001 to CERT-018), checking for weak signatures, short keys, hostname mismatches, distrusted CAs, or compliance violations. Triggers on mentions of cert security scan, CERT checks, certificate compliance, or PKI audit.
-allowed-tools: ["mcp__certificate-hacker__cert_scan_cert_security"]
+allowed-tools: ["mcp__certificate-skills__cert_scan_cert_security"]
 ---
 
 # cert-security-scanner
