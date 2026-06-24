@@ -49,12 +49,17 @@ SUMMARY_STAT_TOLERANCE = 0.01
 DURATION_SECONDS_TOLERANCE = 0.001
 COMPARISON_LABELS = ("A", "B")
 COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
+COMPARISON_TOP_LEVEL_KEYS = ("winner", "reasoning", "rubric", "output_quality", "expectation_results")
+COMPARISON_RUBRIC_ENTRY_KEYS = ("content", "structure", *COMPARISON_RUBRIC_SCORE_FIELDS)
 COMPARISON_RUBRIC_SCORE_RANGES = {
     "content_score": (0, 5),
     "structure_score": (0, 5),
     "overall_score": (0, 10),
 }
+COMPARISON_OUTPUT_QUALITY_KEYS = ("score", "strengths", "weaknesses")
 COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
+COMPARISON_EXPECTATION_RESULT_KEYS = ("passed", "total", "pass_rate", "details")
+COMPARISON_EXPECTATION_DETAIL_KEYS = ("text", "passed")
 COMPARISON_OUTPUT_FILE_RE = re.compile(r"^comparison-\d+\.json$")
 ANALYSIS_INSTRUCTION_LABELS = ("winner", "loser")
 ANALYSIS_COMPARISON_SUMMARY_KEYS = (
@@ -1712,11 +1717,24 @@ def validate_string_list_field(path: pathlib.Path, owner: dict, label: str, fiel
 
 def validate_comparison_rubric_schema(path: pathlib.Path, rubric: dict) -> list[str]:
     errors = []
+    missing_labels = sorted(set(COMPARISON_LABELS) - set(rubric))
+    unknown_labels = sorted(set(rubric) - set(COMPARISON_LABELS))
+    if missing_labels:
+        errors.append(f"{path}: rubric missing label(s): {', '.join(missing_labels)}")
+    if unknown_labels:
+        errors.append(f"{path}: rubric contains unknown label(s): {', '.join(unknown_labels)}")
     for label in COMPARISON_LABELS:
         entry = rubric.get(label)
         if not isinstance(entry, dict):
             errors.append(f"{path}: rubric.{label} must be an object")
             continue
+        expected_keys = set(COMPARISON_RUBRIC_ENTRY_KEYS)
+        missing = sorted(expected_keys - set(entry))
+        unknown = sorted(set(entry) - expected_keys)
+        if missing:
+            errors.append(f"{path}: rubric.{label} missing key(s): {', '.join(missing)}")
+        if unknown:
+            errors.append(f"{path}: rubric.{label} contains unknown key(s): {', '.join(unknown)}")
         for section in ("content", "structure"):
             section_values = entry.get(section)
             if not isinstance(section_values, dict):
@@ -1737,11 +1755,24 @@ def validate_comparison_rubric_schema(path: pathlib.Path, rubric: dict) -> list[
 
 def validate_comparison_output_quality_schema(path: pathlib.Path, output_quality: dict) -> list[str]:
     errors = []
+    missing_labels = sorted(set(COMPARISON_LABELS) - set(output_quality))
+    unknown_labels = sorted(set(output_quality) - set(COMPARISON_LABELS))
+    if missing_labels:
+        errors.append(f"{path}: output_quality missing label(s): {', '.join(missing_labels)}")
+    if unknown_labels:
+        errors.append(f"{path}: output_quality contains unknown label(s): {', '.join(unknown_labels)}")
     for label in COMPARISON_LABELS:
         entry = output_quality.get(label)
         if not isinstance(entry, dict):
             errors.append(f"{path}: output_quality.{label} must be an object")
             continue
+        expected_keys = set(COMPARISON_OUTPUT_QUALITY_KEYS)
+        missing = sorted(expected_keys - set(entry))
+        unknown = sorted(set(entry) - expected_keys)
+        if missing:
+            errors.append(f"{path}: output_quality.{label} missing key(s): {', '.join(missing)}")
+        if unknown:
+            errors.append(f"{path}: output_quality.{label} contains unknown key(s): {', '.join(unknown)}")
         errors.extend(validate_number_range(path, f"output_quality.{label}.score", entry.get("score"), 0, 10))
         for field in COMPARISON_OUTPUT_QUALITY_LIST_FIELDS:
             errors.extend(validate_string_list_field(path, entry, f"output_quality.{label}", field))
@@ -1758,6 +1789,13 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
     errors = []
     if not COMPARISON_OUTPUT_FILE_RE.fullmatch(path.name):
         errors.append(f"{path}: blind comparison output files should be named comparison-N.json")
+    expected_keys = set(COMPARISON_TOP_LEVEL_KEYS)
+    missing = sorted(expected_keys - set(comparison))
+    unknown = sorted(set(comparison) - expected_keys)
+    if missing:
+        errors.append(f"{path}: comparison missing key(s): {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{path}: comparison contains unknown key(s): {', '.join(unknown)}")
     winner = comparison.get("winner")
     if winner not in COMPARISON_LABELS:
         errors.append(f"{path}: comparison winner must be A or B")
@@ -1781,6 +1819,12 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
 
     expectation_results = comparison.get("expectation_results")
     if isinstance(expectation_results, dict):
+        missing_labels = sorted(set(COMPARISON_LABELS) - set(expectation_results))
+        unknown_labels = sorted(set(expectation_results) - set(COMPARISON_LABELS))
+        if missing_labels:
+            errors.append(f"{path}: expectation_results missing label(s): {', '.join(missing_labels)}")
+        if unknown_labels:
+            errors.append(f"{path}: expectation_results contains unknown label(s): {', '.join(unknown_labels)}")
         for label, result in sorted(expectation_results.items()):
             if not isinstance(label, str):
                 errors.append(f"{path}: comparison expectation_results keys must be strings")
@@ -1791,6 +1835,13 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
             if not isinstance(result, dict):
                 errors.append(f"{path}: expectation_results.{label} must be an object")
                 continue
+            expected_keys = set(COMPARISON_EXPECTATION_RESULT_KEYS)
+            missing = sorted(expected_keys - set(result))
+            unknown = sorted(set(result) - expected_keys)
+            if missing:
+                errors.append(f"{path}: expectation_results.{label} missing key(s): {', '.join(missing)}")
+            if unknown:
+                errors.append(f"{path}: expectation_results.{label} contains unknown key(s): {', '.join(unknown)}")
             for int_field in ("passed", "total"):
                 if int_field in result and (
                     not isinstance(result.get(int_field), int) or isinstance(result.get(int_field), bool)
@@ -1814,6 +1865,19 @@ def validate_comparison_output_schema(path: pathlib.Path) -> list[str]:
                         if not isinstance(detail, dict):
                             errors.append(f"{path}: expectation_results.{label}.details[{idx}] must be an object")
                             continue
+                        expected_keys = set(COMPARISON_EXPECTATION_DETAIL_KEYS)
+                        missing = sorted(expected_keys - set(detail))
+                        unknown = sorted(set(detail) - expected_keys)
+                        if missing:
+                            errors.append(
+                                f"{path}: expectation_results.{label}.details[{idx}] "
+                                f"missing key(s): {', '.join(missing)}"
+                            )
+                        if unknown:
+                            errors.append(
+                                f"{path}: expectation_results.{label}.details[{idx}] "
+                                f"contains unknown key(s): {', '.join(unknown)}"
+                            )
                         if not isinstance(detail.get("text"), str) or not detail["text"]:
                             errors.append(
                                 f"{path}: expectation_results.{label}.details[{idx}].text "
