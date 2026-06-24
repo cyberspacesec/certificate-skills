@@ -23,6 +23,7 @@ EVAL_WORKSPACE_SUFFIX = "-workspace"
 EVAL_MANIFEST_KEYS = {"skill_name", "evals"}
 EVAL_CASE_KEYS = {"id", "prompt", "expected_output", "files", "expectations"}
 GENERATED_ARTIFACT_IGNORE_PATTERNS = ("*.skill", "*-workspace/", "/dist/")
+DESCRIPTION_MAX_WORDS = 100
 PORTABLE_BODY_FORBIDDEN_TRIGGER_SECTIONS = ("## When to Use", "## When NOT to Use")
 LEGACY_REF_RE = re.compile(r"certificate-hacker|cert-hacker")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
@@ -202,6 +203,12 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
             errors.append(
                 f"{skill_file}: frontmatter description is too long "
                 f"({len(description)} characters, expected <= 1024)"
+            )
+        word_count = len(re.findall(r"\S+", description))
+        if word_count > DESCRIPTION_MAX_WORDS:
+            errors.append(
+                f"{skill_file}: frontmatter description should stay concise "
+                f"({word_count} words, expected <= {DESCRIPTION_MAX_WORDS})"
             )
         if XML_TAG_RE.search(description):
             errors.append(f"{skill_file}: frontmatter description must not contain XML tags")
