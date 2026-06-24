@@ -42,6 +42,7 @@ BENCHMARK_RUN_RESULT_KEYS = {
 BENCHMARK_RUN_SUMMARY_CONFIGS = ("with_skill", "without_skill")
 BENCHMARK_RUN_SUMMARY_METRICS = ("pass_rate", "time_seconds", "tokens")
 BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev", "min", "max")
+BENCHMARK_DELTA_RE = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$")
 PASS_RATE_TOLERANCE = 0.01
 SUMMARY_STAT_TOLERANCE = 0.01
 DURATION_SECONDS_TOLERANCE = 0.001
@@ -150,6 +151,16 @@ def validate_number_range(
     if not minimum <= value <= maximum:
         return [f"{path}: {label} must be between {minimum:g} and {maximum:g}"]
     return []
+
+
+def parse_benchmark_delta(value: str) -> float | None:
+    stripped = value.strip()
+    if not BENCHMARK_DELTA_RE.fullmatch(stripped):
+        return None
+    try:
+        return float(stripped)
+    except ValueError:
+        return None
 
 
 def unquote_scalar(value: str) -> str:
@@ -1387,6 +1398,9 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
     if not isinstance(run_summary, dict):
         errors.append(f"{path}: benchmark.json run_summary must be an object")
     else:
+        summary_means: dict[str, dict[str, int | float]] = {
+            configuration: {} for configuration in BENCHMARK_RUN_SUMMARY_CONFIGS
+        }
         for configuration in BENCHMARK_RUN_SUMMARY_CONFIGS:
             summary = run_summary.get(configuration)
             if not isinstance(summary, dict):
@@ -1404,6 +1418,8 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                         errors.append(f"{path}: run_summary.{configuration}.{metric}.{field} must be non-negative")
                     elif metric == "pass_rate" and stats[field] > 1:
                         errors.append(f"{path}: run_summary.{configuration}.{metric}.{field} must be between 0 and 1")
+                if is_json_number(stats.get("mean")):
+                    summary_means[configuration][metric] = stats["mean"]
                 if all(is_json_number(stats.get(field)) for field in BENCHMARK_RUN_SUMMARY_STAT_FIELDS):
                     if stats["min"] > stats["max"]:
                         errors.append(f"{path}: run_summary.{configuration}.{metric}.min must be <= max")
@@ -1428,8 +1444,21 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
             errors.append(f"{path}: run_summary.delta must be an object")
         else:
             for metric in BENCHMARK_RUN_SUMMARY_METRICS:
-                if not isinstance(delta.get(metric), str):
+                delta_value = delta.get(metric)
+                if not isinstance(delta_value, str):
                     errors.append(f"{path}: run_summary.delta.{metric} must be a string")
+                    continue
+                parsed_delta = parse_benchmark_delta(delta_value)
+                if parsed_delta is None:
+                    errors.append(f"{path}: run_summary.delta.{metric} must be a numeric difference string")
+                    continue
+                if metric in summary_means["with_skill"] and metric in summary_means["without_skill"]:
+                    expected_delta = summary_means["with_skill"][metric] - summary_means["without_skill"][metric]
+                    if abs(parsed_delta - expected_delta) > SUMMARY_STAT_TOLERANCE:
+                        errors.append(
+                            f"{path}: run_summary.delta.{metric} must match "
+                            "with_skill.mean - without_skill.mean"
+                        )
 
     errors.extend(validate_string_list_field(path, benchmark, "benchmark", "notes"))
     return errors
