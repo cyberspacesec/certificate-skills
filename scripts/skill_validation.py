@@ -286,6 +286,7 @@ def validate_skill_creator_evals(
     min_cases: int,
     max_cases: int | None,
     files_root: pathlib.Path | None,
+    required_files_prefix: str | None = None,
     known_skill_names: set[str] | None = None,
     require_expected_skill_ref: bool = True,
 ) -> list[str]:
@@ -347,6 +348,11 @@ def validate_skill_creator_evals(
                 file_path = pathlib.PurePosixPath(item)
                 if file_path.is_absolute() or ".." in file_path.parts:
                     errors.append(f"{label} evals[{idx}].files entry must stay inside the skill root: {item}")
+                    continue
+                if required_files_prefix and not file_path.as_posix().startswith(required_files_prefix):
+                    errors.append(
+                        f"{label} evals[{idx}].files entry should live under {required_files_prefix}: {item}"
+                    )
                     continue
                 resolved = (root / pathlib.Path(item)).resolve()
                 try:
@@ -434,6 +440,7 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
                 min_cases=1,
                 max_cases=None,
                 files_root=repo_root,
+                required_files_prefix=None,
                 known_skill_names=known_skill_names,
                 require_expected_skill_ref=False,
             )
@@ -455,6 +462,7 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
                     min_cases=2,
                     max_cases=3,
                     files_root=skill_dir,
+                    required_files_prefix="evals/files/",
                 )
             )
 
@@ -769,6 +777,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
                 min_cases=2,
                 max_cases=3,
                 files_root=skill_dir,
+                required_files_prefix="evals/files/",
             )
         )
     return errors
