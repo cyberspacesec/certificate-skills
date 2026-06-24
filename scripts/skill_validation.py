@@ -747,7 +747,7 @@ def get_description(skill_file: pathlib.Path) -> str:
     return fields.get("description", "")
 
 
-def portable_prompt_errors(skill_dir: pathlib.Path, claude_root: pathlib.Path) -> list[str]:
+def portable_body_policy_errors(skill_dir: pathlib.Path) -> list[str]:
     errors = []
     skill_file = skill_dir / "SKILL.md"
     text = skill_file.read_text(encoding="utf-8")
@@ -760,6 +760,12 @@ def portable_prompt_errors(skill_dir: pathlib.Path, claude_root: pathlib.Path) -
             )
     if INSTALLATION_RE.search(text) or INSTALLATION_NOTE_RE.search(text):
         errors.append(f"{skill_file}: portable SKILL.md should not duplicate repository installation instructions")
+    return errors
+
+
+def portable_prompt_errors(skill_dir: pathlib.Path, claude_root: pathlib.Path) -> list[str]:
+    errors = portable_body_policy_errors(skill_dir)
+    skill_file = skill_dir / "SKILL.md"
 
     claude_file = claude_root / skill_dir.name / "SKILL.md"
     if claude_file.is_file() and get_description(skill_file) != get_description(claude_file):
@@ -934,6 +940,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
     errors.extend(frontmatter_errors(skill_dir, "portable"))
     errors.extend(skill_package_safety_errors(skill_dir))
     errors.extend(packaged_artifact_errors(skill_dir))
+    errors.extend(portable_body_policy_errors(skill_dir))
     errors.extend(skill_file_link_errors(skill_dir / "SKILL.md", require_reference_usage_cue=True))
 
     evals_file = skill_dir / "evals" / "evals.json"

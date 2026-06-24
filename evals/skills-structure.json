@@ -52,6 +52,7 @@
         "scripts/validate-skills.sh delegates to the shared Python validator.",
         "scripts/package-skills.py can package portable skill directories into .skill archives.",
         "scripts/package-skills.py reuses the shared validator before writing archives.",
+        "Portable package validation enforces portable SKILL.md body policy before archive writing.",
         ".gitignore keeps generated .skill archives, skill eval workspaces, and dist/ outputs ignored.",
         "Generated .skill archives and skill eval workspaces are not tracked as source files.",
         "SKILL.md files remain lightweight.",
