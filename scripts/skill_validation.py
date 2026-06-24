@@ -40,7 +40,7 @@ BENCHMARK_RUN_RESULT_KEYS = {
 }
 BENCHMARK_RUN_SUMMARY_CONFIGS = ("with_skill", "without_skill")
 BENCHMARK_RUN_SUMMARY_METRICS = ("pass_rate", "time_seconds", "tokens")
-BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev")
+BENCHMARK_RUN_SUMMARY_STAT_FIELDS = ("mean", "stddev", "min", "max")
 COMPARISON_LABELS = ("A", "B")
 COMPARISON_RUBRIC_SCORE_FIELDS = ("content_score", "structure_score", "overall_score")
 COMPARISON_OUTPUT_QUALITY_LIST_FIELDS = ("strengths", "weaknesses")
@@ -1170,6 +1170,12 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                 unknown = sorted(set(result) - BENCHMARK_RUN_RESULT_KEYS)
                 if unknown:
                     errors.append(f"{path}: runs[{idx}].result contains unknown key(s): {', '.join(unknown)}")
+                for field in ("pass_rate", "time_seconds"):
+                    if field in result and not is_json_number(result.get(field)):
+                        errors.append(f"{path}: runs[{idx}].result.{field} must be a number")
+                for field in ("passed", "failed", "total", "tokens", "tool_calls", "errors"):
+                    if field in result and not is_json_int(result.get(field)):
+                        errors.append(f"{path}: runs[{idx}].result.{field} must be an integer")
 
             expectations = run.get("expectations", [])
             if expectations is not None:
@@ -1186,6 +1192,8 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
                                 f"{path}: runs[{idx}].expectations[{expectation_idx}] missing key(s): "
                                 f"{', '.join(missing)}"
                             )
+            if "notes" in run:
+                errors.extend(validate_string_list_field(path, run, f"runs[{idx}]", "notes"))
 
     run_summary = benchmark.get("run_summary")
     if not isinstance(run_summary, dict):
@@ -1212,6 +1220,8 @@ def validate_benchmark_output_schema(path: pathlib.Path) -> list[str]:
             for metric in BENCHMARK_RUN_SUMMARY_METRICS:
                 if not isinstance(delta.get(metric), str):
                     errors.append(f"{path}: run_summary.delta.{metric} must be a string")
+
+    errors.extend(validate_string_list_field(path, benchmark, "benchmark", "notes"))
     return errors
 
 
