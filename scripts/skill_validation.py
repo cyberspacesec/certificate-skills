@@ -44,6 +44,15 @@ GRADING_CLAIM_KEYS = {"claim", "type", "verified", "evidence"}
 GRADING_USER_NOTES_KEYS = {"uncertainties", "needs_review", "workarounds"}
 GRADING_EVAL_FEEDBACK_KEYS = ("suggestions", "overall")
 GRADING_EVAL_FEEDBACK_SUGGESTION_KEYS = {"assertion", "reason"}
+METRICS_REQUIRED_BASE_KEYS = (
+    "tool_calls",
+    "total_tool_calls",
+    "total_steps",
+    "errors_encountered",
+    "output_chars",
+    "transcript_chars",
+)
+METRICS_OPTIONAL_KEYS = ("files_created",)
 BENCHMARK_RUN_RESULT_KEYS = {
     "pass_rate",
     "passed",
@@ -1052,6 +1061,17 @@ def validate_metrics_object_schema(
     require_files_created: bool = True,
 ) -> list[str]:
     errors = []
+    required_keys = set(METRICS_REQUIRED_BASE_KEYS)
+    if require_files_created:
+        required_keys.update(METRICS_OPTIONAL_KEYS)
+    allowed_keys = set(METRICS_REQUIRED_BASE_KEYS) | set(METRICS_OPTIONAL_KEYS)
+    missing = sorted(required_keys - set(metrics))
+    unknown = sorted(set(metrics) - allowed_keys)
+    if missing:
+        errors.append(f"{path}: {label} missing key(s): {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{path}: {label} contains unknown key(s): {', '.join(unknown)}")
+
     tool_calls = metrics.get("tool_calls")
     if not isinstance(tool_calls, dict):
         errors.append(f"{path}: {label} tool_calls must be an object")
@@ -1063,14 +1083,13 @@ def validate_metrics_object_schema(
             if count < 0:
                 errors.append(f"{path}: {label} tool_calls.{tool_name} must be non-negative")
 
-    int_fields = (
+    for field in (
         "total_tool_calls",
         "total_steps",
         "errors_encountered",
         "output_chars",
         "transcript_chars",
-    )
-    for field in int_fields:
+    ):
         if not is_json_int(metrics.get(field)):
             errors.append(f"{path}: {label} {field} must be an integer")
         elif metrics[field] < 0:
