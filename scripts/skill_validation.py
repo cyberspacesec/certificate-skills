@@ -79,6 +79,21 @@ def frontmatter_lines(skill_file: pathlib.Path) -> tuple[list[str], list[str]]:
     return lines[1:close_index], []
 
 
+def body_lines(skill_file: pathlib.Path) -> tuple[list[str], list[str]]:
+    if not skill_file.is_file():
+        return [], [f"missing SKILL.md: {skill_file}"]
+
+    lines = skill_file.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != "---":
+        return [], [f"{skill_file}: missing opening YAML frontmatter delimiter"]
+
+    try:
+        close_index = lines[1:].index("---") + 1
+    except ValueError:
+        return [], [f"{skill_file}: missing closing YAML frontmatter delimiter"]
+    return lines[close_index + 1 :], []
+
+
 def read_frontmatter(skill_file: pathlib.Path) -> tuple[dict[str, str], list[str]]:
     lines, errors = frontmatter_lines(skill_file)
     if errors:
@@ -209,7 +224,23 @@ def frontmatter_errors(skill_dir: pathlib.Path, mode: str) -> list[str]:
     else:
         errors.append(f"{skill_file}: unknown validation mode {mode!r}")
 
+    errors.extend(markdown_instruction_errors(skill_file))
     return errors
+
+
+def markdown_instruction_errors(skill_file: pathlib.Path) -> list[str]:
+    lines, errors = body_lines(skill_file)
+    if errors:
+        return []
+
+    content = [line for line in lines if line.strip()]
+    if not content:
+        return [f"{skill_file}: SKILL.md should include Markdown instructions after frontmatter"]
+    if not content[0].startswith("# "):
+        return [f"{skill_file}: SKILL.md instructions should start with an H1 heading"]
+    if not any(line.startswith("## ") for line in content[1:]):
+        return [f"{skill_file}: SKILL.md instructions should include at least one H2 section"]
+    return []
 
 
 def validate_skill_creator_evals(

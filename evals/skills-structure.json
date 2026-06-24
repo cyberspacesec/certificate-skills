@@ -14,7 +14,8 @@
         "Skill names are 64 characters or fewer, use only lowercase letters, numbers, and hyphens, and avoid reserved words.",
         "Skill names and descriptions do not contain XML tags.",
         "Descriptions are 1024 characters or fewer and describe what the skill does and when to trigger it.",
-        "Descriptions explain when the skill triggers."
+        "Descriptions explain when the skill triggers.",
+        "SKILL.md contains Markdown instructions after frontmatter, starting with an H1 heading and at least one H2 section."
       ]
     },
     {
