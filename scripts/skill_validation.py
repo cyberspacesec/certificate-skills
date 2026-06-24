@@ -242,7 +242,7 @@ def validate_skill_creator_evals(
         if not expected_output:
             errors.append(f"{label} evals[{idx}].expected_output is required")
 
-        files = case.get("files")
+        files = case.get("files", [])
         if not isinstance(files, list):
             errors.append(f"{label} evals[{idx}].files must be a list")
         elif not all(isinstance(item, str) for item in files):

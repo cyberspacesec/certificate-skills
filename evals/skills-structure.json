@@ -35,7 +35,7 @@
       "assertions": [
         "evals/evals.json uses the skill-creator eval shape with skill_name and evals.",
         "Every portable skill contains evals/evals.json with skill_name matching the skill directory.",
-        "Eval files entries are relative paths that resolve to existing files inside the skill root.",
+        "Eval files entries, when present, are relative paths that resolve to existing files inside the skill root.",
         "evals/skills-structure.json contains repository structure checks.",
         "scripts/skill_validation.py contains shared repository and package validation logic.",
         "scripts/validate-skills.sh delegates to the shared Python validator.",
