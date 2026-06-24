@@ -1385,12 +1385,17 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
     if not isinstance(iterations, list):
         errors.append(f"{path}: history iterations must be a list")
     else:
+        version_counts: dict[str, int] = {}
+        current_best_iterations: list[tuple[int, str]] = []
         for idx, iteration in enumerate(iterations):
             if not isinstance(iteration, dict):
                 errors.append(f"{path}: iterations[{idx}] must be an object")
                 continue
             if not isinstance(iteration.get("version"), str) or not iteration["version"]:
                 errors.append(f"{path}: iterations[{idx}].version must be a non-empty string")
+            else:
+                version = iteration["version"]
+                version_counts[version] = version_counts.get(version, 0) + 1
             parent = iteration.get("parent")
             if parent is not None and not isinstance(parent, str):
                 errors.append(f"{path}: iterations[{idx}].parent must be a string or null")
@@ -1402,6 +1407,23 @@ def validate_history_output_schema(path: pathlib.Path) -> list[str]:
                 errors.append(f"{path}: iterations[{idx}].grading_result must be baseline, won, lost, or tie")
             if not isinstance(iteration.get("is_current_best"), bool):
                 errors.append(f"{path}: iterations[{idx}].is_current_best must be a boolean")
+            elif iteration["is_current_best"] and isinstance(iteration.get("version"), str) and iteration["version"]:
+                current_best_iterations.append((idx, iteration["version"]))
+        duplicate_versions = sorted(version for version, count in version_counts.items() if count > 1)
+        if duplicate_versions:
+            errors.append(f"{path}: history iteration versions must be unique: {', '.join(duplicate_versions)}")
+        current_best = history.get("current_best")
+        if isinstance(current_best, str) and current_best:
+            if current_best not in version_counts:
+                errors.append(f"{path}: history current_best must match an iterations[].version")
+            if len(current_best_iterations) != 1:
+                errors.append(f"{path}: exactly one history iteration must have is_current_best true")
+            elif current_best_iterations[0][1] != current_best:
+                idx, version = current_best_iterations[0]
+                errors.append(
+                    f"{path}: iterations[{idx}].is_current_best is true for {version}, "
+                    "but history current_best is different"
+                )
     return errors
 
 
