@@ -228,7 +228,8 @@ validate_packaging_script() {
 check_frontmatter() {
   local file=$1
   local dir_name=$2
-  local name description close_line line_count
+  local root=${3:-}
+  local name description tools allowed_tools close_line line_count frontmatter
   local xml_tag_re='<[[:alpha:]/][^>]*>'
 
   if [[ ! -f "$file" ]]; then
@@ -258,6 +259,9 @@ check_frontmatter() {
 
   name=$(awk 'NR > 1 && $0 == "---" { exit } /^name:[[:space:]]*/ { sub(/^name:[[:space:]]*/, ""); print; exit }' "$file")
   description=$(awk 'NR > 1 && $0 == "---" { exit } /^description:[[:space:]]*/ { sub(/^description:[[:space:]]*/, ""); print; exit }' "$file")
+  tools=$(awk 'NR > 1 && $0 == "---" { exit } /^tools:[[:space:]]*/ { print; exit }' "$file")
+  allowed_tools=$(awk 'NR > 1 && $0 == "---" { exit } /^allowed-tools:[[:space:]]*/ { print; exit }' "$file")
+  frontmatter=$(awk 'NR > 1 && $0 == "---" { exit } NR > 1 { print }' "$file")
 
   if [[ -z "$name" ]]; then
     fail "$file: missing frontmatter name"
@@ -290,6 +294,41 @@ check_frontmatter() {
   if [[ -n "$description" && ( "$description" != *"Use when"* || "$description" != *"Triggers on mentions"* ) ]]; then
     fail "$file: frontmatter description should explain when the skill triggers"
   fi
+
+  if [[ "$root" == "skills" ]]; then
+    if [[ -z "$tools" ]]; then
+      fail "$file: portable skill frontmatter should declare tools"
+    fi
+    if [[ -n "$allowed_tools" ]]; then
+      fail "$file: portable skill frontmatter should use tools, not allowed-tools"
+    fi
+  elif [[ "$root" == ".claude/skills" ]]; then
+    if [[ -z "$allowed_tools" ]]; then
+      fail "$file: Claude Code skill frontmatter should declare allowed-tools"
+    elif [[ "$frontmatter" != *"mcp__certificate-skills__"* ]]; then
+      fail "$file: allowed-tools should use the certificate-skills MCP server prefix"
+    fi
+    if [[ -n "$tools" ]]; then
+      fail "$file: Claude Code skill frontmatter should use allowed-tools, not tools"
+    fi
+  fi
+}
+
+check_claude_prompt_sections() {
+  local file=$1
+  local heading
+  local required_headings=(
+    "## When to Use"
+    "## When NOT to Use"
+    "## Instructions"
+    "## Anti-Patterns"
+  )
+
+  for heading in "${required_headings[@]}"; do
+    if ! grep -qxF "$heading" "$file"; then
+      fail "$file: missing executable prompt section: $heading"
+    fi
+  done
 }
 
 check_skill_package_layout() {
@@ -342,8 +381,11 @@ for root in "${roots[@]}"; do
   fi
 
   while IFS= read -r dir; do
-    check_frontmatter "$dir/SKILL.md" "$(basename "$dir")"
+    check_frontmatter "$dir/SKILL.md" "$(basename "$dir")" "$root"
     check_skill_package_layout "$dir"
+    if [[ "$root" == ".claude/skills" ]]; then
+      check_claude_prompt_sections "$dir/SKILL.md"
+    fi
     if [[ "$root" == "skills" ]]; then
       check_portable_skill_prompt "$dir" "$(basename "$dir")"
     fi

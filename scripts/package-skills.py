@@ -67,6 +67,10 @@ def read_frontmatter(skill_file: pathlib.Path) -> dict[str, str]:
             fields["name"] = unquote_scalar(line.split(":", 1)[1])
         elif line.startswith("description:"):
             fields["description"] = unquote_scalar(line.split(":", 1)[1])
+        elif line.startswith("tools:"):
+            fields["tools"] = line
+        elif line.startswith("allowed-tools:"):
+            fields["allowed-tools"] = line
     return fields
 
 
@@ -102,6 +106,11 @@ def validate_frontmatter(skill_dir: pathlib.Path) -> None:
             errors.append("frontmatter description must not contain XML tags")
         if "Use when" not in description or "Triggers on mentions" not in description:
             errors.append("frontmatter description should explain when the skill triggers")
+
+    if "tools" not in fields:
+        errors.append("portable skill frontmatter should declare tools")
+    if "allowed-tools" in fields:
+        errors.append("portable skill frontmatter should use tools, not allowed-tools")
 
     if errors:
         details = "\n  - ".join(errors)
