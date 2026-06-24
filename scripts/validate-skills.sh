@@ -66,6 +66,52 @@ PY
   fi
 }
 
+validate_skill_links() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    fail "python3 is required to validate skill links"
+    return
+  fi
+
+  if ! python3 - <<'PY'
+import pathlib
+import re
+import sys
+from urllib.parse import unquote
+
+roots = [pathlib.Path(".claude/skills"), pathlib.Path("skills")]
+link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+errors = []
+
+for root in roots:
+    if not root.is_dir():
+        continue
+    for skill_file in sorted(root.glob("*/SKILL.md")):
+        text = skill_file.read_text(encoding="utf-8")
+        for match in link_re.finditer(text):
+            raw_target = match.group(1).strip()
+            target = raw_target.split("#", 1)[0]
+            if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("/"):
+                continue
+            resolved = (skill_file.parent / unquote(target)).resolve()
+            skill_root = skill_file.parent.resolve()
+            try:
+                resolved.relative_to(skill_root)
+            except ValueError:
+                errors.append(f"{skill_file}: link escapes skill package: {raw_target}")
+                continue
+            if not resolved.exists():
+                errors.append(f"{skill_file}: missing linked resource: {raw_target}")
+
+if errors:
+    for error in errors:
+        print(f"ERROR: {error}", file=sys.stderr)
+    sys.exit(1)
+PY
+  then
+    failures=$((failures + 1))
+  fi
+}
+
 check_frontmatter() {
   local file=$1
   local dir_name=$2
@@ -177,6 +223,7 @@ else
 fi
 
 validate_evals_manifest
+validate_skill_links
 
 if [[ "$failures" -gt 0 ]]; then
   exit 1

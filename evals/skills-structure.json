@@ -28,6 +28,7 @@
       "assertions": [
         "SKILL.md files remain lightweight.",
         "Reusable detailed material lives in references/ when present.",
+        "Relative links from SKILL.md resolve to files inside the same skill package.",
         "Skill directory and frontmatter names are lowercase hyphenated.",
         "Portable skills do not duplicate repository installation instructions.",
         "Portable skill descriptions match the trigger-oriented Claude Code skill descriptions."
