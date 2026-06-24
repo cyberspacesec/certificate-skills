@@ -284,6 +284,7 @@ def validate_skill_creator_evals(
     label: str,
     expected_skill_name: str,
     min_cases: int,
+    max_cases: int | None,
     files_root: pathlib.Path | None,
     known_skill_names: set[str] | None = None,
     require_expected_skill_ref: bool = True,
@@ -302,6 +303,8 @@ def validate_skill_creator_evals(
     if not isinstance(eval_cases, list) or len(eval_cases) < min_cases:
         errors.append(f"{label} evals must contain at least {min_cases} case(s)")
         return errors
+    if max_cases is not None and len(eval_cases) > max_cases:
+        errors.append(f"{label} evals should contain at most {max_cases} case(s)")
 
     seen_ids: set[int] = set()
     for idx, case in enumerate(eval_cases):
@@ -429,6 +432,7 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
                 "evals/evals.json",
                 "certificate-skills",
                 min_cases=1,
+                max_cases=None,
                 files_root=repo_root,
                 known_skill_names=known_skill_names,
                 require_expected_skill_ref=False,
@@ -449,6 +453,7 @@ def repository_eval_errors(repo_root: pathlib.Path) -> list[str]:
                     str(skill_evals_path),
                     skill_name,
                     min_cases=2,
+                    max_cases=3,
                     files_root=skill_dir,
                 )
             )
@@ -762,6 +767,7 @@ def validate_portable_package(skill_dir: pathlib.Path) -> list[str]:
                 str(evals_file),
                 skill_dir.name,
                 min_cases=2,
+                max_cases=3,
                 files_root=skill_dir,
             )
         )

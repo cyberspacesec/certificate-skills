@@ -309,7 +309,7 @@ Repository layout:
 - Reference files over 300 lines must include a `Contents` or `Table of Contents` heading.
 - Bundled `scripts/` and `assets/` files are linked from `SKILL.md`; bundled scripts must be executable.
 - Skill package content rejects high-risk shell patterns that could compromise the user's system.
-- Each portable skill includes `evals/evals.json` test prompts using only the skill-creator eval schema fields.
+- Each portable skill includes `evals/evals.json` with 2-3 test prompts using only the skill-creator eval schema fields.
 - [`.claude/skills/`](.claude/skills/) contains Claude Code-ready executable prompts with MCP `allowed-tools` metadata.
 - [`evals/evals.json`](evals/evals.json) contains repository-level skill-selection smoke evals.
 - [`evals/skills-structure.json`](evals/skills-structure.json) contains repository structure checks used by `make validate-skills`.
@@ -377,7 +377,7 @@ cp -r certificate-skills/.claude/skills/ /your/project/.claude/skills/
 - 超过 300 行的 reference 文件必须包含 `Contents` 或 `Table of Contents` 标题。
 - 打包的 `scripts/` 和 `assets/` 文件必须从 `SKILL.md` 链接；打包脚本必须可执行。
 - skill package 内容会拒绝可能破坏用户系统的高风险 shell 模式。
-- 每个可移植 skill 都包含 `evals/evals.json` 测试提示词，并且只使用 skill-creator eval schema 字段。
+- 每个可移植 skill 都包含 `evals/evals.json`，内含 2-3 个测试提示词，并且只使用 skill-creator eval schema 字段。
 - [`.claude/skills/`](.claude/skills/) 保存 Claude Code 可直接复制使用的版本，包含 MCP `allowed-tools` 元数据。
 - [`evals/evals.json`](evals/evals.json) 保存仓库级技能选择 smoke eval。
 - [`evals/skills-structure.json`](evals/skills-structure.json) 保存仓库结构检查，由 `make validate-skills` 校验。

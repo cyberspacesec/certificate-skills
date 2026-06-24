@@ -39,7 +39,7 @@
         "evals/evals.json uses the skill-creator eval shape with skill_name and evals.",
         "Skill eval manifests use only the official skill_name and evals top-level fields.",
         "Skill eval cases use only id, prompt, expected_output, files, and expectations fields with the expected JSON types.",
-        "Every portable skill contains evals/evals.json with skill_name matching the skill directory.",
+        "Every portable skill contains evals/evals.json with skill_name matching the skill directory and 2-3 eval cases.",
         "Eval files entries, when present, are relative paths that resolve to existing files inside the skill root.",
         "evals/skills-structure.json contains repository structure checks.",
         "scripts/skill_validation.py contains shared repository and package validation logic.",
